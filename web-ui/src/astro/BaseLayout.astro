@@ -1,0 +1,32 @@
+---
+import siteConfig from "@/site-metadata.json";
+
+import "@styles/styles.css";
+
+const base = import.meta.env.BASE_URL;
+const datetime = new Date().toISOString();
+
+let { title, description = siteConfig.defaultDescription } = Astro.props;
+
+title = title ? `${title} :: ${siteConfig.baseTitle}` : siteConfig.baseTitle;
+---
+
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+
+    <meta name="description" property="og:description" content={description} />
+    <title>{title}</title>
+
+    <meta name="dcterms.modified" content={datetime} />
+
+    <link rel="icon" type="image/x-icon" href={`${base}favicon.ico`} />
+  </head>
+
+  <body data-theme="hamlindigo">
+    <div style="display: contents" class="h-full overflow-hidden">
+      <slot />
+    </div>
+  </body>
+</html>

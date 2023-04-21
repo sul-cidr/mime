@@ -1,0 +1,63 @@
+version: "3.8"
+
+services:
+  api:
+    container_name: mime-api
+    build: ./api
+
+    volumes:
+      - ./api:/app:Z
+
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:?}
+      DB_USER: ${DB_USER:?}
+      DB_PASSWORD: ${DB_PASSWORD:?}
+      PUBLIC_API_BASE: /api
+
+    depends_on:
+      - db
+
+
+  web-ui:
+    container_name: mime-web-ui
+    build: ./web-ui
+
+    volumes:
+      - ./web-ui:/app:Z
+
+    environment:
+      PUBLIC_API_BASE: /api
+
+
+  db:
+    container_name: mime-db
+    image: ankane/pgvector
+
+    volumes:
+      - mime-db-data:/var/lib/postgresql/data
+
+    environment:
+      POSTGRES_DB: ${DB_NAME:?}
+      POSTGRES_USER: ${DB_USER:?}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?}
+
+
+  web-proxy:
+    container_name: mime-web-proxy
+    image: nginx:alpine
+    ports:
+      - ${APP_HOST:-127.0.0.1}:${APP_PORT:-8080}:80
+
+    volumes:
+      - ./nginx.config:/etc/nginx/conf.d/default.conf
+
+    depends_on:
+      - api
+      - web-ui
+
+    stop_grace_period: 0s
+
+volumes:
+  mime-db-data:

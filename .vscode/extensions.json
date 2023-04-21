@@ -1,0 +1,10 @@
+{
+  "recommendations": [
+    "astro-build.astro-vscode",
+    "charliermarsh.ruff",
+    "esbenp.prettier-vscode",
+    "phoenisx.cssvar",
+    "svelte.svelte-vscode"
+  ],
+  "unwantedRecommendations": ["ms-python.isort"]
+}

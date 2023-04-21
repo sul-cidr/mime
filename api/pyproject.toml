@@ -1,0 +1,13 @@
+[tool.black]
+line-length = 89
+target-version = ['py310']
+
+[tool.ruff]
+ignore = []
+line-length = 89
+select = ["B","C","E","F","T","W","B9"]
+src = ["api"]
+
+[tool.ruff.isort]
+known-first-party = ["pose_data_db"]
+known-local-folder = ["api"]

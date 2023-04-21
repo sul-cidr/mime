@@ -1,0 +1,24 @@
+{
+  // Autocomplete CSS variables in VS Code
+  // https://marketplace.visualstudio.com/items?itemName=phoenisx.cssvar
+  "cssvar.files": ["frontend/src/styles/variables.css"],
+  "cssvar.extensions": ["css", "html", "jsx", "tsx", "astro"],
+
+  "[python]": {
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": true
+    }
+  },
+  "ruff.args": ["--config=api/pyproject.toml"],
+  "python.formatting.provider": "black",
+  "python.linting.enabled": true,
+  "ruff.interpreter": ["api/.venv/bin/python"],
+
+  "cSpell.words": [
+    "fastapi",
+    "gridlines",
+    "layercake",
+    "skeletonlabs",
+    "tailwindcss"
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "extends": "astro/tsconfigs/strictest",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./*"],
+      "@astro/*": ["src/astro/*"],
+      "@config": ["src/config.js"],
+      "@layercake/*": ["src/svelte/layercake/*"],
+      "@styles/*": ["src/styles/*"],
+      "@svelte/*": ["src/svelte/*"]
+    }
+  }
+}
