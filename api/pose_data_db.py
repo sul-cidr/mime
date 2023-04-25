@@ -235,10 +235,12 @@ class PoseDataDatabase:
         return [
             {
                 "frame": frame,
-                "poseCt": len(poses),
-                "avgScore": mean(_["score"] for _ in poses),
+                "poseCt": len(by_frame.get(frame, [])),
+                "avgScore": 0
+                if frame not in by_frame
+                else mean(_["score"] for _ in by_frame[frame]),
             }
-            for frame, poses in by_frame.items()
+            for frame in range(len(by_frame))
         ]
 
     async def get_pose_annotations(self, column: str, video_id: int) -> list[np.ndarray]:
