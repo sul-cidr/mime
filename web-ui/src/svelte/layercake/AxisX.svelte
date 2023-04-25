@@ -94,7 +94,6 @@
 <style>
   .tick {
     font-size: 0.725em;
-    font-weight: 200;
   }
 
   line,
