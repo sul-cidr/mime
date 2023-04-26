@@ -248,3 +248,8 @@ class PoseDataDatabase:
             f"SELECT {column} FROM pose WHERE video_id = $1;", video_id
         )
         return [np.array(_[column]) for _ in annotations]
+
+    async def get_frame_data(self, video_id: int, frame: int) -> list:
+        return await self.conn.fetch(
+            "SELECT * FROM pose WHERE video_id = $1 AND frame = $2;", video_id, frame
+        )
