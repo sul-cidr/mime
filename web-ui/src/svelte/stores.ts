@@ -1,4 +1,4 @@
 import { Writable, writable } from "svelte/store";
 
-export const videoId: Writable<Number> = writable();
-export const videoTitle: Writable<String> = writable();
+export const currentVideo: Writable<Object> = writable();
+export const currentFrame: Writable<Number> = writable();

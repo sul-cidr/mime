@@ -3,7 +3,7 @@
   import { ProgressBar, Table } from "@skeletonlabs/skeleton";
   import type { TableSource } from "@skeletonlabs/skeleton";
 
-  import { videoId, videoTitle } from "@svelte/stores";
+  import { currentVideo } from "@svelte/stores";
 
   import { API_BASE } from "@config";
 
@@ -28,8 +28,7 @@
     }));
 
   const selectVideoHandler = ({ detail: video }) => {
-    $videoId = video.id;
-    $videoTitle = video.video_name;
+    $currentVideo = video;
   };
 
   onMount(async () => {

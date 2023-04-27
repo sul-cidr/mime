@@ -8,6 +8,8 @@
   import { getContext } from "svelte";
   import { quadtree } from "d3-quadtree";
 
+  import { currentFrame } from "@svelte/stores";
+
   const { data, xGet, yGet, width, height } = getContext("LayerCake");
 
   let visible = false;
@@ -49,11 +51,13 @@
     .addAll(dataset || $data);
 </script>
 
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <div
   class="bg"
   on:mousemove={findItem}
   on:mouseout={() => (visible = false)}
   on:blur={() => (visible = false)}
+  on:click={() => ($currentFrame = found.frame)}
 />
 <slot x={xGetter(found) || 0} y={yGetter(found) || 0} {found} {visible} {e} />
 

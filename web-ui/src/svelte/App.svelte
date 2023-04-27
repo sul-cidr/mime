@@ -4,10 +4,13 @@
 
   import VideosTable from "@svelte/VideosTable.svelte";
   import PosesByFrameChart from "@svelte/PosesByFrameChart.svelte";
-  import { videoId, videoTitle } from "@svelte/stores";
+  import FrameViewer from "@svelte/FrameViewer.svelte";
+  import { currentVideo, currentFrame } from "@svelte/stores";
 
   import { baseTitle } from "@/site-metadata.json";
   const base = import.meta.env.BASE_URL;
+
+  $: console.log($currentVideo);
 </script>
 
 <AppShell>
@@ -21,9 +24,17 @@
 
   <section class="m-8 flex flex-col gap-10">
     <VideosTable />
-    {#if $videoId}
-      <h2>{$videoTitle}</h2>
-      <PosesByFrameChart videoId={$videoId} />
+    {#if $currentVideo}
+      <h2>{$currentVideo.video_name}</h2>
+      <PosesByFrameChart videoId={$currentVideo.id} />
+    {/if}
+    {#if $currentFrame}
+      <FrameViewer
+        videoId={$currentVideo.id}
+        frameNumber={$currentFrame}
+        frameHeight={$currentVideo.height}
+        frameWidth={$currentVideo.width}
+      />
     {/if}
   </section>
 </AppShell>
