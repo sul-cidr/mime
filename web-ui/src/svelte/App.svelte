@@ -43,12 +43,7 @@
       <PosesByFrameChart videoId={$currentVideo.id} />
     {/if}
     {#if $currentFrame}
-      <FrameViewer
-        videoId={$currentVideo.id}
-        frameNumber={$currentFrame}
-        frameHeight={$currentVideo.height}
-        frameWidth={$currentVideo.width}
-      />
+      <FrameViewer />
     {/if}
   </section>
 </AppShell>

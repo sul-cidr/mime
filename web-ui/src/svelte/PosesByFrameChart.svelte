@@ -18,7 +18,7 @@
     return await response.json();
   }
 
-  const seriesColors = ["red", "blue", "green", "orange"];
+  const seriesColors = ["#0fba81", "#4f46e5", "green", "orange"];
   const formatTickX = (d: unknown) => d;
   const formatTickY = (d: unknown) => d;
 </script>

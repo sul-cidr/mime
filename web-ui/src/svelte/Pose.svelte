@@ -55,8 +55,8 @@
   const { width, height } = getContext("LayerCake");
   const { ctx } = getContext("canvas");
 
-  $: segments = [...Array(Math.ceil(poseData.length / 3))].map((_) =>
-    poseData.splice(0, 3),
+  $: segments = [...Array(Math.ceil(poseData.keypoints.length / 3))].map((_) =>
+    poseData.keypoints.splice(0, 3),
   ); // nb. mutates `poseData`...
 
   $: {
@@ -71,8 +71,6 @@
       scaleCanvas($ctx, $width, $height);
       $ctx.clearRect(0, 0, $width, $height);
 
-      $ctx.lineWidth = 3;
-
       // Draw a line on the canvas for each skeleton segment.
       // If the confidence value for a given armature point is 0, skip related segments.
       COCO_PERSON_SKELETON.forEach(([from, to], i) => {
@@ -81,12 +79,20 @@
         if (fromConfidence == 0 || toConfidence == 0) {
           return;
         }
+
+        $ctx.lineWidth = 3;
         $ctx.strokeStyle = COCO_COLORS[i];
 
         $ctx.beginPath();
         $ctx.moveTo(fromX, fromY);
         $ctx.lineTo(toX, toY);
         $ctx.stroke();
+
+        // $ctx.lineWidth = 1;
+        // $ctx.strokeStyle = "white";
+        // $ctx.beginPath();
+        // $ctx.rect(...poseData.bbox);
+        // $ctx.stroke();
       });
     }
   }

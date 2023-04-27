@@ -1,15 +1,12 @@
 <script lang="ts">
   import { ProgressBar, SlideToggle } from "@skeletonlabs/skeleton";
-  import { LayerCake, Canvas, Html } from "layercake";
 
-  import Pose from "./Pose.svelte";
+  import FrameDisplay from "@svelte/FrameDisplay.svelte";
+  import FrameDetails from "@svelte/FrameDetails.svelte";
+
+  import { currentVideo, currentFrame } from "@svelte/stores";
 
   import { API_BASE } from "@config";
-
-  export let videoId: number;
-  export let frameNumber: number;
-  export let frameHeight: number;
-  export let frameWidth: number;
 
   let poseData: Array<{ keypoints: Array<number> }>;
   let showFrame: boolean = false;
@@ -20,24 +17,24 @@
     return await response.json();
   }
 
-  $: getPoseData(videoId, frameNumber).then((data) => {
+  $: getPoseData($currentVideo.id, $currentFrame!).then((data) => {
     poseData = data;
   });
 </script>
 
-<SlideToggle name="slider-label" bind:checked={showFrame} size="sm"
-  >Show Frame</SlideToggle
->
+<SlideToggle name="slider-label" bind:checked={showFrame} size="sm">
+  Show Frame
+</SlideToggle>
 <div class="flex">
   <button
     type="button"
     class="btn variant-filled"
-    on:click={() => frameNumber--}>previous</button
+    on:click={() => ($currentFrame = ($currentFrame || 0) - 1)}>previous</button
   >
   <button
     type="button"
     class="btn variant-filled"
-    on:click={() => frameNumber++}>next</button
+    on:click={() => ($currentFrame = ($currentFrame || 0) + 1)}>next</button
   >
   <button
     type="button"
@@ -48,42 +45,17 @@
         playInterval = undefined;
       } else {
         playInterval = setInterval(() => {
-          frameNumber += 24;
-        }, 1000);
+          $currentFrame = ($currentFrame || 0) + 10;
+        }, 400);
       }
     }}>{playInterval ? "stop" : "play"}</button
   >
 </div>
-<div>
-  <div
-    class="h-[480px] border border-solid border-black"
-    style={`aspect-ratio: ${frameWidth}/${frameHeight}`}
-  >
-    {#if poseData}
-      <LayerCake>
-        {#if showFrame}
-          <Html zIndex={0}>
-            <img
-              src={`${API_BASE}/frame/${videoId}/${frameNumber}/`}
-              alt={`Frame ${frameNumber}`}
-            />
-          </Html>
-        {/if}
-        {#if poseData.length}
-          {#each poseData as pose}
-            <Canvas zIndex={1}>
-              <Pose poseData={pose.keypoints} />
-            </Canvas>
-          {/each}
-        {:else}
-          <p>No poses found</p>
-        {/if}
-      </LayerCake>
-    {:else}
-      Loading pose data... <ProgressBar />
-    {/if}
-  </div>
+<div class="flex w-full gap-4">
+  {#if poseData}
+    <FrameDisplay {showFrame} poses={poseData} />
+    <FrameDetails poses={poseData} />
+  {:else}
+    Loading pose data... <ProgressBar />
+  {/if}
 </div>
-
-<style>
-</style>
