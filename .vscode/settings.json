@@ -15,11 +15,16 @@
   "ruff.interpreter": ["api/.venv/bin/python"],
 
   "cSpell.words": [
+    "executemany",
     "fastapi",
     "fetchrow",
     "gridlines",
+    "imageio",
+    "imread",
+    "imwrite",
     "ivfflat",
     "layercake",
+    "pyav",
     "skeletonlabs",
     "tailwindcss"
   ]

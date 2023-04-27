@@ -35,13 +35,16 @@ except AssertionError:
 class PoseDataDatabase:
     """Class to interact with the database."""
 
-    pool: asyncpg.Pool
+    _pool: asyncpg.Pool
 
     def __init__(self, pool: asyncpg.Pool) -> None:
-        self.pool = pool
+        self._pool = pool
 
     @classmethod
     async def create(cls, drop=False) -> "PoseDataDatabase":
+        """Factory method to create a new PoseDataDatabase instance.
+        Required because __init__ doesn't work well with async/await.
+        """
         pool = await PoseDataDatabase.get_pool()
 
         async with pool.acquire() as conn:
@@ -59,6 +62,8 @@ class PoseDataDatabase:
             port=DB_PORT,
             setup=PoseDataDatabase.setup_connection,
         )
+        if not pool:
+            raise RuntimeError("Database connection could not be established")
         return pool
 
     @staticmethod
@@ -118,7 +123,7 @@ class PoseDataDatabase:
         )
 
     async def add_video(self, video_name: str, video_metadata: dict) -> int:
-        video_id = await self.pool.fetchval(
+        video_id = await self._pool.fetchval(
             """
             INSERT
               INTO video (video_name, frame_count, fps, width, height)
@@ -139,7 +144,7 @@ class PoseDataDatabase:
         return video_id
 
     async def clear_poses(self, video_id: int) -> None:
-        await self.pool.execute("DELETE FROM pose WHERE video_id = $1;", video_id)
+        await self._pool.execute("DELETE FROM pose WHERE video_id = $1;", video_id)
 
     async def load_openpifpaf_predictions(
         self, video_id: int, json_path: Path, clear=True
@@ -177,7 +182,7 @@ class PoseDataDatabase:
 
         data = [tuple(pose.values()) for pose in poses]
 
-        await self.pool.executemany(
+        await self._pool.executemany(
             """
             INSERT INTO pose (
               video_id, frame, pose_idx, keypoints, bbox, score, category)
@@ -197,54 +202,53 @@ class PoseDataDatabase:
         annotation_func: Callable,
         reindex=True,
     ) -> None:
-        await self.pool.execute(
-            f"ALTER TABLE pose ADD COLUMN IF NOT EXISTS {column} {col_type};"
-        )
+        async with self._pool.acquire() as conn:
+            await conn.execute(
+                f"ALTER TABLE pose ADD COLUMN IF NOT EXISTS {column} {col_type};"
+            )
 
-        poses = await self.pool.fetch(
-            "SELECT * FROM pose WHERE video_id = $1;", video_id
-        )
-        async with self.pool.transaction():
-            for i, pose in enumerate(poses):
-                if i % (len(poses) // 10) == 0:
-                    logging.info(
-                        f"Annotating pose {i:7}/{len(poses)} "
-                        f"({10 * (i // (len(poses) // 10)):3}%)..."
+            poses = await conn.fetch("SELECT * FROM pose WHERE video_id = $1;", video_id)
+            async with conn.transaction():
+                for i, pose in enumerate(poses):
+                    if i % (len(poses) // 10) == 0:
+                        logging.info(
+                            f"Annotating pose {i:7}/{len(poses)} "
+                            f"({10 * (i // (len(poses) // 10)):3}%)..."
+                        )
+                    annotation_value = annotation_func(pose)
+                    await conn.execute(
+                        f"""
+                        UPDATE pose
+                        SET {column} = $1
+                        WHERE video_id = $2 AND frame = $3 AND pose_idx = $4
+                        ;
+                        """,
+                        annotation_value,
+                        video_id,
+                        pose["frame"],
+                        pose["pose_idx"],
                     )
-                annotation_value = annotation_func(pose)
-                await self.pool.execute(
+
+            if reindex:
+                logging.info("Creating approximate index for cosine distance...")
+                await conn.execute(
                     f"""
-                    UPDATE pose
-                      SET {column} = $1
-                      WHERE video_id = $2 AND frame = $3 AND pose_idx = $4
+                    CREATE INDEX ON pose
+                    USING ivfflat ({column} vector_cosine_ops)
                     ;
                     """,
-                    annotation_value,
-                    video_id,
-                    pose["frame"],
-                    pose["pose_idx"],
                 )
-
-        if reindex:
-            logging.info("Creating approximate index for cosine distance...")
-            await self.pool.execute(
-                f"""
-                CREATE INDEX ON pose
-                  USING ivfflat ({column} vector_cosine_ops)
-                ;
-                """,
-            )
         return
 
     async def get_available_videos(self) -> list:
-        videos = await self.pool.fetch("SELECT * FROM video;")
+        videos = await self._pool.fetch("SELECT * FROM video;")
         return videos
 
     async def get_video_by_id(self, video_id: int) -> asyncpg.Record:
-        return await self.pool.fetchrow("SELECT * FROM video WHERE id = $1;", video_id)
+        return await self._pool.fetchrow("SELECT * FROM video WHERE id = $1;", video_id)
 
     async def get_pose_data_by_frame(self, video_id: int) -> list:
-        pose_data = await self.pool.fetch(
+        pose_data = await self._pool.fetch(
             "SELECT * FROM pose WHERE video_id = $1;", video_id
         )
         pose_data.sort(key=itemgetter("frame"))
@@ -266,12 +270,12 @@ class PoseDataDatabase:
         ]
 
     async def get_pose_annotations(self, column: str, video_id: int) -> list[np.ndarray]:
-        annotations = await self.pool.fetch(
+        annotations = await self._pool.fetch(
             f"SELECT {column} FROM pose WHERE video_id = $1;", video_id
         )
         return [np.array(_[column]) for _ in annotations]
 
     async def get_frame_data(self, video_id: int, frame: int) -> list:
-        return await self.pool.fetch(
+        return await self._pool.fetch(
             "SELECT * FROM pose WHERE video_id = $1 AND frame = $2;", video_id, frame
         )
