@@ -221,6 +221,9 @@ class PoseDataDatabase:
         videos = await self.conn.fetch("SELECT * FROM video;")
         return videos
 
+    async def get_video_by_id(self, video_id: int) -> asyncpg.Record:
+        return await self.conn.fetchrow("SELECT * FROM video WHERE id = $1;", video_id)
+
     async def get_pose_data_by_frame(self, video_id: int) -> list:
         pose_data = await self.conn.fetch(
             "SELECT * FROM pose WHERE video_id = $1;", video_id

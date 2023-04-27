@@ -1,12 +1,23 @@
 import json
 import os
 
+import imageio.v3 as iio
 import uvicorn
+from dotenv import load_dotenv
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 
 from json_encoder import MimeJSONEncoder
 from pose_data_db import PoseDataDatabase
+
+load_dotenv()
+VIDEO_SRC_FOLDER = os.getenv("VIDEO_SRC_FOLDER")
+
+try:
+    assert VIDEO_SRC_FOLDER
+except AssertionError:
+    raise SystemExit("Error: VIDEO_SRC_FOLDER is required") from None
+
 
 mime_api = FastAPI(root_path=os.environ.get("PUBLIC_API_BASE", "/"))
 
@@ -34,6 +45,17 @@ async def root():
 async def videos(request: Request):
     videos = await request.app.state.db.get_available_videos()
     return {"videos": videos}
+
+
+@mime_api.get("/frame/{video_id}/{frame}/")
+async def get_frame(video_id: int, frame: int, request: Request):
+    video = await request.app.state.db.get_video_by_id(video_id)
+    video_path = f"/videos/{video['video_name']}"
+    img = iio.imread(video_path, index=frame, plugin="pyav")
+    return Response(
+        content=iio.imwrite("<bytes>", img, extension=".jpeg"),
+        media_type="image/jpeg",
+    )
 
 
 @mime_api.get("/poses/{video_id}/")

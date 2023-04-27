@@ -14,6 +14,8 @@ pgvector = "*"
 python-dotenv = "*"
 rich = "*"
 uvicorn = {extras = ["standard"], version = "*"}
+imageio = "*"
+av = "*"
 
 [dev-packages]
 black = "*"
