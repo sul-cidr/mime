@@ -10,7 +10,7 @@
   import { baseTitle } from "@/site-metadata.json";
   const base = import.meta.env.BASE_URL;
 
-  $: console.log($currentVideo);
+  $: $currentVideo, ($currentFrame = undefined);
 </script>
 
 <AppShell>

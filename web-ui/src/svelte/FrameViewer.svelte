@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { ProgressBar } from "@skeletonlabs/skeleton";
+  import { ProgressBar, dataTableHandler } from "@skeletonlabs/skeleton";
   import { LayerCake, Canvas } from "layercake";
 
   import Pose from "./Pose.svelte";
@@ -11,10 +11,16 @@
   export let frameHeight: Number;
   export let frameWidth: Number;
 
+  let poseData;
+
   async function getPoseData(videoId: Number, frame: Number) {
     const response = await fetch(`${API_BASE}/poses/${videoId}/${frame}/`);
     return await response.json();
   }
+
+  $: getPoseData(videoId, frameNumber).then((data) => {
+    poseData = data;
+  });
 </script>
 
 <div>
@@ -22,9 +28,7 @@
     class="h-[480px] border border-solid border-black"
     style={`aspect-ratio: ${frameWidth}/${frameHeight}`}
   >
-    {#await getPoseData(videoId, frameNumber)}
-      Loading pose data... <ProgressBar />
-    {:then poseData}
+    {#if poseData}
       <LayerCake>
         {#if poseData.length}
           {#each poseData as pose}
@@ -36,7 +40,9 @@
           <p>No poses found</p>
         {/if}
       </LayerCake>
-    {/await}
+    {:else}
+      Loading pose data... <ProgressBar />
+    {/if}
   </div>
 </div>
 

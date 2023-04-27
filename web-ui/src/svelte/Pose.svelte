@@ -71,6 +71,8 @@
       scaleCanvas($ctx, $width, $height);
       $ctx.clearRect(0, 0, $width, $height);
 
+      $ctx.lineWidth = 3;
+
       OPP_COCO_SKELETON.forEach(([from, to], i) => {
         const [fromX, fromY, fromConfidence] = segments[from - 1];
         const [toX, toY, toConfidence] = segments[to - 1];
@@ -78,7 +80,6 @@
           return;
         }
         $ctx.strokeStyle = OPP_COCO_COLORS[i];
-        $ctx.lineWidth = 2;
 
         $ctx.beginPath();
         $ctx.moveTo(fromX, fromY);
