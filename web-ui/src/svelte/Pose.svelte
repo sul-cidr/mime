@@ -2,7 +2,7 @@
   // The body part numberings and armature connectors for the 17-keypoint COCO pose format are defined in
   // https://github.com/openpifpaf/openpifpaf/blob/main/src/openpifpaf/plugins/coco/constants.py
   // Note that the body part numbers in the connector (skeleton) definitions begin with 1, for some reason, not 0
-  const OPP_COCO_SKELETON = [
+  const COCO_PERSON_SKELETON = [
     [16, 14],
     [14, 12],
     [17, 15],
@@ -24,7 +24,7 @@
     [5, 7],
   ];
 
-  const OPP_COCO_COLORS = [
+  const COCO_COLORS = [
     "orangered",
     "orange",
     "blue",
@@ -47,10 +47,7 @@
   ];
 
   export let poseData;
-
-  const segments = [...Array(Math.ceil(poseData.length / 3))].map((_) =>
-    poseData.splice(0, 3),
-  ); // nb. mutates `poseData`...
+  let segments;
 
   import { getContext } from "svelte";
   import { scaleCanvas } from "layercake";
@@ -58,11 +55,14 @@
   const { width, height } = getContext("LayerCake");
   const { ctx } = getContext("canvas");
 
-  console.log($width, $height);
+  $: segments = [...Array(Math.ceil(poseData.length / 3))].map((_) =>
+    poseData.splice(0, 3),
+  ); // nb. mutates `poseData`...
 
   $: {
     if ($ctx) {
       /* --------------------------------------------
+       * TODO ??
        * If you were to have multiple canvas layers
        * maybe for some artistic layering purposes
        * put these reset functions in the first layer, not each one
@@ -73,13 +73,15 @@
 
       $ctx.lineWidth = 3;
 
-      OPP_COCO_SKELETON.forEach(([from, to], i) => {
+      // Draw a line on the canvas for each skeleton segment.
+      // If the confidence value for a given armature point is 0, skip related segments.
+      COCO_PERSON_SKELETON.forEach(([from, to], i) => {
         const [fromX, fromY, fromConfidence] = segments[from - 1];
         const [toX, toY, toConfidence] = segments[to - 1];
         if (fromConfidence == 0 || toConfidence == 0) {
           return;
         }
-        $ctx.strokeStyle = OPP_COCO_COLORS[i];
+        $ctx.strokeStyle = COCO_COLORS[i];
 
         $ctx.beginPath();
         $ctx.moveTo(fromX, fromY);
@@ -89,3 +91,13 @@
     }
   }
 </script>
+
+<!-- 
+  @component
+  Render an individual pose as a canvas element.
+  
+  Usage:
+    ```tsx
+  <Pose poseData={COCO_Keypoints} />
+  ```
+ -->

@@ -1,19 +1,21 @@
 <script lang="ts">
-  import { ProgressBar, dataTableHandler } from "@skeletonlabs/skeleton";
-  import { LayerCake, Canvas } from "layercake";
+  import { ProgressBar, SlideToggle } from "@skeletonlabs/skeleton";
+  import { LayerCake, Canvas, Html } from "layercake";
 
   import Pose from "./Pose.svelte";
 
   import { API_BASE } from "@config";
 
-  export let videoId: Number;
-  export let frameNumber: Number;
-  export let frameHeight: Number;
-  export let frameWidth: Number;
+  export let videoId: number;
+  export let frameNumber: number;
+  export let frameHeight: number;
+  export let frameWidth: number;
 
-  let poseData;
+  let poseData: Array<{ keypoints: Array<number> }>;
+  let showFrame: boolean = false;
+  let playInterval: number | undefined;
 
-  async function getPoseData(videoId: Number, frame: Number) {
+  async function getPoseData(videoId: number, frame: number) {
     const response = await fetch(`${API_BASE}/poses/${videoId}/${frame}/`);
     return await response.json();
   }
@@ -23,6 +25,35 @@
   });
 </script>
 
+<SlideToggle name="slider-label" bind:checked={showFrame} size="sm"
+  >Show Frame</SlideToggle
+>
+<div class="flex">
+  <button
+    type="button"
+    class="btn variant-filled"
+    on:click={() => frameNumber--}>previous</button
+  >
+  <button
+    type="button"
+    class="btn variant-filled"
+    on:click={() => frameNumber++}>next</button
+  >
+  <button
+    type="button"
+    class="btn variant-filled"
+    on:click={() => {
+      if (playInterval) {
+        clearInterval(playInterval);
+        playInterval = undefined;
+      } else {
+        playInterval = setInterval(() => {
+          frameNumber += 24;
+        }, 1000);
+      }
+    }}>{playInterval ? "stop" : "play"}</button
+  >
+</div>
 <div>
   <div
     class="h-[480px] border border-solid border-black"
@@ -30,9 +61,17 @@
   >
     {#if poseData}
       <LayerCake>
+        {#if showFrame}
+          <Html zIndex={0}>
+            <img
+              src={`${API_BASE}/frame/${videoId}/${frameNumber}/`}
+              alt={`Frame ${frameNumber}`}
+            />
+          </Html>
+        {/if}
         {#if poseData.length}
           {#each poseData as pose}
-            <Canvas zIndex={3}>
+            <Canvas zIndex={1}>
               <Pose poseData={pose.keypoints} />
             </Canvas>
           {/each}
