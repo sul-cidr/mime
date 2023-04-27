@@ -35,17 +35,31 @@ except AssertionError:
 class PoseDataDatabase:
     """Class to interact with the database."""
 
-    conn: asyncpg.Connection
+    pool: asyncpg.Pool
 
-    def __init__(self, conn) -> None:
-        self.conn = conn
+    def __init__(self, pool: asyncpg.Pool) -> None:
+        self.pool = pool
 
     @classmethod
     async def create(cls, drop=False) -> "PoseDataDatabase":
-        conn = await PoseDataDatabase.get_connection()
-        await PoseDataDatabase.initialize_db(conn, drop)
-        await register_vector(conn)
-        return cls(conn)
+        pool = await PoseDataDatabase.get_pool()
+
+        async with pool.acquire() as conn:
+            await PoseDataDatabase.initialize_db(conn, drop)
+
+        return cls(pool)
+
+    @staticmethod
+    async def get_pool() -> asyncpg.Pool:
+        pool = await asyncpg.create_pool(
+            user=DB_USER,
+            password=DB_PASSWORD,
+            database=DB_NAME,
+            host=DB_HOST,
+            port=DB_PORT,
+            setup=PoseDataDatabase.setup_connection,
+        )
+        return pool
 
     @staticmethod
     async def get_connection() -> asyncpg.Connection:
@@ -56,7 +70,12 @@ class PoseDataDatabase:
             host=DB_HOST,
             port=DB_PORT,
         )
+        await PoseDataDatabase.setup_connection(conn)
         return conn
+
+    @staticmethod
+    async def setup_connection(conn: asyncpg.Connection):
+        await register_vector(conn)
 
     @staticmethod
     async def initialize_db(conn, drop=False) -> None:
@@ -99,7 +118,7 @@ class PoseDataDatabase:
         )
 
     async def add_video(self, video_name: str, video_metadata: dict) -> int:
-        video_id = await self.conn.fetchval(
+        video_id = await self.pool.fetchval(
             """
             INSERT
               INTO video (video_name, frame_count, fps, width, height)
@@ -120,7 +139,7 @@ class PoseDataDatabase:
         return video_id
 
     async def clear_poses(self, video_id: int) -> None:
-        await self.conn.execute("DELETE FROM pose WHERE video_id = $1;", video_id)
+        await self.pool.execute("DELETE FROM pose WHERE video_id = $1;", video_id)
 
     async def load_openpifpaf_predictions(
         self, video_id: int, json_path: Path, clear=True
@@ -158,7 +177,7 @@ class PoseDataDatabase:
 
         data = [tuple(pose.values()) for pose in poses]
 
-        await self.conn.executemany(
+        await self.pool.executemany(
             """
             INSERT INTO pose (
               video_id, frame, pose_idx, keypoints, bbox, score, category)
@@ -178,14 +197,14 @@ class PoseDataDatabase:
         annotation_func: Callable,
         reindex=True,
     ) -> None:
-        await self.conn.execute(
+        await self.pool.execute(
             f"ALTER TABLE pose ADD COLUMN IF NOT EXISTS {column} {col_type};"
         )
 
-        poses = await self.conn.fetch(
+        poses = await self.pool.fetch(
             "SELECT * FROM pose WHERE video_id = $1;", video_id
         )
-        async with self.conn.transaction():
+        async with self.pool.transaction():
             for i, pose in enumerate(poses):
                 if i % (len(poses) // 10) == 0:
                     logging.info(
@@ -193,7 +212,7 @@ class PoseDataDatabase:
                         f"({10 * (i // (len(poses) // 10)):3}%)..."
                     )
                 annotation_value = annotation_func(pose)
-                await self.conn.execute(
+                await self.pool.execute(
                     f"""
                     UPDATE pose
                       SET {column} = $1
@@ -208,7 +227,7 @@ class PoseDataDatabase:
 
         if reindex:
             logging.info("Creating approximate index for cosine distance...")
-            await self.conn.execute(
+            await self.pool.execute(
                 f"""
                 CREATE INDEX ON pose
                   USING ivfflat ({column} vector_cosine_ops)
@@ -218,14 +237,14 @@ class PoseDataDatabase:
         return
 
     async def get_available_videos(self) -> list:
-        videos = await self.conn.fetch("SELECT * FROM video;")
+        videos = await self.pool.fetch("SELECT * FROM video;")
         return videos
 
     async def get_video_by_id(self, video_id: int) -> asyncpg.Record:
-        return await self.conn.fetchrow("SELECT * FROM video WHERE id = $1;", video_id)
+        return await self.pool.fetchrow("SELECT * FROM video WHERE id = $1;", video_id)
 
     async def get_pose_data_by_frame(self, video_id: int) -> list:
-        pose_data = await self.conn.fetch(
+        pose_data = await self.pool.fetch(
             "SELECT * FROM pose WHERE video_id = $1;", video_id
         )
         pose_data.sort(key=itemgetter("frame"))
@@ -247,12 +266,12 @@ class PoseDataDatabase:
         ]
 
     async def get_pose_annotations(self, column: str, video_id: int) -> list[np.ndarray]:
-        annotations = await self.conn.fetch(
+        annotations = await self.pool.fetch(
             f"SELECT {column} FROM pose WHERE video_id = $1;", video_id
         )
         return [np.array(_[column]) for _ in annotations]
 
     async def get_frame_data(self, video_id: int, frame: int) -> list:
-        return await self.conn.fetch(
+        return await self.pool.fetch(
             "SELECT * FROM pose WHERE video_id = $1 AND frame = $2;", video_id, frame
         )
