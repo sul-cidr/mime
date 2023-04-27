@@ -2,7 +2,7 @@ import json
 import os
 
 import uvicorn
-from fastapi import FastAPI, Response
+from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 
 from json_encoder import MimeJSONEncoder
@@ -20,29 +20,31 @@ mime_api.add_middleware(
 )
 
 
+@mime_api.on_event("startup")
+async def startup():
+    mime_api.state.db = await PoseDataDatabase.create(drop=False)
+
+
 @mime_api.get("/")
 async def root():
     return {"message": "MIME API"}
 
 
 @mime_api.get("/videos/")
-async def videos():
-    db = await PoseDataDatabase.create(drop=False)
-    videos = await db.get_available_videos()
+async def videos(request: Request):
+    videos = await request.app.state.db.get_available_videos()
     return {"videos": videos}
 
 
 @mime_api.get("/poses/{video_id}/")
-async def poses(video_id: int):
-    db = await PoseDataDatabase.create(drop=False)
-    pose_data_by_frame = await db.get_pose_data_by_frame(video_id)
+async def poses(video_id: int, request: Request):
+    pose_data_by_frame = await request.app.state.db.get_pose_data_by_frame(video_id)
     return pose_data_by_frame
 
 
 @mime_api.get("/poses/{video_id}/{frame}/")
-async def poses_by_frame(video_id: int, frame: int):
-    db = await PoseDataDatabase.create(drop=False)
-    frame_data = await db.get_frame_data(video_id, frame)
+async def poses_by_frame(video_id: int, frame: int, request: Request):
+    frame_data = await request.app.state.db.get_frame_data(video_id, frame)
     return Response(
         content=json.dumps(frame_data, cls=MimeJSONEncoder),
         media_type="application/json",
