@@ -5,6 +5,7 @@
   import VideosTable from "@svelte/VideosTable.svelte";
   import PosesByFrameChart from "@svelte/PosesByFrameChart.svelte";
   import FrameViewer from "@svelte/FrameViewer.svelte";
+  import Icon from "@svelte/Icon.svelte";
   import { currentVideo, currentFrame } from "@svelte/stores";
 
   import { baseTitle } from "@/site-metadata.json";
@@ -15,10 +16,23 @@
 
 <AppShell>
   <svelte:fragment slot="header">
-    <AppBar>
+    <AppBar slotTrail="place-content-end">
       <header>
         <h1><a href={base}>{baseTitle}</a></h1>
       </header>
+      <svelte:fragment slot="trail">
+        <a href="https://github.com/sul-cidr/mime">
+          <Icon name="github" height="24" width="24" />
+        </a>
+
+        <a href={`${base}api/docs`}>
+          <Icon name="book-2" height="24" width="24" />
+        </a>
+
+        <a href={`${base}api/redoc`}>
+          <Icon name="notebook" height="24" width="24" />
+        </a>
+      </svelte:fragment>
     </AppBar>
   </svelte:fragment>
 
