@@ -4,6 +4,7 @@
   import type { TableSource } from "@skeletonlabs/skeleton";
 
   import { currentVideo } from "@svelte/stores";
+  import type { VideoRecord } from "@svelte/stores";
 
   import { API_BASE } from "@config";
 
@@ -17,17 +18,17 @@
   const updateVideoData = (): Promise<TableSource> =>
     getVideos().then((data) => ({
       head: ["Name", "Meta", "Frame Count"],
-      body: data.videos.map((video) => [
+      body: data.videos.map((video: VideoRecord) => [
         video.video_name,
         `${video.width}x${video.height}@${video.fps}fps`,
         video.frame_count,
       ]),
       // Passed to the `on:selected` handler:
-      meta: data.videos.map((video) => video),
+      meta: data.videos.map((video: VideoRecord) => video),
       // foot: [...],
     }));
 
-  const selectVideoHandler = ({ detail: video }) => {
+  const selectVideoHandler = ({ detail: video }: { detail: VideoRecord }) => {
     $currentVideo = video;
   };
 
