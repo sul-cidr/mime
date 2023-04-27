@@ -2,5 +2,7 @@
 @import "@skeletonlabs/skeleton/styles/all.css";
 @import "@skeletonlabs/skeleton/themes/theme-hamlindigo.css";
 
-@import "baseline.css";
-@import "main.css";
+html,
+body {
+  @apply h-full overflow-hidden;
+}
