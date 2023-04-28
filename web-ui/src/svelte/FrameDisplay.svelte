@@ -8,11 +8,15 @@
   const { id: videoId, width: frameWidth, height: frameHeight } = $currentVideo;
 
   export let showFrame: boolean;
-  export let poses: Array<{ keypoints: Array<number>; bbox: Array<number> }>;
+  export let poses: Array<PoseData>;
+  export let hoveredPoseIdx: number | undefined;
 </script>
 
 <div>
-  <div class="h-[480px]" style={`aspect-ratio: ${frameWidth}/${frameHeight}`}>
+  <div
+    class="h-[480px] border border-solid border-black"
+    style={`aspect-ratio: ${frameWidth}/${frameHeight}`}
+  >
     <LayerCake>
       {#if showFrame}
         <Html zIndex={0}>
@@ -29,6 +33,15 @@
           </Canvas>
         {/each}
         <Svg zIndex={2}>
+          <defs>
+            <filter x="0" y="0" width="1" height="1" id="solid">
+              <feFlood flood-color="white" result="bg" />
+              <feMerge>
+                <feMergeNode in="bg" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
           {#each poses as poseData, i}
             <!-- svelte-ignore a11y-click-events-have-key-events -->
             <!-- svelte-ignore a11y-mouse-events-have-key-events -->
@@ -41,12 +54,22 @@
               stroke="white"
               fill="none"
               stroke-width="1"
+              class:selected={hoveredPoseIdx === i}
               on:click={() => console.log(`bbox ${i}`)}
-              on:mouseover={(e) => (e.target.style.stroke = "red")}
-              on:mouseout={(e) => (e.target.style.stroke = "white")}
+              on:mouseover={() => (hoveredPoseIdx = i)}
+              on:mouseout={() => (hoveredPoseIdx = undefined)}
               pointer-events="visible"
               style="cursor: pointer"
             />
+            <text
+              dominant-baseline="hanging"
+              x={poseData.bbox[0] + 2}
+              y={poseData.bbox[1] + 5}
+              stroke="white"
+              fill="white"
+            >
+              &nbsp; {i + 1}
+            </text>
           {/each}
         </Svg>
       {:else}
@@ -55,3 +78,15 @@
     </LayerCake>
   </div>
 </div>
+
+<style>
+  :global(rect.selected) {
+    stroke: red;
+  }
+
+  :global(rect.selected + text) {
+    stroke: red;
+    fill: red;
+    filter: url(#solid);
+  }
+</style>

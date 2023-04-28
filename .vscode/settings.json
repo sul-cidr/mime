@@ -15,6 +15,7 @@
   "ruff.interpreter": ["api/.venv/bin/python"],
 
   "cSpell.words": [
+    "bbox",
     "executemany",
     "fastapi",
     "fetchrow",

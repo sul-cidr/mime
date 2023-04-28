@@ -4,7 +4,6 @@
   import type { TableSource } from "@skeletonlabs/skeleton";
 
   import { currentVideo } from "@svelte/stores";
-  import type { VideoRecord } from "@svelte/stores";
 
   import { API_BASE } from "@config";
 
