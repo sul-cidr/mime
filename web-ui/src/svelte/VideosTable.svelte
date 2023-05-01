@@ -46,6 +46,17 @@
     interactive={true}
     on:selected={selectVideoHandler}
   />
+  {#if videoTableSource.body.length === 0}
+    <div class="alert variant-ghost-warning -mt-8">
+      <Icon
+        name="alert-triangle"
+        height="24px"
+        width="24px"
+        class="self-center mr-4"
+      />
+      No videos available. Please load some videos into the system using the CLI.
+    </div>
+  {/if}
 {:else if videoTableSource instanceof Error}
   <div class="alert variant-filled-error flex items-baseline">
     <Icon
