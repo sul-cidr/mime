@@ -7,7 +7,12 @@ RUN apk update \
 # Container is used with live-reload so we don't want the Vite cache stored on bind-mounted host filesystem
 ENV VITE_CACHE_DIR=/tmp
 
+# Store all of pnpm's stores, caches, and runtime data outside /app, so that the host filesystem can be 
+#  bind mounted over the top without complications.  Note that absolute paths won't work here.
+ENV MODULES_DIR=../node_modules
+
 WORKDIR /app
 EXPOSE 3000
 COPY . .
-ENTRYPOINT ["pnpm", "dev", "--host"]
+RUN pnpm --modules-dir $MODULES_DIR --virtual-store-dir $MODULES_DIR/.pnpm --store-dir $MODULES_DIR/.pnpm-store install
+ENTRYPOINT pnpm $MODULES_DIR/.bin/astro dev --host  
