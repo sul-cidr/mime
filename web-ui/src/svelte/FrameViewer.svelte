@@ -22,40 +22,51 @@
   );
 </script>
 
-<SlideToggle name="slider-label" bind:checked={showFrame} size="sm">
-  Show Frame
-</SlideToggle>
-<div class="flex">
-  <button
-    type="button"
-    class="btn variant-filled"
-    on:click={() => ($currentFrame = ($currentFrame || 0) - 1)}>previous</button
+<div>
+  <header
+    class="bg-surface-200-700-token p-4 flex justify-between items-center gap-4"
   >
-  <button
-    type="button"
-    class="btn variant-filled"
-    on:click={() => ($currentFrame = ($currentFrame || 0) + 1)}>next</button
-  >
-  <button
-    type="button"
-    class="btn variant-filled"
-    on:click={() => {
-      if (playInterval) {
-        clearInterval(playInterval);
-        playInterval = undefined;
-      } else {
-        playInterval = setInterval(() => {
-          $currentFrame = ($currentFrame || 0) + 10;
-        }, 400);
-      }
-    }}>{playInterval ? "stop" : "play"}</button
-  >
-</div>
-<div class="flex w-full gap-4">
-  {#if poseData}
-    <FrameDisplay {showFrame} poses={poseData} bind:hoveredPoseIdx />
-    <FrameDetails poses={poseData} bind:hoveredPoseIdx />
-  {:else}
-    Loading pose data... <ProgressBar />
-  {/if}
+    <div
+      class="p-1 inline-flex border-token border-surface-400-500-token space-x-1 rounded-token"
+    >
+      <!-- class="radio-item flex-auto text-base text-center cursor-pointer px-4 py-1 rounded-token variant-filled" -->
+      <button
+        type="button"
+        class="btn btn-sm variant-filled"
+        on:click={() => ($currentFrame = ($currentFrame || 0) - 1)}
+        >previous</button
+      >
+      <button
+        type="button"
+        class="btn btn-sm variant-filled"
+        on:click={() => ($currentFrame = ($currentFrame || 0) + 1)}>next</button
+      >
+      <button
+        type="button"
+        class="btn btn-sm variant-filled"
+        on:click={() => {
+          if (playInterval) {
+            clearInterval(playInterval);
+            playInterval = undefined;
+          } else {
+            playInterval = setInterval(() => {
+              $currentFrame = ($currentFrame || 0) + 10;
+            }, 400);
+          }
+        }}>{playInterval ? "stop" : "play"}</button
+      >
+    </div>
+    <SlideToggle name="slider-label" bind:checked={showFrame} size="sm">
+      Show Frame
+    </SlideToggle>
+  </header>
+
+  <div class="flex gap-4 p-4 bg-surface-100-800-token">
+    {#if poseData}
+      <FrameDisplay {showFrame} poses={poseData} bind:hoveredPoseIdx />
+      <FrameDetails poses={poseData} bind:hoveredPoseIdx />
+    {:else}
+      Loading pose data... <ProgressBar />
+    {/if}
+  </div>
 </div>

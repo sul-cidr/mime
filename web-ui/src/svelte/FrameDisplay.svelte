@@ -14,7 +14,7 @@
 
 <div>
   <div
-    class="h-[480px] border border-solid border-black"
+    class="h-[480px] border border-solid border-black frame-display"
     style={`aspect-ratio: ${frameWidth}/${frameHeight}`}
   >
     <LayerCake>
@@ -88,5 +88,10 @@
     stroke: red;
     fill: red;
     filter: url(#solid);
+  }
+
+  .frame-display {
+    background: radial-gradient(circle at 50% -250%, #333, #111827, #333);
+    box-shadow: inset 0px 0px 30px 0px #666;
   }
 </style>

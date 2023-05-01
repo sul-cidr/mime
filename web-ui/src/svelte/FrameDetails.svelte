@@ -4,11 +4,11 @@
   export let hoveredPoseIdx: number | undefined;
 </script>
 
-<div class="card variant-ghost-secondary p-4">
+<div class="card variant-ghost-secondary p-4 w-full">
   <header class="card-header font-bold">
     <h3>Details for frame #{$currentFrame}</h3>
   </header>
-  <dl class="w-96 grid grid-cols-2 gap-2 p-4 [&>dt]:font-bold">
+  <dl class="grid grid-cols-2 gap-2 p-4 [&>dt]:font-bold">
     <dt>#Poses:</dt>
     <dd>{poses.length}</dd>
     <dt>Time:</dt>
