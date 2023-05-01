@@ -80,6 +80,7 @@ class PoseDataDatabase:
 
     @staticmethod
     async def setup_connection(conn: asyncpg.Connection):
+        await conn.execute("CREATE EXTENSION IF NOT EXISTS vector;")
         await register_vector(conn)
 
     @staticmethod
@@ -88,8 +89,6 @@ class PoseDataDatabase:
             logging.warn("Dropping database tables...")
             await conn.execute("DROP TABLE IF EXISTS video CASCADE;")
             await conn.execute("DROP TABLE IF EXISTS pose CASCADE;")
-
-        await conn.execute("CREATE EXTENSION IF NOT EXISTS vector;")
 
         await conn.execute(
             """
