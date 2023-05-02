@@ -3,7 +3,7 @@
   import { AppBar } from "@skeletonlabs/skeleton";
 
   import VideosTable from "@svelte/VideosTable.svelte";
-  import PosesByFrameChart from "@svelte/PosesByFrameChart.svelte";
+  import PoseDataExplorer from "@svelte/PoseDataExplorer.svelte";
   import FrameViewer from "@svelte/FrameViewer.svelte";
   import Icon from "@svelte/Icon.svelte";
   import { currentVideo, currentFrame } from "@svelte/stores";
@@ -40,7 +40,7 @@
     <VideosTable />
     {#if $currentVideo}
       <h2>{$currentVideo.video_name}</h2>
-      <PosesByFrameChart videoId={$currentVideo.id} />
+      <PoseDataExplorer videoId={$currentVideo.id} />
     {/if}
     {#if $currentFrame}
       <FrameViewer />
