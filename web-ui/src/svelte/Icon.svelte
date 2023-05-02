@@ -1,7 +1,7 @@
 <script>
   export let name;
-  export let width = "1rem";
-  export let height = "1rem";
+  export let width = "16px";
+  export let height = "16px";
   export let customAttribs = {};
 
   const defaultAttribs = {
