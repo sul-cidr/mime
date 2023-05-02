@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 
 import imageio.v3 as iio
@@ -6,6 +7,7 @@ import uvicorn
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi_utils.timing import add_timing_middleware
 
 from json_encoder import MimeJSONEncoder
 from pose_data_db import PoseDataDatabase
@@ -19,7 +21,11 @@ except AssertionError:
     raise SystemExit("Error: VIDEO_SRC_FOLDER is required") from None
 
 
+logging.basicConfig(level=(os.getenv("LOG_LEVEL") or "INFO").upper())
+logger = logging.getLogger(__name__)
+
 mime_api = FastAPI(root_path=os.environ.get("PUBLIC_API_BASE", "/"))
+add_timing_middleware(mime_api, record=logger.debug, prefix="api")
 
 
 mime_api.add_middleware(

@@ -12,10 +12,12 @@ services:
     environment:
       DB_HOST: db
       DB_PORT: 5432
+      PUBLIC_API_BASE: /api
+
       DB_NAME: ${DB_NAME:?}
       DB_USER: ${DB_USER:?}
       DB_PASSWORD: ${DB_PASSWORD:?}
-      PUBLIC_API_BASE: /api
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
       VIDEO_SRC_FOLDER: /videos
 
     depends_on:

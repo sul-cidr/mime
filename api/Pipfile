@@ -16,6 +16,7 @@ rich = "*"
 uvicorn = {extras = ["standard"], version = "*"}
 imageio = "*"
 av = "*"
+fastapi-utils = "*"
 
 [dev-packages]
 black = "*"
