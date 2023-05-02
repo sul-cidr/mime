@@ -1,5 +1,6 @@
 <script lang="ts">
   import { currentVideo, currentFrame } from "@svelte/stores";
+  import { formatSeconds } from "../lib/utils";
   export let poses: Array<PoseData>;
   export let hoveredPoseIdx: number | undefined;
 </script>
@@ -12,7 +13,7 @@
     <dt>#Poses:</dt>
     <dd>{poses.length}</dd>
     <dt>Time:</dt>
-    <dd>{($currentFrame || 0) / $currentVideo.fps} seconds</dd>
+    <dd>{formatSeconds(($currentFrame || 0) / $currentVideo.fps)}</dd>
   </dl>
 
   {#each poses as pose, i}
