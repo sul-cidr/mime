@@ -28,9 +28,11 @@
       {/if}
       {#if poses.length}
         {#each poses as poseData}
-          <Canvas zIndex={1}>
-            <Pose {poseData} />
-          </Canvas>
+          {#if !poseData.hidden}
+            <Canvas zIndex={1}>
+              <Pose {poseData} />
+            </Canvas>
+          {/if}
         {/each}
         <Svg zIndex={2}>
           <defs>
@@ -43,33 +45,35 @@
             </filter>
           </defs>
           {#each poses as poseData, i}
-            <!-- svelte-ignore a11y-click-events-have-key-events -->
-            <!-- svelte-ignore a11y-mouse-events-have-key-events -->
-            <rect
-              data-id={i}
-              x={poseData.bbox[0]}
-              y={poseData.bbox[1]}
-              height={poseData.bbox[3]}
-              width={poseData.bbox[2]}
-              stroke="white"
-              fill="none"
-              stroke-width="1"
-              class:selected={hoveredPoseIdx === i}
-              on:click={() => console.log(`bbox ${i}`)}
-              on:mouseover={() => (hoveredPoseIdx = i)}
-              on:mouseout={() => (hoveredPoseIdx = undefined)}
-              pointer-events="visible"
-              style="cursor: pointer"
-            />
-            <text
-              dominant-baseline="hanging"
-              x={poseData.bbox[0] + 2}
-              y={poseData.bbox[1] + 5}
-              stroke="white"
-              fill="white"
-            >
-              &nbsp; {i + 1}
-            </text>
+            {#if !poseData.hidden}
+              <!-- svelte-ignore a11y-click-events-have-key-events -->
+              <!-- svelte-ignore a11y-mouse-events-have-key-events -->
+              <rect
+                data-id={i}
+                x={poseData.bbox[0]}
+                y={poseData.bbox[1]}
+                height={poseData.bbox[3]}
+                width={poseData.bbox[2]}
+                stroke="white"
+                fill="none"
+                stroke-width="1"
+                class:selected={hoveredPoseIdx === i}
+                on:click={() => console.log(`bbox ${i}`)}
+                on:mouseover={() => (hoveredPoseIdx = i)}
+                on:mouseout={() => (hoveredPoseIdx = undefined)}
+                pointer-events="visible"
+                style="cursor: pointer"
+              />
+              <text
+                dominant-baseline="hanging"
+                x={poseData.bbox[0] + 2}
+                y={poseData.bbox[1] + 5}
+                stroke="white"
+                fill="white"
+              >
+                {i + 1}
+              </text>
+            {/if}
           {/each}
         </Svg>
       {:else}

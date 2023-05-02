@@ -1,6 +1,8 @@
 <script lang="ts">
   import { currentVideo, currentFrame } from "@svelte/stores";
   import { formatSeconds } from "../lib/utils";
+  import Icon from "@svelte/Icon.svelte";
+
   export let poses: Array<PoseData>;
   export let hoveredPoseIdx: number | undefined;
 </script>
@@ -16,15 +18,31 @@
     <dd>{formatSeconds(($currentFrame || 0) / $currentVideo.fps)}</dd>
   </dl>
 
-  {#each poses as pose, i}
-    <!-- svelte-ignore a11y-mouse-events-have-key-events -->
-    <p
-      class="px-4 py-1"
-      class:font-bold={hoveredPoseIdx === i}
-      on:mouseover={() => (hoveredPoseIdx = i)}
-      on:mouseout={() => (hoveredPoseIdx = undefined)}
-    >
-      Pose #{i + 1}. Confidence: {pose.score}
-    </p>
-  {/each}
+  <ul>
+    {#each poses as pose, i}
+      <!-- svelte-ignore a11y-mouse-events-have-key-events -->
+      <li
+        class="px-4 py-1 flex items-center gap-2 justify-between cursor-pointer"
+        class:variant-ghost={hoveredPoseIdx === i}
+        on:mouseover={() => (hoveredPoseIdx = i)}
+        on:mouseout={() => (hoveredPoseIdx = undefined)}
+      >
+        Pose #{i + 1}. Confidence: {pose.score}
+        <button
+          class="btn p-2"
+          class:variant-filled={!pose.hidden}
+          class:variant-ghost-primary={pose.hidden}
+          on:click={() => {
+            pose.hidden = !pose.hidden;
+          }}
+        >
+          {#if pose.hidden}
+            <Icon name="eye" />
+          {:else}
+            <Icon name="eye-off" />
+          {/if}
+        </button>
+      </li>
+    {/each}
+  </ul>
 </div>

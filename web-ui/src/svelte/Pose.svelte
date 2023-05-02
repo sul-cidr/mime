@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   // The body part numberings and armature connectors for the 17-keypoint COCO pose format are defined in
   // https://github.com/openpifpaf/openpifpaf/blob/main/src/openpifpaf/plugins/coco/constants.py
   // Note that the body part numbers in the connector (skeleton) definitions begin with 1, for some reason, not 0
@@ -46,8 +46,8 @@
     "goldenrod",
   ];
 
-  export let poseData;
-  let segments;
+  export let poseData: PoseData;
+  let segments: Array<Array<number>>;
 
   import { getContext } from "svelte";
   import { scaleCanvas } from "layercake";
@@ -55,9 +55,12 @@
   const { width, height } = getContext("LayerCake");
   const { ctx } = getContext("canvas");
 
-  $: segments = [...Array(Math.ceil(poseData.keypoints.length / 3))].map((_) =>
-    poseData.keypoints.splice(0, 3),
-  ); // nb. mutates `poseData`...
+  const segmentArray = (arr: Array<number>, l = 3) => {
+    const _arr = [...arr];
+    return [...Array(Math.ceil(arr.length / l))].map((_) => _arr.splice(0, l));
+  };
+
+  $: segments = segmentArray(poseData.keypoints, 3);
 
   $: {
     if ($ctx) {
@@ -74,8 +77,8 @@
       // Draw a line on the canvas for each skeleton segment.
       // If the confidence value for a given armature point is 0, skip related segments.
       COCO_PERSON_SKELETON.forEach(([from, to], i) => {
-        const [fromX, fromY, fromConfidence] = segments[from - 1];
-        const [toX, toY, toConfidence] = segments[to - 1];
+        const [fromX, fromY, fromConfidence] = segments[from! - 1];
+        const [toX, toY, toConfidence] = segments[to! - 1];
         if (fromConfidence == 0 || toConfidence == 0) {
           return;
         }

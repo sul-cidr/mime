@@ -11,4 +11,5 @@ type PoseData = {
   keypoints: Array<number>;
   bbox: Array<number>;
   score: number;
+  hidden: boolean | undefined;
 };

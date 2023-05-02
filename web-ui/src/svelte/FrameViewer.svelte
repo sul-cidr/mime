@@ -12,13 +12,17 @@
   let playInterval: number | undefined;
   let hoveredPoseIdx: number | undefined;
 
+  const updatePoseData = (data: Array<PoseData>) => {
+    poseData = data;
+  };
+
   async function getPoseData(videoId: number, frame: number) {
     const response = await fetch(`${API_BASE}/poses/${videoId}/${frame}/`);
     return await response.json();
   }
 
-  $: getPoseData($currentVideo.id, $currentFrame!).then(
-    (data) => (poseData = data),
+  $: getPoseData($currentVideo.id, $currentFrame!).then((data) =>
+    updatePoseData(data),
   );
 </script>
 
@@ -63,8 +67,8 @@
 
   <div class="flex gap-4 p-4 bg-surface-100-800-token">
     {#if poseData}
-      <FrameDisplay {showFrame} poses={poseData} bind:hoveredPoseIdx />
-      <FrameDetails poses={poseData} bind:hoveredPoseIdx />
+      <FrameDisplay {showFrame} bind:poses={poseData} bind:hoveredPoseIdx />
+      <FrameDetails bind:poses={poseData} bind:hoveredPoseIdx />
     {:else}
       Loading pose data... <ProgressBar />
     {/if}
