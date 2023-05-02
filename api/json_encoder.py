@@ -1,4 +1,5 @@
 import json
+from decimal import Decimal
 
 import asyncpg
 import numpy as np
@@ -10,6 +11,7 @@ class MimeJSONEncoder(json.JSONEncoder):
             np.integer: int,
             np.floating: float,
             np.ndarray: lambda arr: arr.tolist(),
+            Decimal: float,
             asyncpg.Record: lambda obj: dict(obj.items()),
         }
         conversion_func = type_map.get(type(obj), super().default)

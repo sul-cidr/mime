@@ -8,6 +8,8 @@
   import MultiLine from "@layercake/MultiLine.svelte";
   import SharedTooltip from "@layercake/SharedTooltip.html.svelte";
 
+  import { currentVideo } from "@svelte/stores";
+
   export let data;
 
   const seriesColors = ["#0fba81", "#4f46e5", "green", "orange"];
@@ -25,7 +27,7 @@
       valueTo: "value",
     });
     xTicks = Array.from(
-      { length: Math.ceil(data.at(-1).frame / 10000) },
+      { length: Math.ceil($currentVideo.frame_count / 10000) },
       (_, i) => i * 10000,
     );
   }

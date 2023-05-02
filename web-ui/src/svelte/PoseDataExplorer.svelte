@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { onMount } from "svelte";
   import { ProgressBar } from "@skeletonlabs/skeleton";
   import { API_BASE } from "@config";
 
@@ -12,10 +11,6 @@
     const response = await fetch(`${API_BASE}/poses/${videoId}/`);
     return await response.json();
   }
-
-  onMount(async () => {
-    data = await getPoseData(videoId);
-  });
 
   $: {
     data = undefined;

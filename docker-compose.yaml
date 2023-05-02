@@ -38,6 +38,7 @@ services:
   db:
     container_name: mime-db
     image: ankane/pgvector
+    shm_size: 1g
 
     volumes:
       - mime-db-data:/var/lib/postgresql/data

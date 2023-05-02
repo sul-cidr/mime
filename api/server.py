@@ -66,8 +66,11 @@ async def get_frame(video_id: int, frame: int, request: Request):
 
 @mime_api.get("/poses/{video_id}/")
 async def poses(video_id: int, request: Request):
-    pose_data_by_frame = await request.app.state.db.get_pose_data_by_frame(video_id)
-    return pose_data_by_frame
+    frame_data = await request.app.state.db.get_pose_data_by_frame(video_id)
+    return Response(
+        content=json.dumps(frame_data, cls=MimeJSONEncoder),
+        media_type="application/json",
+    )
 
 
 @mime_api.get("/poses/{video_id}/{frame}/")

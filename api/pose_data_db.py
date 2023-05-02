@@ -1,12 +1,9 @@
 """PoseDataDatabase class to abstract out the database interaction."""
 
-import itertools
 import json
 import logging
 import os
-from operator import itemgetter
 from pathlib import Path
-from statistics import mean
 from typing import Callable
 
 import asyncpg
@@ -247,26 +244,18 @@ class PoseDataDatabase:
         return await self._pool.fetchrow("SELECT * FROM video WHERE id = $1;", video_id)
 
     async def get_pose_data_by_frame(self, video_id: int) -> list:
-        pose_data = await self._pool.fetch(
-            "SELECT * FROM pose WHERE video_id = $1;", video_id
+        return await self._pool.fetch(
+            """
+            SELECT frame,
+                   count(pose_idx) AS "poseCt",
+                   ROUND(AVG(score)::numeric, 2) AS "avgScore"
+            FROM pose
+            WHERE video_id = $1
+            GROUP BY frame
+            ORDER BY frame;
+            """,
+            video_id,
         )
-        pose_data.sort(key=itemgetter("frame"))
-
-        by_frame = {
-            frame: list(poses)
-            for frame, poses in itertools.groupby(pose_data, itemgetter("frame"))
-        }
-
-        return [
-            {
-                "frame": frame,
-                "poseCt": len(by_frame.get(frame, [])),
-                "avgScore": 0
-                if frame not in by_frame
-                else mean(_["score"] for _ in by_frame[frame]),
-            }
-            for frame in range(len(by_frame))
-        ]
 
     async def get_pose_annotations(self, column: str, video_id: int) -> list[np.ndarray]:
         annotations = await self._pool.fetch(
