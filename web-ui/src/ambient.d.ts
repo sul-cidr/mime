@@ -8,8 +8,12 @@ type VideoRecord = {
 };
 
 type PoseData = {
+  video_id: number;
+  frame: number;
+  pose_idx: number;
   keypoints: Array<number>;
   bbox: Array<number>;
   score: number;
+  norm: Array<number>;
   hidden: boolean | undefined;
 };
