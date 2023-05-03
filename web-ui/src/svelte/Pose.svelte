@@ -46,8 +46,11 @@
     "goldenrod",
   ];
 
-  export let poseData: Array<number>;
-  let segments: Array<Array<number>>;
+  export let poseData: CocoSkeletonWithConfidence | CocoSkeletonNoConfidence;
+  let segments: FixedLengthArray<
+    FixedLengthArray<number, 2> | FixedLengthArray<number, 3>,
+    17
+  >;
 
   import { getContext } from "svelte";
   import { scaleCanvas } from "layercake";

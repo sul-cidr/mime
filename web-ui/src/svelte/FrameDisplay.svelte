@@ -8,7 +8,7 @@
   const { id: videoId, width: frameWidth, height: frameHeight } = $currentVideo;
 
   export let showFrame: boolean;
-  export let poses: Array<PoseData>;
+  export let poses: Array<PoseRecord>;
   export let hoveredPoseIdx: number | undefined;
 </script>
 

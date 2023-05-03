@@ -3,7 +3,7 @@
   import { formatSeconds } from "../lib/utils";
   import Icon from "@svelte/Icon.svelte";
 
-  export let poses: Array<PoseData>;
+  export let poses: Array<PoseRecord>;
   export let hoveredPoseIdx: number | undefined;
 </script>
 

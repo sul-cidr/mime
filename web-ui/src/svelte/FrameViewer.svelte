@@ -7,12 +7,12 @@
   import { API_BASE } from "@config";
   import { currentVideo, currentFrame } from "@svelte/stores";
 
-  let poseData: Array<PoseData>;
+  let poseData: Array<PoseRecord>;
   let showFrame: boolean = true;
   let playInterval: number | undefined;
   let hoveredPoseIdx: number | undefined;
 
-  const updatePoseData = (data: Array<PoseData>) => {
+  const updatePoseData = (data: Array<PoseRecord>) => {
     poseData = data;
   };
 

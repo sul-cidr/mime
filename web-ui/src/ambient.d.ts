@@ -1,3 +1,12 @@
+type FixedLengthArray<
+  T,
+  N extends number,
+  R extends readonly T[] = [],
+> = R["length"] extends N ? R : Tuple<T, N, readonly [T, ...R]>;
+
+type CocoSkeletonWithConfidence = FixedLengthArray<number, 51>;
+type CocoSkeletonNoConfidence = FixedLengthArray<number, 34>;
+
 type VideoRecord = {
   id: number;
   video_name: string;
@@ -7,13 +16,13 @@ type VideoRecord = {
   fps: number;
 };
 
-type PoseData = {
+type PoseRecord = {
   video_id: number;
   frame: number;
   pose_idx: number;
-  keypoints: Array<number>;
-  bbox: Array<number>;
+  keypoints: CocoSkeletonWithConfidence;
+  bbox: FixedLengthArray<number, 4>;
   score: number;
-  norm: Array<number>;
+  norm: CocoSkeletonNoConfidence;
   hidden: boolean | undefined;
 };
