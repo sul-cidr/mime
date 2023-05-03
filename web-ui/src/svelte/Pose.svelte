@@ -63,7 +63,7 @@
     return [...Array(Math.ceil(arr.length / l))].map((_) => _arr.splice(0, l));
   };
 
-  $: segments = segmentArray(poseData, 3);
+  $: segments = segmentArray(poseData, poseData.length / 17);
 
   $: {
     if ($ctx) {
@@ -80,10 +80,16 @@
       // Draw a line on the canvas for each skeleton segment.
       // If the confidence value for a given armature point is 0, skip related segments.
       COCO_PERSON_SKELETON.forEach(([from, to], i) => {
-        const [fromX, fromY, fromConfidence] = segments[from! - 1];
-        const [toX, toY, toConfidence] = segments[to! - 1];
-        if (fromConfidence == 0 || toConfidence == 0) {
-          return;
+        let fromX, fromY, toX, toY;
+        if (poseData.length === 51) {
+          let fromConfidence, toConfidence;
+          [fromX, fromY, fromConfidence] = segments[from! - 1]!;
+          [toX, toY, toConfidence] = segments[to! - 1]!;
+          if (fromConfidence == 0 || toConfidence == 0) return;
+        } else {
+          [fromX, fromY] = segments[from! - 1]!;
+          [toX, toY] = segments[to! - 1]!;
+          if ([fromX, fromY, toX, toY].some((x) => x === -1)) return;
         }
 
         $ctx.lineWidth = 3;
