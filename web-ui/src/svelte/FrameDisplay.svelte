@@ -30,7 +30,7 @@
         {#each poses as poseData}
           {#if !poseData.hidden}
             <Canvas zIndex={1}>
-              <Pose {poseData} />
+              <Pose poseData={poseData.keypoints} />
             </Canvas>
           {/if}
         {/each}

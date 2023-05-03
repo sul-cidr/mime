@@ -46,7 +46,7 @@
     "goldenrod",
   ];
 
-  export let poseData: PoseData;
+  export let poseData: Array<number>;
   let segments: Array<Array<number>>;
 
   import { getContext } from "svelte";
@@ -60,7 +60,7 @@
     return [...Array(Math.ceil(arr.length / l))].map((_) => _arr.splice(0, l));
   };
 
-  $: segments = segmentArray(poseData.keypoints, 3);
+  $: segments = segmentArray(poseData, 3);
 
   $: {
     if ($ctx) {
@@ -90,12 +90,6 @@
         $ctx.moveTo(fromX, fromY);
         $ctx.lineTo(toX, toY);
         $ctx.stroke();
-
-        // $ctx.lineWidth = 1;
-        // $ctx.strokeStyle = "white";
-        // $ctx.beginPath();
-        // $ctx.rect(...poseData.bbox);
-        // $ctx.stroke();
       });
     }
   }
