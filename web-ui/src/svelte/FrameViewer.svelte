@@ -47,14 +47,16 @@
       >
       <button
         type="button"
-        class="btn btn-sm variant-filled"
+        class="btn btn-sm"
+        class:variant-filled={!playInterval}
+        class:variant-ghost-primary={playInterval}
         on:click={() => {
           if (playInterval) {
             clearInterval(playInterval);
             playInterval = undefined;
           } else {
             playInterval = setInterval(() => {
-              $currentFrame = ($currentFrame || 0) + 10;
+              $currentFrame = ($currentFrame || 0) + 5;
             }, 400);
           }
         }}>{playInterval ? "stop" : "play"}</button
