@@ -47,6 +47,7 @@
   ];
 
   export let poseData: CocoSkeletonWithConfidence | CocoSkeletonNoConfidence;
+  export let scalePoseToCanvas = false;
   let segments: FixedLengthArray<
     FixedLengthArray<number, 2> | FixedLengthArray<number, 3>,
     17
@@ -77,6 +78,8 @@
       scaleCanvas($ctx, $width, $height);
       $ctx.clearRect(0, 0, $width, $height);
 
+      const f = scalePoseToCanvas ? $width / 100 : 1;
+
       // Draw a line on the canvas for each skeleton segment.
       // If the confidence value for a given armature point is 0, skip related segments.
       COCO_PERSON_SKELETON.forEach(([from, to], i) => {
@@ -96,8 +99,8 @@
         $ctx.strokeStyle = COCO_COLORS[i];
 
         $ctx.beginPath();
-        $ctx.moveTo(fromX, fromY);
-        $ctx.lineTo(toX, toY);
+        $ctx.moveTo(fromX * f, fromY * f);
+        $ctx.lineTo(toX * f, toY * f);
         $ctx.stroke();
       });
     }
