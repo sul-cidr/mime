@@ -86,6 +86,8 @@
 <style>
   :global(rect.selected) {
     stroke: red;
+    fill: white;
+    fill-opacity: 0.25;
   }
 
   :global(rect.selected + text) {
