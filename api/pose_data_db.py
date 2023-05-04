@@ -267,3 +267,23 @@ class PoseDataDatabase:
         return await self._pool.fetch(
             "SELECT * FROM pose WHERE video_id = $1 AND frame = $2;", video_id, frame
         )
+
+    async def get_nearest_neighbors(
+        self, video_id: int, frame: int, pose_idx: int, limit=5
+    ) -> list:
+        return await self._pool.fetch(
+            """
+            SELECT * FROM pose
+            WHERE video_id = $1 AND NOT (frame = $2 AND pose_idx = $3)
+            ORDER BY norm <-> (
+                SELECT norm
+                FROM pose
+                WHERE video_id = $1 AND frame = $2 AND pose_idx = $3
+            )
+            LIMIT $4;
+            """,
+            video_id,
+            frame,
+            pose_idx,
+            limit,
+        )

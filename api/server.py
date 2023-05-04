@@ -82,5 +82,18 @@ async def poses_by_frame(video_id: int, frame: int, request: Request):
     )
 
 
+@mime_api.get("/poses/similar/{video_id}/{frame}/{pose_idx}/")
+async def get_nearest_neighbors(
+    video_id: int, frame: int, pose_idx: int, request: Request
+):
+    frame_data = await request.app.state.db.get_nearest_neighbors(
+        video_id, frame, pose_idx
+    )
+    return Response(
+        content=json.dumps(frame_data, cls=MimeJSONEncoder),
+        media_type="application/json",
+    )
+
+
 if __name__ == "__main__":
     uvicorn.run("server:mime_api", host="0.0.0.0", port=5000, reload=True)
