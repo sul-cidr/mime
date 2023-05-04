@@ -62,6 +62,17 @@
         }}>{playInterval ? "stop" : "play"}</button
       >
     </div>
+    <div>
+      <label class="label flex items-center gap-4">
+        <span>Frame</span>
+        <input
+          class="input pl-2 text-right w-28 m-0"
+          type="number"
+          placeholder="Frame #"
+          bind:value={$currentFrame}
+        />
+      </label>
+    </div>
     <SlideToggle name="slider-label" bind:checked={showFrame} size="sm">
       Show Frame
     </SlideToggle>
