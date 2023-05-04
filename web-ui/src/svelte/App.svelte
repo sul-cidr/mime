@@ -5,8 +5,9 @@
   import VideosTable from "@svelte/VideosTable.svelte";
   import PoseDataExplorer from "@svelte/PoseDataExplorer.svelte";
   import FrameViewer from "@svelte/FrameViewer.svelte";
+  import SimilarPoses from "@svelte/SimilarPoses.svelte";
   import Icon from "@svelte/Icon.svelte";
-  import { currentVideo, currentFrame } from "@svelte/stores";
+  import { currentVideo, currentFrame, currentPose } from "@svelte/stores";
 
   import { baseTitle } from "@/site-metadata.json";
   const base = import.meta.env.BASE_URL;
@@ -44,6 +45,9 @@
     {/if}
     {#if $currentFrame}
       <FrameViewer />
+    {/if}
+    {#if $currentPose}
+      <SimilarPoses />
     {/if}
   </section>
 </AppShell>

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { currentVideo, currentFrame } from "@svelte/stores";
+  import { currentVideo, currentFrame, currentPose } from "@svelte/stores";
   import { formatSeconds } from "../lib/utils";
   import Icon from "@svelte/Icon.svelte";
 
@@ -28,20 +28,31 @@
         on:mouseout={() => (hoveredPoseIdx = undefined)}
       >
         Pose #{i + 1}. Confidence: {pose.score}
-        <button
-          class="btn p-2"
-          class:variant-filled={!pose.hidden}
-          class:variant-ghost-primary={pose.hidden}
-          on:click={() => {
-            pose.hidden = !pose.hidden;
-          }}
-        >
-          {#if pose.hidden}
-            <Icon name="eye" />
-          {:else}
-            <Icon name="eye-off" />
-          {/if}
-        </button>
+        <div class="flex align-stretch gap-2">
+          <button
+            class="button px-2 variant-filled"
+            on:click={() => {
+              // console.log(pose);
+              $currentPose = pose;
+            }}
+          >
+            similar
+          </button>
+          <button
+            class="btn p-2"
+            class:variant-filled={!pose.hidden}
+            class:variant-ghost-primary={pose.hidden}
+            on:click={() => {
+              pose.hidden = !pose.hidden;
+            }}
+          >
+            {#if pose.hidden}
+              <Icon name="eye" />
+            {:else}
+              <Icon name="eye-off" />
+            {/if}
+          </button>
+        </div>
       </li>
     {/each}
   </ul>
