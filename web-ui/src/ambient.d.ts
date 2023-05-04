@@ -21,7 +21,7 @@ type PoseRecord = {
   frame: number;
   pose_idx: number;
   keypoints: CocoSkeletonWithConfidence;
-  bbox: FixedLengthArray<number, 4>;
+  bbox: FixedLengthArray<number, 4>; // bbox format for PifPaf is x0, y0, width, height
   score: number;
   norm: CocoSkeletonNoConfidence;
   hidden: boolean | undefined;
