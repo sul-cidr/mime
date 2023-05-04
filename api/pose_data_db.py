@@ -203,7 +203,9 @@ class PoseDataDatabase:
                 f"ALTER TABLE pose ADD COLUMN IF NOT EXISTS {column} {col_type};"
             )
 
-            poses = await conn.fetch("SELECT * FROM pose WHERE video_id = $1;", video_id)
+            poses = await conn.fetch(
+                "SELECT * FROM pose WHERE video_id = $1;", video_id
+            )
             async with conn.transaction():
                 for i, pose in enumerate(poses):
                     if i % (len(poses) // 10) == 0:
@@ -257,7 +259,9 @@ class PoseDataDatabase:
             video_id,
         )
 
-    async def get_pose_annotations(self, column: str, video_id: int) -> list[np.ndarray]:
+    async def get_pose_annotations(
+        self, column: str, video_id: int
+    ) -> list[np.ndarray]:
         annotations = await self._pool.fetch(
             f"SELECT {column} FROM pose WHERE video_id = $1;", video_id
         )
@@ -269,17 +273,25 @@ class PoseDataDatabase:
         )
 
     async def get_nearest_neighbors(
-        self, video_id: int, frame: int, pose_idx: int, limit=5
+        self, video_id: int, frame: int, pose_idx: int, metric="cosine", limit=5
     ) -> list:
-        return await self._pool.fetch(
+        sub_query = """
+            SELECT norm
+            FROM pose
+            WHERE video_id = $1 AND frame = $2 AND pose_idx = $3
             """
-            SELECT * FROM pose
+
+        distance = {
+            "cosine": f"1 - (norm <=> ({sub_query}))",
+            "euclidean": f"norm <-> ({sub_query})",
+            "innerproduct": f"(norm <#> ({sub_query})) * -1",
+        }[metric]
+
+        return await self._pool.fetch(
+            f"""
+            SELECT *, {distance} AS distance FROM pose
             WHERE video_id = $1 AND NOT (frame = $2 AND pose_idx = $3)
-            ORDER BY norm <-> (
-                SELECT norm
-                FROM pose
-                WHERE video_id = $1 AND frame = $2 AND pose_idx = $3
-            )
+            ORDER BY distance
             LIMIT $4;
             """,
             video_id,

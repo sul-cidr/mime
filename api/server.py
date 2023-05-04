@@ -82,12 +82,12 @@ async def poses_by_frame(video_id: int, frame: int, request: Request):
     )
 
 
-@mime_api.get("/poses/similar/{video_id}/{frame}/{pose_idx}/")
+@mime_api.get("/poses/similar/{metric}/{video_id}/{frame}/{pose_idx}/")
 async def get_nearest_neighbors(
-    video_id: int, frame: int, pose_idx: int, request: Request
+    metric: str, video_id: int, frame: int, pose_idx: int, request: Request
 ):
     frame_data = await request.app.state.db.get_nearest_neighbors(
-        video_id, frame, pose_idx
+        video_id, frame, pose_idx, metric
     )
     return Response(
         content=json.dumps(frame_data, cls=MimeJSONEncoder),
