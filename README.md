@@ -35,3 +35,16 @@ Update the codebase with `git pull`.  If dependencies are modified, `docker comp
 ## Accessing remotely
 
 Because all parts of the application are served behind a reverse proxy, everything should be available over a single TCP port.  Something like `ssh -fNTL 3000:localhost:8080 user@mime-server` should be sufficient to expose the UI running on the remote host at http://localhost:3000/ on the local machine.
+
+
+## Development
+
+The docker configuration is configured with hot-reload, so changes to the source folders on the docker host are immediately reflected in the running containers, so no local dependencies are absolutely required.
+
+Despite this, it is recommended to have `pnpm` and `pipenv` installed on the docker host for the web-ui and the api respectively, and to install dependencies locally, i.e.:
+
+```sh
+cd web-ui && pnpm install && cd -
+cd api && PIPENV_VENV_IN_PROJECT=1 python -m pipenv install --dev && cd -
+```
+In addition to making it possible to run parts of the stack independently of the docker configuration, this will make sure dev environments are available to, e.g., VS Cod{ium,e} for linting and static analysis, etc.
