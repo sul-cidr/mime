@@ -39,7 +39,7 @@ Because all parts of the application are served behind a reverse proxy, everythi
 
 ## Development
 
-The docker configuration is configured with hot-reload, so changes to the source folders on the docker host are immediately reflected in the running containers, so no local dependencies are absolutely required.
+The docker configuration is configured with hot-reload, so changes to the source folders on the docker host are immediately reflected in the running containers and no local dependencies are required for development.
 
 Despite this, it is recommended to have `pnpm` and `pipenv` installed on the docker host for the web-ui and the api respectively, and to install dependencies locally, i.e.:
 
