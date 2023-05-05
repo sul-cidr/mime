@@ -54,6 +54,36 @@
   </RadioGroup>
   {#if poses}
     <div class="flex gap-4">
+      <div class="card variant-ghost-tertiary drop-shadow-lg">
+        <header class="p-2">
+          Frame {$currentPose.frame}, Pose: {$currentPose.pose_idx + 1}
+        </header>
+        <div class="w-full aspect-[5/6] frame-display py-[20px] px-[10px]">
+          <LayerCake>
+            <!-- {#if showFrame}
+        <Html zIndex={0}>
+          <img
+            src={`${API_BASE}/frame/${videoId}/${$currentFrame}/`}
+            alt={`Frame ${$currentFrame}`}
+          />
+        </Html>
+      {/if} -->
+            <Canvas zIndex={1}>
+              <Pose poseData={$currentPose.norm} scalePoseToCanvas={true} />
+            </Canvas>
+          </LayerCake>
+        </div>
+        <footer class="p-2">
+          <ul>
+            <li>
+              Time: {formatSeconds($currentPose.frame / $currentVideo.fps)}
+            </li>
+          </ul>
+        </footer>
+      </div>
+
+      <span class="divider-vertical !border-l-8 !border-double" />
+
       {#each poses as pose}
         <div class="card drop-shadow-lg">
           <header class="p-2">
