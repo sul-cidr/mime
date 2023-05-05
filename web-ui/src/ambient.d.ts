@@ -25,4 +25,5 @@ type PoseRecord = {
   score: number;
   norm: CocoSkeletonNoConfidence;
   hidden: boolean | undefined;
+  distance?: number;
 };
