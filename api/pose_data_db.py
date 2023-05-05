@@ -282,9 +282,9 @@ class PoseDataDatabase:
             """
 
         distance = {
-            "cosine": f"1 - (norm <=> ({sub_query}))",
+            "cosine": f"norm <=> ({sub_query})",
             "euclidean": f"norm <-> ({sub_query})",
-            "innerproduct": f"(norm <#> ({sub_query})) * -1",
+            "innerproduct": f"norm <#> ({sub_query})",
         }[metric]
 
         return await self._pool.fetch(
