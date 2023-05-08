@@ -14,6 +14,8 @@ type VideoRecord = {
   height: number;
   frame_count: number;
   fps: number;
+  pose_ct: number;
+  poses_per_frame: number;
 };
 
 type PoseRecord = {

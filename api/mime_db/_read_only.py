@@ -3,7 +3,16 @@ import numpy as np
 
 
 async def get_available_videos(self) -> list:
-    videos = await self._pool.fetch("SELECT * FROM video;")
+    videos = await self._pool.fetch(
+        """
+        SELECT video.*,
+          COUNT(pose) AS pose_ct,
+          TRUNC(COUNT(pose)::decimal / video.frame_count, 2) as poses_per_frame
+        FROM video INNER JOIN pose ON video.id = pose.video_id
+        GROUP BY video.id
+        ORDER BY video.video_name;
+        """
+    )
     return videos
 
 
