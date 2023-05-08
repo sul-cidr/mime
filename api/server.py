@@ -10,7 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi_utils.timing import add_timing_middleware
 
 from json_encoder import MimeJSONEncoder
-from pose_data_db import PoseDataDatabase
+from mime_db import MimeDb
 
 load_dotenv()
 VIDEO_SRC_FOLDER = os.getenv("VIDEO_SRC_FOLDER")
@@ -39,7 +39,7 @@ mime_api.add_middleware(
 
 @mime_api.on_event("startup")
 async def startup():
-    mime_api.state.db = await PoseDataDatabase.create(drop=False)
+    mime_api.state.db = await MimeDb.create(drop=False)
 
 
 @mime_api.get("/")
