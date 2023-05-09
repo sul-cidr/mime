@@ -25,6 +25,7 @@
     "imwrite",
     "ivfflat",
     "layercake",
+    "pgproto",
     "pyav",
     "skeletonlabs",
     "tailwindcss"

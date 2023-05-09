@@ -87,5 +87,6 @@ class MimeDb:
 
     @staticmethod
     async def setup_connection(conn: asyncpg.Connection):
+        await conn.execute('CREATE EXTENSION IF NOT EXISTS "uuid-ossp";')
         await conn.execute("CREATE EXTENSION IF NOT EXISTS vector;")
         await register_vector(conn)

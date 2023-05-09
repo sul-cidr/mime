@@ -2,11 +2,12 @@ import json
 import logging
 from pathlib import Path
 from typing import Callable
+from uuid import UUID
 
 import numpy as np
 
 
-async def add_video(self, video_name: str, video_metadata: dict) -> int:
+async def add_video(self, video_name: str, video_metadata: dict) -> UUID:
     video_id = await self._pool.fetchval(
         """
         INSERT
@@ -22,18 +23,18 @@ async def add_video(self, video_name: str, video_metadata: dict) -> int:
     )
     logging.debug(f"'{video_name}' has ID {video_id}")
 
-    if not isinstance(video_id, int):
+    if not isinstance(video_id, UUID):
         raise ValueError(f"Unable to add video '{video_name}'")
 
     return video_id
 
 
-async def clear_poses(self, video_id: int) -> None:
+async def clear_poses(self, video_id: UUID) -> None:
     await self._pool.execute("DELETE FROM pose WHERE video_id = $1;", video_id)
 
 
 async def load_openpifpaf_predictions(
-    self, video_id: int, json_path: Path, clear=True
+    self, video_id: UUID, json_path: Path, clear=True
 ) -> None:
     frames = []
     with json_path.open("r", encoding="utf8") as _fh:
@@ -85,7 +86,7 @@ async def annotate_pose(
     self,
     column: str,
     col_type: str,
-    video_id: int | None,
+    video_id: UUID | None,
     annotation_func: Callable,
     reindex=True,
 ) -> None:

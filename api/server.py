@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+from uuid import UUID
 
 import imageio.v3 as iio
 import uvicorn
@@ -54,7 +55,7 @@ async def videos(request: Request):
 
 
 @mime_api.get("/frame/{video_id}/{frame}/")
-async def get_frame(video_id: int, frame: int, request: Request):
+async def get_frame(video_id: UUID, frame: int, request: Request):
     video = await request.app.state.db.get_video_by_id(video_id)
     video_path = f"/videos/{video['video_name']}"
     img = iio.imread(video_path, index=frame, plugin="pyav")
@@ -65,7 +66,7 @@ async def get_frame(video_id: int, frame: int, request: Request):
 
 
 @mime_api.get("/poses/{video_id}/")
-async def poses(video_id: int, request: Request):
+async def poses(video_id: UUID, request: Request):
     frame_data = await request.app.state.db.get_pose_data_by_frame(video_id)
     return Response(
         content=json.dumps(frame_data, cls=MimeJSONEncoder),
@@ -74,7 +75,7 @@ async def poses(video_id: int, request: Request):
 
 
 @mime_api.get("/poses/{video_id}/{frame}/")
-async def poses_by_frame(video_id: int, frame: int, request: Request):
+async def poses_by_frame(video_id: UUID, frame: int, request: Request):
     frame_data = await request.app.state.db.get_frame_data(video_id, frame)
     return Response(
         content=json.dumps(frame_data, cls=MimeJSONEncoder),
@@ -84,7 +85,7 @@ async def poses_by_frame(video_id: int, frame: int, request: Request):
 
 @mime_api.get("/poses/similar/{metric}/{video_id}/{frame}/{pose_idx}/")
 async def get_nearest_neighbors(
-    metric: str, video_id: int, frame: int, pose_idx: int, request: Request
+    metric: str, video_id: UUID, frame: int, pose_idx: int, request: Request
 ):
     frame_data = await request.app.state.db.get_nearest_neighbors(
         video_id, frame, pose_idx, metric
