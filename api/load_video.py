@@ -11,11 +11,14 @@ import cv2
 import numpy as np
 from rich.logging import RichHandler
 
-import pose_data_db
-import pose_normalization
+import lib.pose_normalization as pose_normalization
+from mime_db import MimeDb
 
 
 def get_video_metadata(video_file):
+    # TODO: rewrite this without OpenCV?
+    #  (currently this is the only time OpenCV is needed in this container --
+    #   and it's a hefty dependency for just this..!)
     cap = cv2.VideoCapture(str(video_file))
     return {
         "frame_count": int(cap.get(cv2.CAP_PROP_FRAME_COUNT)),
@@ -76,7 +79,7 @@ async def main() -> None:
     assert json_path.exists(), f"'{json_path}' does not exist"
 
     # Create database
-    db = await pose_data_db.PoseDataDatabase.create(drop=args.drop)
+    db = await MimeDb.create(drop=args.drop)
 
     # Get video metadata and add to database
     video_metadata = get_video_metadata(video_path)
@@ -96,7 +99,4 @@ async def main() -> None:
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
-    asyncio.run(main())
-    asyncio.run(main())
     asyncio.run(main())
