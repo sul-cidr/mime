@@ -9,7 +9,7 @@ from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_utils.timing import add_timing_middleware
 
-from json_encoder import MimeJSONEncoder
+from lib.json_encoder import MimeJSONEncoder
 from mime_db import MimeDb
 
 load_dotenv()
