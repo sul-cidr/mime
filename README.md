@@ -24,12 +24,19 @@ EOL
 docker compose up
 ```
 
+(`VIDEO_SRC_FOLDER` is the only value that must be supplied -- it is suggested that other values be left as above.)
+
 All being well, the UI should be now available at `http://localhost:8080/`.
+
+
+## just
+
+A [`justfile`](./justfile) is provided to simplify some commands -- if you have [`just`](https://github.com/casey/just) installed, execute `just` from the repository working folder to see a list of available commands.
 
 
 ## Updating
 
-Update the codebase with `git pull`.  If dependencies are modified, `docker compose up --build` should be used to ensure the images are rebuilt with the new dependencies are available inside the images.
+Update the codebase with `git pull`.  If dependencies are modified, `docker compose build` (or `just build`) should be used to ensure the images are rebuilt with the new dependencies are available inside the images.
 
 
 ## Accessing remotely
