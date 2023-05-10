@@ -1,8 +1,8 @@
+import urllib
 from datetime import datetime
 from functools import partial
+
 import numpy as np
-
-
 from bokeh.layouts import column, row
 from bokeh.models import (
     Button,
@@ -17,7 +17,6 @@ from bokeh.models import (
     Toggle,
 )
 from bokeh.plotting import figure
-
 from pose_functions import *
 
 
@@ -722,3 +721,19 @@ def build_bokeh_app(
         doc.add_root(layout_column)
 
     return bkapp
+
+
+def remote_jupyter_proxy_url(port):
+    """
+    Callable to configure Bokeh's show method when a proxy must be
+    configured.
+
+    If port is None we're asking about the URL
+    for the origin header.
+    """
+    # If port is None we're asking for the URL origin
+    # so return the public hostname.
+    if port is None:
+        return "localhost"
+
+    return f"http://localhost:8080/jupyter/{port}"

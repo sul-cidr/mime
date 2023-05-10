@@ -8,6 +8,8 @@ EXPOSE 5000
 ENV PYTHONPYCACHEPREFIX=/tmp
 # Makes local modules easy to use from Jupyter
 ENV PYTHONPATH=$PYTHONPATH:/app
+# Allow websocket connections from the main app host
+ENV BOKEH_ALLOW_WS_ORIGIN=localhost:8080
 
 # Install dependencies from apt repos
 # * build-essential takes care of what is needed to build the lap binaries
