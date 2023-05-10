@@ -1,11 +1,65 @@
 # Some of the stuff we need doesn't work well on Alpine
 FROM python:3.10-slim
 
-# Container is used with live-reload so we don't want .pyc stored on bind-mounted host filesystem
-ENV PYTHONPYCACHEPREFIX=/tmp
-
 WORKDIR /app
 EXPOSE 5000
+
+# Container is used with live-reload so we don't want .pyc stored on bind-mounted host filesystem
+ENV PYTHONPYCACHEPREFIX=/tmp
+# Makes local modules easy to use from Jupyter
+ENV PYTHONPATH=$PYTHONPATH:/app
+
+# Install and configure supervisor
+RUN apt-get update -qq \
+  && apt-get install -y supervisor \
+  && rm -rf /var/lib/apt/lists/*
+
+RUN <<EOF cat >> /stop-supervisor.sh
+#!/usr/bin/env bash
+set -Eeo pipefail
+while read -r; do
+  echo -e "\e[31m Service was stopped or one of it's services crashed,
+            see the logs above for more details. \e[0m" >&2
+  kill -SIGTERM "$(cat supervisord.pid)"
+done < /dev/stdin
+EOF
+RUN chmod 755 /stop-supervisor.sh
+
+RUN <<EOF cat >> /etc/supervisor/conf.d/supervisord.conf
+[supervisord]
+nodaemon=true
+
+[program:api-server]
+directory=/app/
+command=python /app/server.py
+stdout_logfile=/dev/stdout
+stdout_logfile_maxbytes=0
+stderr_logfile=/dev/stdout
+stderr_logfile_maxbytes=0
+
+[program:notebook-server]
+directory=/app/
+command=jupyter notebook --allow-root --no-browser --NotebookApp.base_url=/jupyter --NotebookApp.allow_origin='*' --port=8888 --ip=0.0.0.0
+stdout_logfile=/dev/stdout
+stdout_logfile_maxbytes=0
+stderr_logfile=/dev/stdout
+stderr_logfile_maxbytes=0
+
+[eventlistener:processes]
+directory=/app/
+command=/stop-supervisor.sh
+events=PROCESS_STATE_STOPPED,PROCESS_STATE_EXITED,PROCESS_STATE_FATAL
+stderr_logfile=/dev/stdout
+stderr_logfile_maxbytes=0
+EOF
+
+# Install jupyter
+# (not added to Pipfile as it doesn't make sense to include it as part of the API server --
+#  if it's desired outside of this docker config then venv kernels must be compiled on the host etc.)
+RUN pip install jupyter
+
+# Copy and install application
 COPY . .
 RUN pip install pipenv && pipenv install --dev --deploy --system
-ENTRYPOINT ["python", "/app/server.py"]
+
+CMD ["/usr/bin/supervisord"]
