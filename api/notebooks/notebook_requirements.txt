@@ -1,0 +1,9 @@
+jupyter
+bokeh
+ipyfilechooser
+ipycanvas
+matplotlib
+scipy
+scikit-image
+torch
+lap
