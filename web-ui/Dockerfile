@@ -15,4 +15,4 @@ WORKDIR /app
 EXPOSE 3000
 COPY . .
 RUN pnpm --modules-dir $MODULES_DIR --virtual-store-dir $MODULES_DIR/.pnpm --store-dir $MODULES_DIR/.pnpm-store install
-ENTRYPOINT pnpm $MODULES_DIR/.bin/astro dev --host  
+ENTRYPOINT pnpm $MODULES_DIR/.bin/astro dev --host
