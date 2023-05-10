@@ -28,6 +28,10 @@ RUN chmod 755 /stop-supervisor.sh
 RUN <<EOF cat >> /etc/supervisor/conf.d/supervisord.conf
 [supervisord]
 nodaemon=true
+user=root
+logfile=/var/log/supervisor/supervisord.log 
+pidfile=/var/run/supervisord.pid
+childlogdir=/var/log/supervisor
 
 [program:api-server]
 directory=/app/
@@ -62,4 +66,4 @@ RUN pip install jupyter
 COPY . .
 RUN pip install pipenv && pipenv install --dev --deploy --system
 
-CMD ["/usr/bin/supervisord"]
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
