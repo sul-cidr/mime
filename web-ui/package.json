@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@astrojs/tailwind": "^3.1.2",
+    "@floating-ui/dom": "^1.2.7",
     "@skeletonlabs/skeleton": "^1.2.5",
     "d3-quadtree": "^3.0.1",
     "layercake": "^7.4.0",

@@ -8,6 +8,7 @@
   import SimilarPoses from "@svelte/SimilarPoses.svelte";
   import Icon from "@svelte/Icon.svelte";
   import { currentVideo, currentFrame, currentPose } from "@svelte/stores";
+  import { tooltip } from "@svelte/actions/tooltip";
 
   import { baseTitle } from "@/site-metadata.json";
   const base = import.meta.env.BASE_URL;
@@ -24,23 +25,24 @@
       <svelte:fragment slot="trail">
         <a
           href={`${base}jupyter/notebooks/notebooks/video_posedata_explorer.ipynb`}
+          use:tooltip={"PoseData Explorer Notebook"}
         >
           <Icon name="file-analytics" height="24" width="24" />
         </a>
 
-        <a href={`${base}jupyter/tree/notebooks`}>
+        <a href={`${base}jupyter/tree/notebooks`} use:tooltip={"Jupyter"}>
           <Icon name="jupyter" height="24" width="24" />
         </a>
 
-        <a href={`${base}api/docs`}>
+        <a href={`${base}api/docs`} use:tooltip={"Swagger API docs"}>
           <Icon name="book-2" height="24" width="24" />
         </a>
 
-        <a href={`${base}api/redoc`}>
+        <a href={`${base}api/redoc`} use:tooltip={"ReDoc API docs"}>
           <Icon name="notebook" height="24" width="24" />
         </a>
 
-        <a href="https://github.com/sul-cidr/mime">
+        <a href="https://github.com/sul-cidr/mime" use:tooltip={"GitHub"}>
           <Icon name="github" height="24" width="24" />
         </a>
       </svelte:fragment>

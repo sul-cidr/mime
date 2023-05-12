@@ -3,6 +3,7 @@ lockfileVersion: 5.4
 specifiers:
   '@astrojs/svelte': ^2.1.1
   '@astrojs/tailwind': ^3.1.2
+  '@floating-ui/dom': ^1.2.7
   '@skeletonlabs/skeleton': ^1.2.5
   '@types/d3-scale': ^4.0.3
   astro: ^2.3.4
@@ -15,6 +16,7 @@ specifiers:
 
 dependencies:
   '@astrojs/tailwind': 3.1.2_s6yiphfdqqvkcvtcfokesalite
+  '@floating-ui/dom': 1.2.7
   '@skeletonlabs/skeleton': 1.2.5
   d3-quadtree: 3.0.1
   layercake: 7.4.0_svelte@3.58.0
@@ -833,6 +835,16 @@ packages:
     os: [win32]
     requiresBuild: true
     optional: true
+
+  /@floating-ui/core/1.2.6:
+    resolution: {integrity: sha512-EvYTiXet5XqweYGClEmpu3BoxmsQ4hkj3QaYA6qEnigCWffTP3vNRwBReTdrwDwo7OoJ3wM8Uoe9Uk4n+d4hfg==}
+    dev: false
+
+  /@floating-ui/dom/1.2.7:
+    resolution: {integrity: sha512-DyqylONj1ZaBnzj+uBnVfzdjjCkFCL2aA9ESHLyUOGSqb03RpbLMImP1ekIQXYs4KLk9jAjJfZAU8hXfWSahEg==}
+    dependencies:
+      '@floating-ui/core': 1.2.6
+    dev: false
 
   /@jridgewell/gen-mapping/0.3.3:
     resolution: {integrity: sha512-HLhSWOLRi875zjjMG/r+Nv0oCW8umGb0BgEhyX3dDX3egwZtB8PqLnjz3yedt8R5StBrzcg4aBpnh8UA9D1BoQ==}
