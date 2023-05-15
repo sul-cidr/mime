@@ -10,16 +10,16 @@
 
   import { currentVideo } from "@svelte/stores";
 
-  export let data;
+  export let data: Array<FrameRecord>;
 
   const seriesColors = ["#0fba81", "#4f46e5", "green", "orange"];
   const formatTickX = (d: unknown) => d;
   const formatTickY = (d: unknown) => d;
 
-  const seriesNames = Object.keys(data[0]).filter((d) => d !== "frame");
+  const seriesNames = Object.keys(data[0]!).filter((d) => d !== "frame");
 
-  let groupedData;
-  let xTicks;
+  let groupedData: Array<Object>;
+  let xTicks: Array<number>;
 
   $: {
     groupedData = groupLonger(data, seriesNames, {
