@@ -48,10 +48,7 @@
 </script>
 
 <div class="flex gap-4">
-  <div
-    class="card w-80 mb-4"
-    class:variant-ghost-primary={filterByAvgScoreActive}
-  >
+  <div class="card w-80" class:variant-ghost-primary={filterByAvgScoreActive}>
     <div class="flex items-center justify-between p-4">
       Filter by Avg. Score: <SlideToggle
         name="filter-by-avg-score-active"
@@ -92,10 +89,7 @@
       </label>
     </div>
   </div>
-  <div
-    class="card w-80 mb-4"
-    class:variant-ghost-primary={filterByPoseCountActive}
-  >
+  <div class="card w-80" class:variant-ghost-primary={filterByPoseCountActive}>
     <div class="flex items-center justify-between p-4">
       Filter by Pose Count: <SlideToggle
         name="filter-by-avg-score-active"

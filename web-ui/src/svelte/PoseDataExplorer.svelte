@@ -1,9 +1,5 @@
 <script lang="ts">
-  import {
-    Accordion,
-    AccordionItem,
-    ProgressBar,
-  } from "@skeletonlabs/skeleton";
+  import { ProgressBar } from "@skeletonlabs/skeleton";
   import Icon from "@svelte/Icon.svelte";
   import { API_BASE } from "@config";
 
@@ -13,6 +9,8 @@
   export let videoId: Number;
   let data: Array<FrameRecord> | undefined;
   let filteredData: Array<FrameRecord>;
+
+  let showFilters = false;
 
   async function getPoseData(videoId: Number) {
     const response = await fetch(`${API_BASE}/poses/${videoId}/`);
@@ -26,15 +24,28 @@
 </script>
 
 {#if data}
-  <Accordion class="variant-ringed-primary">
-    <AccordionItem open>
-      <svelte:fragment slot="lead"><Icon name="filter" /></svelte:fragment>
-      <svelte:fragment slot="summary">Filters</svelte:fragment>
-      <svelte:fragment slot="content">
-        <PoseDataFilters {data} bind:filteredData />
-      </svelte:fragment>
-    </AccordionItem>
-  </Accordion>
+  <div class="variant-ringed-primary flex flex-col">
+    <button
+      class="flex items-center gap-2 p-2 hover:bg-primary-hover-token"
+      class:mb-2={showFilters}
+      on:click={() => (showFilters = !showFilters)}
+    >
+      <Icon name="filter" />
+      <span class="grow text-left">Filters</span>
+      {#if showFilters}
+        <Icon name="chevron-up" />
+      {:else}
+        <Icon name="chevron-down" />
+      {/if}
+    </button>
+    <div
+      class="overflow-hidden h-0 pt-0"
+      class:h-full={showFilters}
+      class:p-2={showFilters}
+    >
+      <PoseDataFilters {data} bind:filteredData />
+    </div>
+  </div>
   <PosesByFrameChart data={filteredData} />
 {:else}
   Loading pose data... <ProgressBar />
