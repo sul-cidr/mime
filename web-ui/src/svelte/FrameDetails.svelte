@@ -1,6 +1,6 @@
 <script lang="ts">
   import { currentVideo, currentFrame, currentPose } from "@svelte/stores";
-  import { formatSeconds } from "../lib/utils";
+  import { formatSeconds } from "@utils";
   import Icon from "@svelte/Icon.svelte";
 
   export let poses: Array<PoseRecord>;

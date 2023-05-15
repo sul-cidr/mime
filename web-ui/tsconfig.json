@@ -8,7 +8,8 @@
       "@config": ["src/config.js"],
       "@layercake/*": ["src/svelte/layercake/*"],
       "@styles/*": ["src/styles/*"],
-      "@svelte/*": ["src/svelte/*"]
+      "@svelte/*": ["src/svelte/*"],
+      "@utils": ["src/lib/utils.ts"]
     }
   }
 }

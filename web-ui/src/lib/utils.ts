@@ -9,3 +9,6 @@ export const formatSeconds = (seconds: number) => {
     .map(([c, t]) => (c ? `${c}${t}` : ""))
     .join("");
 };
+
+export const clamp = (num: number, min: number, max: number): number =>
+  num < min ? min : num > max ? max : num;
