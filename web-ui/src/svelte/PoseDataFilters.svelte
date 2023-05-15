@@ -1,7 +1,7 @@
 <script lang="ts">
   import { SlideToggle } from "@skeletonlabs/skeleton";
 
-  export let data;
+  export let data: Array<FrameRecord>;
   export let filteredData;
 
   let filterByAvgScoreActive: boolean = false;

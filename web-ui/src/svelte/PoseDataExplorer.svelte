@@ -6,8 +6,8 @@
   import PoseDataFilters from "@/src/svelte/PoseDataFilters.svelte";
 
   export let videoId: Number;
-  let data: Array<Object> | undefined;
-  let filteredData: Array<Object> | undefined;
+  let data: Array<FrameRecord> | undefined;
+  let filteredData: Array<FrameRecord>;
 
   async function getPoseData(videoId: Number) {
     const response = await fetch(`${API_BASE}/poses/${videoId}/`);

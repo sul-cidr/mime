@@ -29,3 +29,9 @@ type PoseRecord = {
   hidden: boolean | undefined;
   distance?: number;
 };
+
+type FrameRecord = {
+  frame: number;
+  avgScore: number;
+  poseCt: number;
+};
