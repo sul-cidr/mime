@@ -47,7 +47,8 @@
   ];
 
   export let poseData: CocoSkeletonWithConfidence | CocoSkeletonNoConfidence;
-  export let scalePoseToCanvas = false;
+  export let scaleFactor = 1;
+  export let normalizedPose = false;
   let segments: FixedLengthArray<
     FixedLengthArray<number, 2> | FixedLengthArray<number, 3>,
     17
@@ -75,10 +76,13 @@
        * put these reset functions in the first layer, not each one
        * since they should only run once per update
        */
+
+      // "Scale your canvas size to retina screens."
+      // (see https://layercake.graphics/guide#scalecanvas)
       scaleCanvas($ctx, $width, $height);
       $ctx.clearRect(0, 0, $width, $height);
 
-      const f = scalePoseToCanvas ? $width / 100 : 1;
+      const normalizationFactor = normalizedPose ? $width / 100 : 1;
 
       // Draw a line on the canvas for each skeleton segment.
       // If the confidence value for a given armature point is 0, skip related segments.
@@ -95,12 +99,18 @@
           if ([fromX, fromY, toX, toY].some((x) => x === -1)) return;
         }
 
-        $ctx.lineWidth = 3;
+        $ctx.lineWidth = scaleFactor > 0.8 ? 3 : 2;
         $ctx.strokeStyle = COCO_COLORS[i];
 
         $ctx.beginPath();
-        $ctx.moveTo(fromX * f, fromY * f);
-        $ctx.lineTo(toX * f, toY * f);
+        $ctx.moveTo(
+          fromX * normalizationFactor * scaleFactor,
+          fromY * normalizationFactor * scaleFactor,
+        );
+        $ctx.lineTo(
+          toX * normalizationFactor * scaleFactor,
+          toY * normalizationFactor * scaleFactor,
+        );
         $ctx.stroke();
       });
     }

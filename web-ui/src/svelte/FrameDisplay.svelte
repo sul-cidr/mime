@@ -10,12 +10,15 @@
   export let showFrame: boolean;
   export let poses: Array<PoseRecord>;
   export let hoveredPoseIdx: number | undefined;
+  export let displayWidthPx = 640;
+
+  const scaleFactor = displayWidthPx / frameWidth;
 </script>
 
 <div>
   <div
-    class="h-[480px] border border-solid border-black frame-display"
-    style={`aspect-ratio: ${frameWidth}/${frameHeight}`}
+    class="box-content border border-solid border-black frame-display"
+    style={`width:${displayWidthPx}px;aspect-ratio:${frameWidth}/${frameHeight}`}
   >
     <LayerCake>
       {#if showFrame}
@@ -30,11 +33,11 @@
         {#each poses as poseData}
           {#if !poseData.hidden}
             <Canvas zIndex={1}>
-              <Pose poseData={poseData.keypoints} />
+              <Pose poseData={poseData.keypoints} {scaleFactor} />
             </Canvas>
           {/if}
         {/each}
-        <Svg zIndex={2}>
+        <Svg viewBox={`0 0 ${frameWidth} ${frameHeight}`} zIndex={2}>
           <defs>
             <filter x="0" y="0" width="1" height="1" id="solid">
               <feFlood flood-color="white" result="bg" />

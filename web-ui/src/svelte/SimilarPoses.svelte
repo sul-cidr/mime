@@ -69,7 +69,7 @@
         </Html>
       {/if} -->
             <Canvas zIndex={1}>
-              <Pose poseData={$currentPose.norm} scalePoseToCanvas={true} />
+              <Pose poseData={$currentPose.norm} normalizedPose={true} />
             </Canvas>
           </LayerCake>
         </div>
@@ -100,7 +100,7 @@
         </Html>
       {/if} -->
               <Canvas zIndex={1}>
-                <Pose poseData={pose.norm} scalePoseToCanvas={true} />
+                <Pose poseData={pose.norm} normalizedPose={true} />
               </Canvas>
             </LayerCake>
           </div>
