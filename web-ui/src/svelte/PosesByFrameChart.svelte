@@ -4,7 +4,7 @@
 
   import AxisX from "@layercake/AxisX.svelte";
   import AxisY from "@layercake/AxisY.svelte";
-  import Labels from "@layercake/GroupLabels.html.svelte";
+  import Key from "@layercake/Key.html.svelte";
   import MultiLine from "@layercake/MultiLine.svelte";
   import SharedTooltip from "@layercake/SharedTooltip.html.svelte";
 
@@ -17,6 +17,8 @@
   const formatTickY = (d: unknown) => d;
 
   const seriesNames = Object.keys(data[0]!).filter((d) => d !== "frame");
+
+  let hiddenSeries: Array<string> = [];
 
   let groupedData: Array<Object>;
   let xTicks: Array<number>;
@@ -54,12 +56,12 @@
         tickMarks={true}
       />
       <AxisY ticks={5} formatTick={formatTickY} />
-      <MultiLine />
+      <MultiLine {hiddenSeries} />
     </Svg>
 
     <Html>
-      <Labels />
       <SharedTooltip formatTitle={(d) => `Frame ${d}`} dataset={data} />
+      <Key align="end" bind:hiddenSeries />
     </Html>
   </LayerCake>
 </div>

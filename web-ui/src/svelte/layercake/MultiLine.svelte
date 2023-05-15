@@ -7,6 +7,8 @@
   import { getContext } from "svelte";
   import { currentVideo } from "@svelte/stores";
 
+  export let hiddenSeries = [];
+
   const { data, xGet, yGet, zGet } = getContext("LayerCake");
 
   $: path = (values) => {
@@ -33,7 +35,9 @@
 
 <g class="line-group">
   {#each $data as group}
-    <path class="path-line" d={path(group.values)} stroke={$zGet(group)} />
+    {#if !hiddenSeries.includes(group.series)}
+      <path class="path-line" d={path(group.values)} stroke={$zGet(group)} />
+    {/if}
   {/each}
 </g>
 

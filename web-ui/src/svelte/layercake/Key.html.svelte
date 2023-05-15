@@ -17,6 +17,8 @@
   /** @type {Boolean} [capitalize=true] - Capitalize the first character. */
   export let capitalize = true;
 
+  export let hiddenSeries;
+
   const { zDomain, zScale } = getContext("LayerCake");
 
   function cap(val) {
@@ -36,7 +38,14 @@
   style="justify-content: {align === 'end' ? 'flex-end' : align};"
 >
   {#each $zDomain as item}
-    <div class="key-item">
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
+    <div
+      class="key-item"
+      on:click={() =>
+        hiddenSeries.includes(item)
+          ? (hiddenSeries = hiddenSeries.filter((d) => d !== item))
+          : (hiddenSeries = [...hiddenSeries, item])}
+    >
       <div
         class="chip chip__{shape}"
         style="background: {shape === `line`
@@ -53,8 +62,12 @@
 <style>
   .key {
     display: flex;
+    float: right;
+    position: relative;
+    width: fit-content;
   }
   .key-item {
+    cursor: pointer;
     margin-right: 14px;
   }
   .chip {
