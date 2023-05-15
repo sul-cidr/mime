@@ -22,8 +22,14 @@
         <h1><a href={base}>{baseTitle}</a></h1>
       </header>
       <svelte:fragment slot="trail">
-        <a href="https://github.com/sul-cidr/mime">
-          <Icon name="github" height="24" width="24" />
+        <a
+          href={`${base}jupyter/notebooks/notebooks/video_posedata_explorer.ipynb`}
+        >
+          <Icon name="file-analytics" height="24" width="24" />
+        </a>
+
+        <a href={`${base}jupyter/tree/notebooks`}>
+          <Icon name="jupyter" height="24" width="24" />
         </a>
 
         <a href={`${base}api/docs`}>
@@ -32,6 +38,10 @@
 
         <a href={`${base}api/redoc`}>
           <Icon name="notebook" height="24" width="24" />
+        </a>
+
+        <a href="https://github.com/sul-cidr/mime">
+          <Icon name="github" height="24" width="24" />
         </a>
       </svelte:fragment>
     </AppBar>
