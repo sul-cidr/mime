@@ -25,8 +25,9 @@
   let xTicks: Array<number>;
 
   let brushExtents = [null, null];
-  let brushedData: Array<Object>;
   let groupedBrushedData: Array<Object>;
+
+  let brushFaded = true;
 
   const fillEmptyFrames = (
     data: Array<FrameRecord>,
@@ -56,18 +57,6 @@
   };
 
   $: {
-    const startFrame = Math.max(
-      1,
-      Math.ceil($currentVideo.frame_count * (brushExtents[0] || 0)),
-    );
-    const endFrame = Math.min(
-      $currentVideo.frame_count,
-      Math.ceil($currentVideo.frame_count * (brushExtents[1] || 1)),
-    );
-    brushedData = fillEmptyFrames(data, startFrame, endFrame);
-  }
-
-  $: {
     groupedData = groupLonger(fillEmptyFrames(data), seriesNames, {
       groupTo: "series",
       valueTo: "value",
@@ -79,10 +68,22 @@
   }
 
   $: {
-    groupedBrushedData = groupLonger(brushedData, seriesNames, {
-      groupTo: "series",
-      valueTo: "value",
-    });
+    const startFrame = Math.max(
+      1,
+      Math.ceil($currentVideo.frame_count * (brushExtents[0] || 0)),
+    );
+    const endFrame = Math.min(
+      $currentVideo.frame_count,
+      Math.ceil($currentVideo.frame_count * (brushExtents[1] || 1)),
+    );
+    groupedBrushedData = groupLonger(
+      fillEmptyFrames(data, startFrame, endFrame),
+      seriesNames,
+      {
+        groupTo: "series",
+        valueTo: "value",
+      },
+    );
   }
 </script>
 
@@ -117,7 +118,12 @@
   </LayerCake>
 </div>
 
-<div class="brush-container variant-ringed-primary select-none pt-2">
+<!-- svelte-ignore a11y-mouse-events-have-key-events -->
+<div
+  class="brush-container variant-ringed-primary select-none pt-2"
+  on:mouseover={() => (brushFaded = false)}
+  on:mouseout={() => (brushFaded = true)}
+>
   <LayerCake
     padding={{ top: 7, right: 10, bottom: 20, left: 25 }}
     x={"frame"}
@@ -137,7 +143,7 @@
         snapTicks={true}
         tickMarks={true}
       />
-      <MultiLine />
+      <MultiLine faded={brushFaded} />
     </Svg>
     <Html>
       <Brush bind:min={brushExtents[0]} bind:max={brushExtents[1]} />

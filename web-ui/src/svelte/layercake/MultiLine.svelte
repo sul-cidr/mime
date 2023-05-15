@@ -8,6 +8,7 @@
   import { currentVideo } from "@svelte/stores";
 
   export let hiddenSeries = [];
+  export let faded = false;
 
   const { data, xGet, yGet, zGet } = getContext("LayerCake");
 
@@ -16,7 +17,7 @@
   };
 </script>
 
-<g class="line-group">
+<g class="line-group transition-opacity" class:opacity-50={faded}>
   {#each $data as group}
     {#if !hiddenSeries.includes(group.series)}
       <path class="path-line" d={path(group.values)} stroke={$zGet(group)} />

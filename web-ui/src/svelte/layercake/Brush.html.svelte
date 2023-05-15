@@ -131,9 +131,9 @@
     position: absolute;
     height: 100%;
     cursor: move;
-    /* mix-blend-mode: difference; */
-    background-color: #cccccc90;
-    /* border: 1px solid #000; */
+    background-color: #00000010;
+    mix-blend-mode: darken;
+    outline: 1px solid #00000030;
   }
 
   .brush-handle {
