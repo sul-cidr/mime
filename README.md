@@ -29,6 +29,11 @@ docker compose up
 All being well, the UI should be now available at `http://localhost:8080/`.
 
 
+### Jupyter
+
+If using the docker configuration, a Jupyter Notebook server will be available at `http://localhost:8080/jupyter/` (linked from the UI header)  At the present time it is necessary to grab the authentication token from the api container logs each time the container is rebuilt.  If launching the API server from a `venv` on the host, the notebook-specific requirements from [`api/notebooks/notebook_requirements.txt`](api/notebooks/notebook_requirements.txt) must be installed in the `venv` (e.g. something like `pipenv run pip install -r notebooks/notebook_requirements.txt`).
+
+
 ## just
 
 A [`justfile`](./justfile) is provided to simplify some commands -- if you have [`just`](https://github.com/casey/just) installed, execute `just` from the repository working folder to see a list of available commands.
@@ -41,7 +46,7 @@ Update the codebase with `git pull`.  If dependencies are modified, `docker comp
 
 ## Accessing remotely
 
-Because all parts of the application are served behind a reverse proxy, everything should be available over a single TCP port.  Something like `ssh -fNTL 3000:localhost:8080 user@mime-server` should be sufficient to expose the UI running on the remote host at http://localhost:3000/ on the local machine.
+When using the docker bring-up, all parts of the application are served behind a reverse proxy so everything is available over a single TCP port.  Something like `ssh -fNTL 3000:localhost:8080 user@mime-server` should be sufficient to expose the UI running on the remote host at http://localhost:3000/ on the local machine.
 
 
 ## Development
