@@ -3,7 +3,7 @@
   Adds a brush component to create a range between 0 and 1. Bind to the `min` and `max` props to use them in other components. See the [brushable example](https://layercake.graphcics/example/Brush) for use.
  -->
 <script>
-  import { clamp } from "yootils";
+  import { clamp } from "@utils";
 
   /** @type {Number} min - The brush's min value. Useful to bind to. */
   export let min;
