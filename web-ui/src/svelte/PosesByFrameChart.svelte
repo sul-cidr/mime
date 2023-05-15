@@ -4,6 +4,7 @@
 
   import AxisX from "@layercake/AxisX.svelte";
   import AxisY from "@layercake/AxisY.svelte";
+  import Brush from "@layercake/Brush.html.svelte";
   import Key from "@layercake/Key.html.svelte";
   import MultiLine from "@layercake/MultiLine.svelte";
   import SharedTooltip from "@layercake/SharedTooltip.html.svelte";
@@ -23,8 +24,51 @@
   let groupedData: Array<Object>;
   let xTicks: Array<number>;
 
+  let brushExtents = [null, null];
+  let brushedData: Array<Object>;
+  let groupedBrushedData: Array<Object>;
+
+  const fillEmptyFrames = (
+    data: Array<FrameRecord>,
+    startFrame = 1,
+    endFrame = $currentVideo.frame_count,
+  ): Array<FrameRecord> => {
+    // fill with zero values for unrepresented frames
+    const framesInRange = data.filter(
+      (frame: FrameRecord) =>
+        frame.frame >= startFrame && frame.frame <= endFrame,
+    );
+    const timeSeries = [];
+    let i = startFrame;
+    framesInRange.forEach((frame: FrameRecord) => {
+      while (i < frame.frame) {
+        timeSeries.push({ frame: i, avgScore: 0, poseCt: 0 });
+        i++;
+      }
+      timeSeries.push(frame);
+      i++;
+    });
+    while (i < endFrame) {
+      timeSeries.push({ frame: i, avgScore: 0, poseCt: 0 });
+      i++;
+    }
+    return timeSeries;
+  };
+
   $: {
-    groupedData = groupLonger(data, seriesNames, {
+    const startFrame = Math.max(
+      1,
+      Math.ceil($currentVideo.frame_count * (brushExtents[0] || 0)),
+    );
+    const endFrame = Math.min(
+      $currentVideo.frame_count,
+      Math.ceil($currentVideo.frame_count * (brushExtents[1] || 1)),
+    );
+    brushedData = fillEmptyFrames(data, startFrame, endFrame);
+  }
+
+  $: {
+    groupedData = groupLonger(fillEmptyFrames(data), seriesNames, {
       groupTo: "series",
       valueTo: "value",
     });
@@ -32,6 +76,13 @@
       { length: Math.ceil($currentVideo.frame_count / 10000) },
       (_, i) => i * 10000,
     );
+  }
+
+  $: {
+    groupedBrushedData = groupLonger(brushedData, seriesNames, {
+      groupTo: "series",
+      valueTo: "value",
+    });
   }
 </script>
 
@@ -44,8 +95,8 @@
     yDomain={[0, null]}
     zScale={scaleOrdinal()}
     zRange={seriesColors}
-    flatData={flatten(groupedData, "values")}
-    data={groupedData}
+    flatData={flatten(groupedBrushedData, "values")}
+    data={groupedBrushedData}
   >
     <Svg>
       <AxisX
@@ -66,9 +117,42 @@
   </LayerCake>
 </div>
 
+<div class="brush-container variant-ringed-primary select-none pt-2">
+  <LayerCake
+    padding={{ top: 7, right: 10, bottom: 20, left: 25 }}
+    x={"frame"}
+    y={"value"}
+    z={"series"}
+    yDomain={[0, null]}
+    zScale={scaleOrdinal()}
+    zRange={seriesColors}
+    flatData={flatten(groupedData, "values")}
+    data={groupedData}
+  >
+    <Svg pointerEvents={false}>
+      <AxisX
+        gridlines={false}
+        ticks={xTicks}
+        formatTick={formatTickX}
+        snapTicks={true}
+        tickMarks={true}
+      />
+      <MultiLine />
+    </Svg>
+    <Html>
+      <Brush bind:min={brushExtents[0]} bind:max={brushExtents[1]} />
+    </Html>
+  </LayerCake>
+</div>
+
 <style>
   .chart-container {
     width: 100%;
     height: 450px;
+  }
+
+  .brush-container {
+    width: 100%;
+    height: 100px;
   }
 </style>
