@@ -23,6 +23,7 @@ services:
     depends_on:
       - db
 
+    command: bash -c 'while !</dev/tcp/db/5432; do sleep 1; done; /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf' 
 
   web-ui:
     container_name: mime-web-ui
