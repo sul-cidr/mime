@@ -65,6 +65,26 @@ async def get_frame(video_id: UUID, frame: int, request: Request):
     )
 
 
+@mime_api.get("/frame/{video_id}/{frame}/{left}/{top}/{width}/{height}/")
+async def get_rect_from_frame(
+    video_id: UUID,
+    frame: int,
+    left: int,
+    top: int,
+    width: int,
+    height: int,
+    request: Request,
+):
+    video = await request.app.state.db.get_video_by_id(video_id)
+    video_path = f"/videos/{video['video_name']}"
+    img = iio.imread(video_path, index=frame, plugin="pyav")
+    img = img[top : top + height, left : left + width]
+    return Response(
+        content=iio.imwrite("<bytes>", img, extension=".jpeg"),
+        media_type="image/jpeg",
+    )
+
+
 @mime_api.get("/poses/{video_id}/")
 async def poses(video_id: UUID, request: Request):
     frame_data = await request.app.state.db.get_pose_data_by_frame(video_id)
