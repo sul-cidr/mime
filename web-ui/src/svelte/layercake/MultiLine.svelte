@@ -7,33 +7,21 @@
   import { getContext } from "svelte";
   import { currentVideo } from "@svelte/stores";
 
+  export let hiddenSeries = [];
+  export let faded = false;
+
   const { data, xGet, yGet, zGet } = getContext("LayerCake");
 
   $: path = (values) => {
-    // fill with zero values for unrepresented frames, so that the series lines
-    //  actually go down to zero on the y axis where appropriate.
-    const out = [];
-    let i = 1;
-    values.forEach((d) => {
-      while (i < d.frame) {
-        out.push($xGet({ frame: i }) + "," + $yGet({ value: 0 }));
-        i++;
-      }
-      out.push($xGet(d) + "," + $yGet(d));
-      i++;
-    });
-    while (i < $currentVideo.frame_count) {
-      out.push($xGet({ frame: i }) + "," + $yGet({ value: 0 }));
-      i++;
-    }
-    return "M" + out.join("L");
-    // return "M" + values.map((d) => $xGet(d) + "," + $yGet(d)).join("L");
+    return "M" + values.map((d) => $xGet(d) + "," + $yGet(d)).join("L");
   };
 </script>
 
-<g class="line-group">
+<g class="line-group transition-opacity" class:opacity-50={faded}>
   {#each $data as group}
-    <path class="path-line" d={path(group.values)} stroke={$zGet(group)} />
+    {#if !hiddenSeries.includes(group.series)}
+      <path class="path-line" d={path(group.values)} stroke={$zGet(group)} />
+    {/if}
   {/each}
 </g>
 
