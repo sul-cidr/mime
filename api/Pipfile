@@ -17,6 +17,7 @@ uvicorn = {extras = ["standard"], version = "*"}
 imageio = "*"
 av = "*"
 fastapi-utils = "*"
+fastapi-cache2 = "*"
 
 [dev-packages]
 black = "*"
