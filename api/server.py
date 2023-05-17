@@ -8,6 +8,9 @@ import uvicorn
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi_cache import FastAPICache
+from fastapi_cache.backends.inmemory import InMemoryBackend
+from fastapi_cache.decorator import cache
 from fastapi_utils.timing import add_timing_middleware
 
 from lib.json_encoder import MimeJSONEncoder
@@ -41,6 +44,7 @@ mime_api.add_middleware(
 @mime_api.on_event("startup")
 async def startup():
     mime_api.state.db = await MimeDb.create(drop=False)
+    FastAPICache.init(InMemoryBackend())
 
 
 @mime_api.get("/")
@@ -65,6 +69,7 @@ async def get_frame(video_id: UUID, frame: int, request: Request):
     )
 
 
+@cache(expire=60)
 @mime_api.get("/poses/{video_id}/")
 async def poses(video_id: UUID, request: Request):
     frame_data = await request.app.state.db.get_pose_data_by_frame(video_id)
