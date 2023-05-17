@@ -1,7 +1,8 @@
 <script lang="ts">
   import { RadioGroup, RadioItem } from "@skeletonlabs/skeleton";
-  import { LayerCake, Canvas } from "layercake";
+  import { LayerCake, Canvas, Html, Svg } from "layercake";
   import Pose from "@svelte/Pose.svelte";
+  import NormalizedPoseFrameClip from "@svelte/NormalizedPoseFrameClip.svelte";
   import { formatSeconds } from "../lib/utils";
 
   import { API_BASE } from "@config";
@@ -60,15 +61,20 @@
         </header>
         <div class="w-full aspect-[5/6] frame-display py-[20px] px-[10px]">
           <LayerCake>
-            <!-- {#if showFrame}
-        <Html zIndex={0}>
-          <img
-            src={`${API_BASE}/frame/${videoId}/${$currentFrame}/`}
-            alt={`Frame ${$currentFrame}`}
-          />
-        </Html>
-      {/if} -->
-            <Canvas zIndex={1}>
+            <Html zIndex={0}>
+              <NormalizedPoseFrameClip poseRecord={$currentPose} />
+            </Html>
+            <!-- <Svg zIndex={2}>
+              <rect
+                x={0}
+                y={0}
+                height={$currentPose.bbox[3] * (100 / $currentPose.bbox[3])}
+                width={$currentPose.bbox[2] * (100 / $currentPose.bbox[3])}
+                stroke="green"
+                stroke-width="1"
+              />
+            </Svg> -->
+            <Canvas zIndex={3}>
               <Pose poseData={$currentPose.norm} normalizedPose={true} />
             </Canvas>
           </LayerCake>
@@ -91,14 +97,6 @@
           </header>
           <div class="w-full aspect-[5/6] frame-display py-[20px] px-[10px]">
             <LayerCake>
-              <!-- {#if showFrame}
-        <Html zIndex={0}>
-          <img
-            src={`${API_BASE}/frame/${videoId}/${$currentFrame}/`}
-            alt={`Frame ${$currentFrame}`}
-          />
-        </Html>
-      {/if} -->
               <Canvas zIndex={1}>
                 <Pose poseData={pose.norm} normalizedPose={true} />
               </Canvas>
