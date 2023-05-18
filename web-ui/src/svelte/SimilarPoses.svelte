@@ -107,7 +107,7 @@
           <footer class="p-2">
             <ul>
               <li>Time: {formatSeconds(pose.frame / $currentVideo.fps)}</li>
-              <li>Distance: {pose.distance.toFixed(2)}</li>
+              <li>Distance: {pose.distance?.toFixed(2)}</li>
             </ul>
           </footer>
         </div>

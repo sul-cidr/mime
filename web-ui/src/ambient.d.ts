@@ -8,7 +8,7 @@ type CocoSkeletonWithConfidence = FixedLengthArray<number, 51>;
 type CocoSkeletonNoConfidence = FixedLengthArray<number, 34>;
 
 type VideoRecord = {
-  id: number;
+  id: string; // TODO UUID
   video_name: string;
   width: number;
   height: number;

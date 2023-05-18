@@ -16,7 +16,7 @@
     poseData = data;
   };
 
-  async function getPoseData(videoId: number, frame: number) {
+  async function getPoseData(videoId: string, frame: number) {
     const response = await fetch(`${API_BASE}/poses/${videoId}/${frame}/`);
     return await response.json();
   }

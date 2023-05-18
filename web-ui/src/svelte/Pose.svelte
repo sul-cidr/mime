@@ -57,8 +57,11 @@
   import { getContext } from "svelte";
   import { scaleCanvas } from "layercake";
 
-  const { width, height } = getContext("LayerCake");
-  const { ctx } = getContext("canvas");
+  const { width, height } = <
+    { width: SvelteStore<number>; height: SvelteStore<number> }
+  >getContext("LayerCake");
+  const { ctx }: { ctx: SvelteStore<CanvasRenderingContext2D> } =
+    getContext("canvas");
 
   const segmentArray = (arr: Array<number>, l = 3) => {
     const _arr = [...arr];
@@ -100,7 +103,7 @@
         }
 
         $ctx.lineWidth = scaleFactor > 0.8 ? 3 : 2;
-        $ctx.strokeStyle = COCO_COLORS[i];
+        $ctx.strokeStyle = COCO_COLORS[i]!;
 
         $ctx.beginPath();
         $ctx.moveTo(

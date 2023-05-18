@@ -24,7 +24,7 @@
   let groupedData: Array<Object>;
   let xTicks: Array<number>;
 
-  let brushExtents = [null, null];
+  let brushExtents: Array<number | null> = [null, null];
   let groupedBrushedData: Array<Object>;
 
   let brushFaded = true;
@@ -55,6 +55,8 @@
     }
     return timeSeries;
   };
+
+  const formatTitle = (d: string) => `Frame ${d}`;
 
   $: {
     groupedData = groupLonger(fillEmptyFrames(data), seriesNames, {
@@ -112,7 +114,7 @@
     </Svg>
 
     <Html>
-      <SharedTooltip formatTitle={(d) => `Frame ${d}`} dataset={data} />
+      <SharedTooltip {formatTitle} dataset={data} />
       <Key align="end" bind:hiddenSeries />
     </Html>
   </LayerCake>

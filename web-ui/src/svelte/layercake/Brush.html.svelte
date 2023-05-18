@@ -5,10 +5,10 @@
 <script>
   import { clamp } from "@utils";
 
-  /** @type {Number} min - The brush's min value. Useful to bind to. */
+  /** @type {Number | null | undefined} min - The brush's min value. Useful to bind to. */
   export let min;
 
-  /** @type {Number} max - The brush's max value. Useful to bind to. */
+  /** @type {Number | null | undefined} max - The brush's max value. Useful to bind to. */
   export let max;
 
   let brush;
