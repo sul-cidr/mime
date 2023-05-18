@@ -80,7 +80,15 @@
 
   <div class="flex gap-4 p-4 bg-surface-100-800-token">
     {#if poseData}
-      <FrameDisplay {showFrame} bind:poses={poseData} bind:hoveredPoseIdx />
+      <FrameDisplay
+        {showFrame}
+        bind:poses={poseData}
+        bind:hoveredPoseIdx
+        videoId={$currentVideo.id}
+        frame={$currentFrame}
+        frameHeight={$currentVideo.height}
+        frameWidth={$currentVideo.width}
+      />
       <FrameDetails bind:poses={poseData} bind:hoveredPoseIdx />
     {:else}
       Loading pose data... <ProgressBar />
