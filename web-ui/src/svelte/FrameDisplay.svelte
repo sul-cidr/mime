@@ -3,14 +3,15 @@
   import Pose from "./Pose.svelte";
 
   import { API_BASE } from "@config";
-  import { currentVideo, currentFrame } from "@svelte/stores";
-
-  const { id: videoId, width: frameWidth, height: frameHeight } = $currentVideo;
 
   export let showFrame: boolean;
   export let poses: Array<PoseRecord>;
   export let hoveredPoseIdx: number | undefined;
   export let displayWidthPx = 640;
+  export let frame: number;
+  export let videoId: string;
+  export let frameWidth: number;
+  export let frameHeight: number;
 
   const scaleFactor = displayWidthPx / frameWidth;
 
@@ -25,8 +26,8 @@
       {#if showFrame}
         <Html zIndex={0}>
           <img
-            src={`${API_BASE}/frame/${videoId}/${$currentFrame}/`}
-            alt={`Frame ${$currentFrame}`}
+            src={`${API_BASE}/frame/${videoId}/${frame}/`}
+            alt={`Frame ${frame}`}
           />
         </Html>
       {/if}

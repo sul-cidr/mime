@@ -19,9 +19,8 @@
       let trackCount = 0;
       if (data.length) {
         data.forEach((pr: PoseRecord) => {
-          if (pr.track_id != 0)
-            trackCount += 1;
-        })
+          if (pr.track_id != 0) trackCount += 1;
+        });
       }
       trackCt = trackCount;
     }
@@ -39,11 +38,11 @@
               poseData[pi]!.face_bbox = fr.bbox;
               poseData[pi]!.face_landmarks = fr.landmarks;
             }
-          })
-        })
+          });
+        });
       }
     }
-  }
+  };
 
   async function getPoseData(videoId: string, frame: number) {
     if (!frame) {
@@ -120,8 +119,16 @@
 
   <div class="flex gap-4 p-4 bg-surface-100-800-token">
     {#if poseData}
-      <FrameDisplay {showFrame} bind:poses={poseData} bind:hoveredPoseIdx />
-      <FrameDetails bind:poses={poseData} {trackCt} bind:hoveredPoseIdx />
+      <FrameDisplay
+        {showFrame}
+        bind:poses={poseData}
+        bind:hoveredPoseIdx
+        videoId={$currentVideo.id}
+        frame={$currentFrame}
+        frameHeight={$currentVideo.height}
+        frameWidth={$currentVideo.width}
+      />
+      <FrameDetails bind:poses={poseData} bind:hoveredPoseIdx />
     {:else}
       Loading pose data... <ProgressBar />
     {/if}
