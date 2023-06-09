@@ -19,13 +19,14 @@
   const updateVideoData = (): Promise<TableSource | void> =>
     getVideos()
       .then((data) => ({
-        head: ["Name", "Meta", "Frame Count", "Pose Count", "Poses Per Frame"],
+        head: ["Name", "Meta", "Frame Count", "Pose Count", "Poses/Frame", "Tracked Poses"],
         body: data.videos.map((video: VideoRecord) => [
           video.video_name,
           `${video.width}x${video.height}@${video.fps}fps`,
           video.frame_count,
           video.pose_ct,
           video.poses_per_frame,
+          video.track_ct,
         ]),
         // Passed to the `on:selected` handler:
         meta: data.videos.map((video: VideoRecord) => video),
