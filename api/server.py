@@ -9,7 +9,6 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_utils.timing import add_timing_middleware
-
 from lib.json_encoder import MimeJSONEncoder
 from mime_db import MimeDb
 
@@ -58,7 +57,7 @@ async def videos(request: Request):
 async def get_frame(video_id: UUID, frame: int, request: Request):
     video = await request.app.state.db.get_video_by_id(video_id)
     video_path = f"/videos/{video['video_name']}"
-    img = iio.imread(video_path, index=frame, plugin="pyav")
+    img = iio.imread(video_path, index=frame - 1, plugin="pyav")
     return Response(
         content=iio.imwrite("<bytes>", img, extension=".jpeg"),
         media_type="image/jpeg",
