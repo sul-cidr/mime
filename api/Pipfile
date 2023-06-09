@@ -5,23 +5,24 @@ name = "pypi"
 
 [packages]
 asyncpg = "*"
+av = "*"
 faiss-cpu = "*"
 fastapi = "*"
+fastapi-utils = "*"
+imageio = "*"
 jsonlines = "*"
 numpy = "*"
 opencv-python = "*"
 pgvector = "*"
 python-dotenv = "*"
 rich = "*"
+scipy = "*"
 uvicorn = {extras = ["standard"], version = "*"}
-imageio = "*"
-av = "*"
-fastapi-utils = "*"
 
 [dev-packages]
 black = "*"
-ruff = "*"
 ipython = "*"
+ruff = "*"
 
 [requires]
 python_version = "3.10"
