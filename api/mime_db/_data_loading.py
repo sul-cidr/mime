@@ -82,6 +82,28 @@ async def load_openpifpaf_predictions(
     logging.info(f"Loaded {len(poses)} predictions!")
 
 
+async def add_video_tracks(self, video_id: UUID | None, track_data) -> None:
+    async with self._pool.acquire() as conn:
+        await conn.execute(
+            "ALTER TABLE pose ADD COLUMN IF NOT EXISTS track_id INTEGER NOT NULL DEFAULT 0"
+        )
+        await conn.execute("UPDATE pose SET track_id = 0 WHERE video_id = $1", video_id)
+
+        for track in track_data:
+            await conn.execute(
+                """
+                UPDATE pose
+                SET track_id = $1
+                WHERE video_id = $2 AND frame = $3 AND pose_idx = $4
+                ;
+                """,
+                track["track_id"],
+                video_id,
+                track["frame"],
+                track["pose_idx"],
+            )
+
+
 async def annotate_pose(
     self,
     column: str,
