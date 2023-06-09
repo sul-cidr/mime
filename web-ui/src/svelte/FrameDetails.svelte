@@ -4,6 +4,7 @@
   import Icon from "@svelte/Icon.svelte";
 
   export let poses: Array<PoseRecord>;
+  export let trackCt: number | 0;
   export let hoveredPoseIdx: number | undefined;
 </script>
 
@@ -14,6 +15,8 @@
   <dl class="grid grid-cols-2 gap-2 p-4 [&>dt]:font-bold">
     <dt>#Poses:</dt>
     <dd>{poses.length}</dd>
+    <dt>#Tracked Poses:</dt>
+    <dd>{trackCt}</dd>
     <dt>Time:</dt>
     <dd>{formatSeconds(($currentFrame || 0) / $currentVideo.fps)}</dd>
   </dl>
@@ -27,7 +30,7 @@
         on:mouseover={() => (hoveredPoseIdx = i)}
         on:mouseout={() => (hoveredPoseIdx = undefined)}
       >
-        Pose #{i + 1}. Confidence: {pose.score}
+        Pose #{i + 1} | Confidence: {pose.score} {#if pose.track_id != 0} | Track {pose.track_id} {/if }
         <div class="flex align-stretch gap-2">
           <button
             class="button px-2 variant-filled"

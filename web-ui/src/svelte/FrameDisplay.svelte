@@ -57,7 +57,7 @@
                 y={poseData.bbox[1]}
                 height={poseData.bbox[3]}
                 width={poseData.bbox[2]}
-                stroke="white"
+                stroke={poseData.track_id ? "magenta" : "white"}
                 fill="none"
                 stroke-width="1"
                 class:selected={hoveredPoseIdx === i}
@@ -74,7 +74,11 @@
                 stroke="white"
                 fill="white"
               >
-                {i + 1}
+                {#if poseData.track_id != 0}
+                  {poseData.track_id}
+                {:else}
+                  {i + 1}
+                {/if}
               </text>
             {/if}
           {/each}
