@@ -22,7 +22,7 @@
         head: ["Name", "Meta", "Frame Count", "Pose Count", "Poses/Frame", "Tracked Poses"],
         body: data.videos.map((video: VideoRecord) => [
           video.video_name,
-          `${video.width}x${video.height}@${video.fps}fps`,
+          `${video.width}x${video.height}@${video.fps.toFixed(2)}fps`,
           video.frame_count,
           video.pose_ct,
           video.poses_per_frame,
