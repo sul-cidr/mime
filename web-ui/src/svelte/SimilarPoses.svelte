@@ -122,7 +122,7 @@
         <header class="p-2">
           Frame {$currentPose.frame}, Pose: {$currentPose.pose_idx + 1}
         </header>
-        <div class="w-full aspect-[5/6] frame-display py-[20px] px-[10px]">
+        <div class="w-full aspect-[5/6] frame-display py-[30px] px-[10px]">
           <LayerCake>
           {#if showFrame}
             <Html zIndex={0}>
@@ -153,7 +153,7 @@
           <header class="p-2">
             Frame {pose.frame}, Pose: {pose.pose_idx + 1}
           </header>
-          <div class="w-full aspect-[5/6] frame-display py-[20px] px-[10px]">
+          <div class="w-full aspect-[5/6] frame-display py-[30px] px-[10px]">
             <LayerCake>
               {#if showFrame}
                 <Html zIndex={0}>
@@ -187,7 +187,7 @@
   }
   .pose-bg-display {
     height: 100%;
-    display: block;
-    margin: auto
+    width: 100%;
+    object-fit: contain;
   }
 </style>
