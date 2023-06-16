@@ -66,7 +66,7 @@ async def get_frame_data(self, video_id: UUID, frame: int) -> list:
 
 
 async def get_nearest_neighbors(
-    self, video_id: UUID, frame: int, pose_idx: int, metric="cosine", limit=5
+    self, video_id: UUID, frame: int, pose_idx: int, metric="cosine", limit=50
 ) -> list:
     sub_query = """
         SELECT norm

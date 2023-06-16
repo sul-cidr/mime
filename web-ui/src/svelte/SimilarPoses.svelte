@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { RadioGroup, RadioItem, SlideToggle } from "@skeletonlabs/skeleton";
+  import { Paginator, RadioGroup, RadioItem, SlideToggle } from "@skeletonlabs/skeleton";
   import { LayerCake, Canvas, Html } from "layercake";
   import Pose from "@svelte/Pose.svelte";
   import { formatSeconds } from "../lib/utils";
@@ -11,7 +11,15 @@
   export let similarityMetric = "cosine";
   let poses: Array<PoseRecord>;
 
-  const updatePoseData = (data: Array<PoseRecord>) => (poses = data);
+  const simStep = 5;
+  let simPager = {
+	  offset: 0,
+	  limit: simStep,
+	  size: 50,
+    amounts: [simStep]
+  };
+
+  const updatePoseData = (data: Array<PoseRecord>) => {poses = data; simPager.size=poses.length};
 
   async function getPoseData(
     videoId: number,
@@ -25,6 +33,7 @@
     return await response.json();
   }
 
+  // Not currently used, but worth keeping around for a bit
   const shiftToOrigin = (keypoints: CocoSkeletonWithConfidence, bbox:FixedLengthArray<number, 4>) => {
     let newKeypoints: CocoSkeletonWithConfidence = [...keypoints];
 
@@ -95,27 +104,27 @@
   class="variant-ghost-secondary px-4 pt-4 pb-8 flex flex-col gap-4 items-center"
 >
   <div class="p-1 inline-flex items-center space-x-1 rounded-token">
-  <RadioGroup>
-    <RadioItem
-      bind:group={similarityMetric}
-      name="similarity-metric"
-      value="cosine">Cosine</RadioItem
-    >
-    <RadioItem
-      bind:group={similarityMetric}
-      name="similarity-metric"
-      value="euclidean">Euclidean</RadioItem
-    >
-    <RadioItem
-      bind:group={similarityMetric}
-      name="similarity-metric"
-      value="innerproduct">Inner Product</RadioItem
-    >
-  </RadioGroup>
-  <SlideToggle name="slider-label" bind:checked={showFrame} size="sm">
-    Show Image
-  </SlideToggle>
-</div>
+    <RadioGroup>
+      <RadioItem
+        bind:group={similarityMetric}
+        name="similarity-metric"
+        value="cosine">Cosine</RadioItem
+      >
+      <RadioItem
+        bind:group={similarityMetric}
+        name="similarity-metric"
+        value="euclidean">Euclidean</RadioItem
+      >
+      <RadioItem
+        bind:group={similarityMetric}
+        name="similarity-metric"
+        value="innerproduct">Inner Product</RadioItem
+      >
+    </RadioGroup>
+    <SlideToggle name="slider-label" bind:checked={showFrame} size="sm">
+      Show Image
+    </SlideToggle>
+  </div>
   {#if poses}
     <div class="flex gap-4">
       <div class="card variant-ghost-tertiary drop-shadow-lg">
@@ -148,34 +157,44 @@
 
       <span class="divider-vertical !border-l-8 !border-double" />
 
-      {#each poses as pose}
-        <div class="card drop-shadow-lg">
-          <header class="p-2">
-            Frame {pose.frame}, Pose: {pose.pose_idx + 1}
-          </header>
-          <div class="w-full aspect-[5/6] frame-display py-[30px] px-[10px]">
-            <LayerCake>
-              {#if showFrame}
-                <Html zIndex={0}>
-                  <img class="object-contain h-full w-full"
-                  src={`${API_BASE}/frame/resize/${pose.video_id}/${pose.frame}/${getExtent(pose.keypoints).join(",")}|${getNormDims(pose.norm).join(",")}`}
-                  alt={`Frame ${pose.frame}, Pose: ${pose.pose_idx + 1}`}
-                  />
-                </Html>
-              {/if}
-              <Canvas zIndex={1}>
-                <Pose poseData={pose.norm} normalizedPose={true} />
-              </Canvas>
-            </LayerCake>
+      {#each poses as pose, p}
+        {#if p >= (simPager.offset * simPager.limit) && p < (simPager.offset * simPager.limit) + simPager.limit}
+          <div class="card drop-shadow-lg">
+            <header class="p-2">
+              Frame {pose.frame}, Pose: {pose.pose_idx + 1}
+            </header>
+            <div class="w-full aspect-[5/6] frame-display py-[30px] px-[10px]">
+              <LayerCake>
+                {#if showFrame}
+                  <Html zIndex={0}>
+                    <img class="object-contain h-full w-full"
+                    src={`${API_BASE}/frame/resize/${pose.video_id}/${pose.frame}/${getExtent(pose.keypoints).join(",")}|${getNormDims(pose.norm).join(",")}`}
+                    alt={`Frame ${pose.frame}, Pose: ${pose.pose_idx + 1}`}
+                    />
+                  </Html>
+                {/if}
+                <Canvas zIndex={1}>
+                  <Pose poseData={pose.norm} normalizedPose={true} />
+                </Canvas>
+              </LayerCake>
+            </div>
+            <footer class="p-2">
+              <ul>
+                <li>Time: {formatSeconds(pose.frame / $currentVideo.fps)}</li>
+                <li>Distance: {pose.distance?.toFixed(2)}</li>
+              </ul>
+            </footer>
           </div>
-          <footer class="p-2">
-            <ul>
-              <li>Time: {formatSeconds(pose.frame / $currentVideo.fps)}</li>
-              <li>Distance: {pose.distance?.toFixed(2)}</li>
-            </ul>
-          </footer>
-        </div>
+        {/if}
       {/each}
+    </div>
+    <div class="hide-paginator-label flex items-baseline"><span>Similar poses</span>
+      <Paginator
+        bind:settings={simPager}
+        showFirstLastButtons="{false}"
+        showPreviousNextButtons="{true}"
+        amountText="Poses"
+      />
     </div>
   {/if}
 </section>
