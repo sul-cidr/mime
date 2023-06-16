@@ -126,7 +126,7 @@
           <LayerCake>
           {#if showFrame}
             <Html zIndex={0}>
-              <img class="pose-bg-display"
+              <img class="object-contain h-full w-full"
               src={`${API_BASE}/frame/resize/${$currentPose.video_id}/${$currentPose.frame}/${getExtent($currentPose.keypoints).join(",")}|${getNormDims($currentPose.norm).join(",")}`}
               alt={`Frame ${$currentPose.frame}, Pose: ${$currentPose.pose_idx + 1}`}
               />
@@ -157,7 +157,7 @@
             <LayerCake>
               {#if showFrame}
                 <Html zIndex={0}>
-                  <img class="pose-bg-display"
+                  <img class="object-contain h-full w-full"
                   src={`${API_BASE}/frame/resize/${pose.video_id}/${pose.frame}/${getExtent(pose.keypoints).join(",")}|${getNormDims(pose.norm).join(",")}`}
                   alt={`Frame ${pose.frame}, Pose: ${pose.pose_idx + 1}`}
                   />
@@ -184,10 +184,5 @@
   .frame-display {
     background: radial-gradient(circle at 50% -250%, #333, #111827, #333);
     box-shadow: inset 0px 0px 30px 0px #666;
-  }
-  .pose-bg-display {
-    height: 100%;
-    width: 100%;
-    object-fit: contain;
   }
 </style>
