@@ -1,0 +1,28 @@
+---
+import BaseLayout from "@astro/BaseLayout.astro";
+import FrameDisplay from "@svelte/FrameDisplay.svelte";
+// import { API_BASE } from "@config";
+
+async function getPoseData(videoId: string, frame: number) {
+  const API_BASE = "http://api:5000";
+  const response = await fetch(`${API_BASE}/poses/${videoId}/${frame}/`);
+  return await response.json();
+}
+
+const { videoId, frame } = Astro.params;
+const poseData = await getPoseData(videoId, frame);
+// get frame width and height
+---
+
+<BaseLayout>
+  <FrameDisplay
+    client:load
+    showFrame={true}
+    videoId={videoId}
+    frame={frame}
+    poses={poseData}
+    frameHeight={480}
+    frameWidth={640}
+    hoveredPoseIdx={undefined}
+  />
+</BaseLayout>
