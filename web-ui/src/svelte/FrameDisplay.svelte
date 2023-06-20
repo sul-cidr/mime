@@ -1,10 +1,12 @@
 <script lang="ts">
   import { LayerCake, Canvas, Html, Svg } from "layercake";
+  import Icon from "@svelte/Icon.svelte";
   import Pose from "./Pose.svelte";
 
   import { API_BASE } from "@config";
 
   export let showFrame: boolean;
+  export let showControls: boolean = false;
   export let poses: Array<PoseRecord>;
   export let hoveredPoseIdx: number | undefined;
   export let displayWidthPx = 640;
@@ -107,6 +109,23 @@
       {/if}
     </LayerCake>
   </div>
+  {#if showControls}
+    <div>
+      <button
+        class="btn p-2"
+        class:variant-filled={true}
+        on:click={() => {
+          window.open(
+            `/frame/${videoId}/${frame}/`,
+            "new",
+            `width=${frameWidth},height=${frameHeight}`,
+          );
+        }}
+      >
+        <Icon name="external-link" />
+      </button>
+    </div>
+  {/if}
 </div>
 
 <style>

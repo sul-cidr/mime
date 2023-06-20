@@ -103,6 +103,13 @@
     "chevron-down": {
       svg: `<path d="M6 9l6 6l6 -6"></path>`,
     },
+    "external-link": {
+      svg: `
+        <path d="M12 6h-6a2 2 0 0 0 -2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-6"></path>
+        <path d="M11 13l9 -9"></path>
+        <path d="M15 4h5v5"></path>
+      `,
+    },
   };
   const { attribs, svg } = icons[name];
 </script>

@@ -5,6 +5,7 @@ import tailwind from "@astrojs/tailwind";
 
 // https://astro.build/config
 const config = defineConfig({
+  output: "server",
   trailingSlash: "always",
   integrations: [svelte(), tailwind()],
   vite: {

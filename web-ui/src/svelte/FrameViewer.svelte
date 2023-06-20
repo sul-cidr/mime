@@ -121,6 +121,7 @@
     {#if poseData}
       <FrameDisplay
         {showFrame}
+        showControls={true}
         bind:poses={poseData}
         bind:hoveredPoseIdx
         videoId={$currentVideo.id}

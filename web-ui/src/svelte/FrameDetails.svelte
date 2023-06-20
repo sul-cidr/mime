@@ -35,10 +35,7 @@
         <div class="flex align-stretch gap-2">
           <button
             class="button px-2 variant-filled"
-            on:click={() => {
-              // console.log(pose);
-              $currentPose = pose;
-            }}
+            on:click={() => ($currentPose = pose)}
           >
             sim pose
           </button>
