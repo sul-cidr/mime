@@ -4,7 +4,7 @@
   import Icon from "@svelte/Icon.svelte";
 
   export let poses: Array<PoseRecord>;
-  export let trackCt: number | 0;
+  export let trackCt: number;
   export let hoveredPoseIdx: number | undefined;
 </script>
 
