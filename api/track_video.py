@@ -7,9 +7,10 @@ import asyncio
 import logging
 from pathlib import Path
 
+from rich.logging import RichHandler
+
 import lib.pose_tracker as pose_tracker
 from mime_db import MimeDb
-from rich.logging import RichHandler
 
 
 async def main() -> None:
