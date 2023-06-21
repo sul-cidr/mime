@@ -54,7 +54,6 @@ async def main() -> None:
     video_name = video_path.name
 
     video_id = await db.get_video_id(video_name)
-    video_id = video_id[0]["id"]
 
     video_metadata = await db.get_video_by_id(video_id)
 
