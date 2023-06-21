@@ -67,7 +67,12 @@ EOF
 COPY . .
 
 # Install application dependencies
-RUN pip install pipenv && pipenv install --dev --deploy --system
+RUN pip install pipenv
+RUN pipenv lock && pipenv --clear && pipenv --rm
+RUN pipenv install --dev --deploy --system
+
+# lap is now  a dependency for the api container, not just the notebook
+RUN pip install --no-cache-dir lap
 
 # Install jupyter and notebook-only dependencies
 # (not added to Pipfile as it doesn't make sense to include it as part of the 
