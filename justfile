@@ -12,6 +12,14 @@ default:
 @build:
   docker compose build
 
+# Lint Python files with ruff
+@lint:
+  docker compose exec api ruff check .
+
+# Lint Python files with ruff, and fix where possible
+@lint-fix:
+  docker compose exec api ruff check --fix .
+
 # Provide paths relative to $VIDEO_SRC_FOLDER
 @add-video path:
   docker compose exec api sh -c "/app/load_video.py --video-path \"\$VIDEO_SRC_FOLDER/$1\""
