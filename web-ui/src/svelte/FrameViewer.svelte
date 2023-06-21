@@ -8,7 +8,7 @@
   import { currentVideo, currentFrame } from "@svelte/stores";
 
   let poseData: Array<PoseRecord>;
-  let trackCt: number | 0;
+  let trackCt: number;
   let showFrame: boolean = true;
   let playInterval: number | undefined;
   let hoveredPoseIdx: number | undefined;
