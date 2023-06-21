@@ -121,7 +121,7 @@
   <div class="flex gap-4 p-4 bg-surface-100-800-token">
     {#if poseData}
       <FrameDisplay {showFrame} bind:poses={poseData} bind:hoveredPoseIdx />
-      <FrameDetails bind:poses={poseData} bind:trackCt={trackCt} bind:hoveredPoseIdx />
+      <FrameDetails bind:poses={poseData} {trackCt} bind:hoveredPoseIdx />
     {:else}
       Loading pose data... <ProgressBar />
     {/if}
