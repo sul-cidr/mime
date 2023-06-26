@@ -14,16 +14,23 @@
   let hoveredPoseIdx: number | undefined;
 
   const updatePoseData = (data: Array<PoseRecord>) => {
-    poseData = data;
-    let trackCount = 0;
-    data.forEach((pr: PoseRecord) => {
-      if (pr.track_id != 0)
-        trackCount += 1;
-    })
-    trackCt = trackCount;
+    if (data) {
+      poseData = data;
+      let trackCount = 0;
+      if (data.length) {
+        data.forEach((pr: PoseRecord) => {
+          if (pr.track_id != 0)
+            trackCount += 1;
+        })
+      }
+      trackCt = trackCount;
+    }
   };
 
   async function getPoseData(videoId: string, frame: number) {
+    if (!frame) {
+      return null;
+    }
     const response = await fetch(`${API_BASE}/poses/${videoId}/${frame}/`);
     return await response.json();
   }
