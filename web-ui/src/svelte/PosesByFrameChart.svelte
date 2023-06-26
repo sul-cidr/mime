@@ -7,9 +7,10 @@
   import Brush from "@layercake/Brush.html.svelte";
   import Key from "@layercake/Key.html.svelte";
   import MultiLine from "@layercake/MultiLine.svelte";
+  import ProgressLine from "@/src/svelte/layercake/ProgressLine.svelte";
   import SharedTooltip from "@layercake/SharedTooltip.html.svelte";
 
-  import { currentVideo } from "@svelte/stores";
+  import { currentFrame, currentVideo } from "@svelte/stores";
 
   export let data: Array<FrameRecord>;
 
@@ -45,14 +46,14 @@
     let i = startFrame;
     framesInRange.forEach((frame: FrameRecord) => {
       while (i < frame.frame) {
-        timeSeries.push({ frame: i, avgScore: 0, poseCt: 0, trackCt: 0 });
+        timeSeries.push({ frame: i, avgScore: 0, poseCt: 0, trackCt: 0});
         i++;
       }
       timeSeries.push(frame);
       i++;
     });
     while (i < endFrame) {
-      timeSeries.push({ frame: i, avgScore: 0, poseCt: 0, trackCt: 0 });
+      timeSeries.push({ frame: i, avgScore: 0, poseCt: 0, trackCt: 0});
       i++;
     }
     return timeSeries;
@@ -113,6 +114,7 @@
       />
       <AxisY ticks={5} formatTick={formatTickY} />
       <MultiLine {hiddenSeries} />
+      <ProgressLine frameno={$currentFrame || 0} />
     </Svg>
 
     <Html>
@@ -148,6 +150,7 @@
         tickMarks={true}
       />
       <MultiLine faded={brushFaded} />
+      <ProgressLine frameno={$currentFrame || 0} />
     </Svg>
     <Html>
       <Brush bind:min={brushExtents[0]} bind:max={brushExtents[1]} />
