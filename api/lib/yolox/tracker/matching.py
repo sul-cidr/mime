@@ -5,8 +5,8 @@ import scipy
 # from scipy.optimize import linear_sum_assignment
 from scipy.spatial.distance import cdist
 
-from yolox.tracker.python_bbox import bbox_overlaps as bbox_ious
-from yolox.tracker import kalman_filter
+from . import kalman_filter
+from .python_bbox import bbox_overlaps as bbox_ious
 
 
 def merge_matches(m1, m2, shape):

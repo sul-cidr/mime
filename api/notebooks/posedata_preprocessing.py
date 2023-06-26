@@ -1,18 +1,21 @@
-from datetime import datetime, timedelta
 import json
 import math
 import os
-from pathlib import Path
 import statistics
+import sys
+from datetime import datetime, timedelta
+from pathlib import Path
 
 import cv2
-from IPython.display import display
-from ipywidgets import IntProgress
 import jsonlines
 import numpy as np
+from IPython.display import display
+from ipywidgets import IntProgress
 from skimage.metrics import structural_similarity
 
-from yolox.tracker.byte_tracker import BYTETracker
+sys.path.append("..")
+
+from lib.yolox.tracker.byte_tracker import BYTETracker
 
 SEEK_SCORE_THRESHOLD = 0.99
 

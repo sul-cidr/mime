@@ -29,6 +29,7 @@ class MimeDb:
 
     from mime_db._data_loading import (
         add_video,
+        add_video_tracks,
         annotate_pose,
         clear_poses,
         load_openpifpaf_predictions,
@@ -39,7 +40,9 @@ class MimeDb:
         get_frame_data,
         get_nearest_neighbors,
         get_pose_data_by_frame,
+        get_pose_data_from_video,
         get_video_by_id,
+        get_video_id,
     )
 
     _pool: asyncpg.Pool

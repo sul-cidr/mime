@@ -3,13 +3,13 @@ import logging
 import os
 from uuid import UUID
 
+import cv2
 import imageio.v3 as iio
 import uvicorn
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_utils.timing import add_timing_middleware
-
 from lib.json_encoder import MimeJSONEncoder
 from mime_db import MimeDb
 
@@ -58,9 +58,45 @@ async def videos(request: Request):
 async def get_frame(video_id: UUID, frame: int, request: Request):
     video = await request.app.state.db.get_video_by_id(video_id)
     video_path = f"/videos/{video['video_name']}"
-    img = iio.imread(video_path, index=frame, plugin="pyav")
+    img = iio.imread(video_path, index=frame - 1, plugin="pyav")
     return Response(
         content=iio.imwrite("<bytes>", img, extension=".jpeg"),
+        media_type="image/jpeg",
+    )
+
+
+@mime_api.get("/frame/{video_id}/{frame}/{xywh}/")
+async def get_frame_region(video_id: UUID, frame: int, xywh: str, request: Request):
+    video = await request.app.state.db.get_video_by_id(video_id)
+    video_path = f"/videos/{video['video_name']}"
+    x, y, w, h = [round(float(elt)) for elt in xywh.split(",")]
+    img = iio.imread(video_path, index=frame - 1, plugin="pyav")
+    img_region = img[y : y + h, x : x + w]
+    return Response(
+        content=iio.imwrite("<bytes>", img_region, extension=".jpeg"),
+        media_type="image/jpeg",
+    )
+
+
+@mime_api.get("/frame/resize/{video_id}/{frame}/{xywh_resize}/")
+async def get_frame_region_resized(
+    video_id: UUID, frame: int, xywh_resize: str, request: Request
+):
+    video = await request.app.state.db.get_video_by_id(video_id)
+    video_path = f"/videos/{video['video_name']}"
+    xywh, resize_dims = xywh_resize.split("|")
+    x, y, w, h = [round(float(elt)) for elt in xywh.split(",")]
+    img = iio.imread(video_path, index=frame - 1, plugin="pyav")
+    img_region = img[y : y + h, x : x + w]
+    rw, rh = [round(float(elt)) for elt in resize_dims.split(",")]
+    if rw is not None and rh is not None:
+        resized_region = cv2.resize(img_region, (rw, rh))
+    elif rw is not None and rh is None:
+        resized_region = cv2.resize(img_region, (rw, h))
+    elif rw is None and rh is not None:
+        resized_region = cv2.resize(img_region, (w, rh))
+    return Response(
+        content=iio.imwrite("<bytes>", resized_region, extension=".jpeg"),
         media_type="image/jpeg",
     )
 

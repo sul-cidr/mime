@@ -8,15 +8,29 @@
   import { currentVideo, currentFrame } from "@svelte/stores";
 
   let poseData: Array<PoseRecord>;
+  let trackCt: number | 0;
   let showFrame: boolean = true;
   let playInterval: number | undefined;
   let hoveredPoseIdx: number | undefined;
 
   const updatePoseData = (data: Array<PoseRecord>) => {
-    poseData = data;
+    if (data) {
+      poseData = data;
+      let trackCount = 0;
+      if (data.length) {
+        data.forEach((pr: PoseRecord) => {
+          if (pr.track_id != 0)
+            trackCount += 1;
+        })
+      }
+      trackCt = trackCount;
+    }
   };
 
   async function getPoseData(videoId: string, frame: number) {
+    if (!frame) {
+      return null;
+    }
     const response = await fetch(`${API_BASE}/poses/${videoId}/${frame}/`);
     return await response.json();
   }
@@ -81,7 +95,7 @@
   <div class="flex gap-4 p-4 bg-surface-100-800-token">
     {#if poseData}
       <FrameDisplay {showFrame} bind:poses={poseData} bind:hoveredPoseIdx />
-      <FrameDetails bind:poses={poseData} bind:hoveredPoseIdx />
+      <FrameDetails bind:poses={poseData} bind:trackCt={trackCt} bind:hoveredPoseIdx />
     {:else}
       Loading pose data... <ProgressBar />
     {/if}

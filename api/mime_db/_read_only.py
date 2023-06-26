@@ -9,7 +9,8 @@ async def get_available_videos(self) -> list:
         """
         SELECT video.*,
           COUNT(pose) AS pose_ct,
-          TRUNC(COUNT(pose)::decimal / video.frame_count, 2) as poses_per_frame
+          COUNT(DISTINCT track_id) filter (where track_id > 0) AS track_ct,
+          TRUNC(COUNT(pose)::decimal / video.frame_count, 2) AS poses_per_frame
         FROM video INNER JOIN pose ON video.id = pose.video_id
         GROUP BY video.id
         ORDER BY video.video_name;
@@ -27,6 +28,7 @@ async def get_pose_data_by_frame(self, video_id: UUID) -> list:
         """
         SELECT frame,
                 count(pose_idx) AS "poseCt",
+                count(NULLIF(track_id,0)) AS "trackCt",
                 ROUND(AVG(score)::numeric, 2) AS "avgScore"
         FROM pose
         WHERE video_id = $1
@@ -34,6 +36,19 @@ async def get_pose_data_by_frame(self, video_id: UUID) -> list:
         ORDER BY frame;
         """,
         video_id,
+    )
+
+
+async def get_pose_data_from_video(self, video_id: UUID) -> list:
+    return await self._pool.fetch(
+        f"SELECT * FROM pose WHERE video_id = $1 ORDER BY frame ASC;",
+        video_id,
+    )
+
+
+async def get_video_id(self, video_name: str) -> asyncpg.Record:
+    return await self._pool.fetch(
+        f"SELECT id FROM video WHERE video_name = $1;", video_name
     )
 
 
@@ -51,7 +66,7 @@ async def get_frame_data(self, video_id: UUID, frame: int) -> list:
 
 
 async def get_nearest_neighbors(
-    self, video_id: UUID, frame: int, pose_idx: int, metric="cosine", limit=5
+    self, video_id: UUID, frame: int, pose_idx: int, metric="cosine", limit=50
 ) -> list:
     sub_query = """
         SELECT norm

@@ -5,7 +5,6 @@
 -->
 <script>
   import { getContext } from "svelte";
-  import { currentVideo } from "@svelte/stores";
 
   export let hiddenSeries = [];
   export let faded = false;
