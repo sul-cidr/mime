@@ -37,4 +37,5 @@ type FrameRecord = {
   avgScore: number;
   poseCt: number;
   trackCt: number;
+  similar: number | undefined;
 };
