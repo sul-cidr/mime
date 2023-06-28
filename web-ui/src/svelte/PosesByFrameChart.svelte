@@ -10,17 +10,20 @@
   import ProgressLine from "@/src/svelte/layercake/ProgressLine.svelte";
   import SharedTooltip from "@layercake/SharedTooltip.html.svelte";
 
-  import { currentFrame, currentVideo } from "@svelte/stores";
+  import { currentFrame, currentVideo, similarPoseFrames } from "@svelte/stores";
 
   export let data: Array<FrameRecord>;
 
-  const seriesColors = ["#0fba81", "#4f46e5", "magenta", "green", "orange"];
+  const seriesColors = ["#0fba81", "#4f46e5", "magenta", "#f9e076", "green", "orange"];
   const formatTickXAsTime = (d: number) => { return new Date(d / $currentVideo.fps * 1000).toISOString().slice(12,19).replace(/^0:/,"");
   }
   const formatTickX = (d: unknown) => d;
   const formatTickY = (d: unknown) => d;
 
   const seriesNames = Object.keys(data[0]!).filter((d) => d !== "frame");
+  if (!seriesNames.includes("similar")) {
+    seriesNames.push("similar");
+  }
 
   let hiddenSeries: Array<string> = [];
 
@@ -32,8 +35,30 @@
 
   let brushFaded = true;
 
+  let maxValue:number = 0;
+
+  // This is a pretty silly way to get a bar that always extends to the top
+  // of the chart, but short of implementing multiple Y axes for the MultiLine
+  // component, it may be the best option -- assuming we want to add such
+  // maxed-out lines to the chart, which is debatable, although it's a fairly
+  // effective way of indicating where similar poses occur on the timeline.
+  const getMaxValue = (data:Array<FrameRecord>) => {
+    let maxSoFar = 0;
+    for (const item of data) {
+      for (const [key, value] of Object.entries(item)) {
+        if (!hiddenSeries.concat(['frame']).includes(key)) {
+          if (value && value > maxSoFar) {
+            maxSoFar = value;
+          }
+        }
+      }
+    }
+    return maxSoFar;
+  }
+
   const fillEmptyFrames = (
     data: Array<FrameRecord>,
+    similarPoseFrames: {[frameno: number]: number},
     startFrame = 1,
     endFrame = $currentVideo.frame_count,
   ): Array<FrameRecord> => {
@@ -46,14 +71,20 @@
     let i = startFrame;
     framesInRange.forEach((frame: FrameRecord) => {
       while (i < frame.frame) {
-        timeSeries.push({ frame: i, avgScore: 0, poseCt: 0, trackCt: 0});
+        timeSeries.push({ frame: i, avgScore: 0, poseCt: 0, trackCt: 0, similar: 0});
         i++;
       }
-      timeSeries.push(frame);
+      let frameWithSimilarMatches = frame;
+      // XXX Using maxValue in this way leads to nonsensical "Similar:" values
+      // in the tooltips for frames with matching poses. Either the tooltip
+      // code should be customized to hide these, or we shouldn't use this
+      // method at all for highlighting matching frames.
+      frameWithSimilarMatches['similar'] = (i in similarPoseFrames) ? maxValue : 0;
+      timeSeries.push(frameWithSimilarMatches);
       i++;
     });
     while (i < endFrame) {
-      timeSeries.push({ frame: i, avgScore: 0, poseCt: 0, trackCt: 0});
+      timeSeries.push({ frame: i, avgScore: 0, poseCt: 0, trackCt: 0, similar: 0});
       i++;
     }
     return timeSeries;
@@ -62,7 +93,7 @@
   const formatTitle = (d: string) => `Frame ${d}`;
 
   $: {
-    groupedData = groupLonger(fillEmptyFrames(data), seriesNames, {
+    groupedData = groupLonger(fillEmptyFrames(data, $similarPoseFrames), seriesNames, {
       groupTo: "series",
       valueTo: "value",
     });
@@ -82,13 +113,14 @@
       Math.ceil($currentVideo.frame_count * (brushExtents[1] || 1)),
     );
     groupedBrushedData = groupLonger(
-      fillEmptyFrames(data, startFrame, endFrame),
+      fillEmptyFrames(data, $similarPoseFrames, startFrame, endFrame),
       seriesNames,
       {
         groupTo: "series",
         valueTo: "value",
       },
     );
+    maxValue = getMaxValue(data);
   }
 </script>
 
