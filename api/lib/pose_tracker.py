@@ -110,7 +110,7 @@ def track_poses(pose_data, video_fps, video_width, video_height):
         frameno = res[0]
         # The bbox coordinates returned by the ByteTracker usually deviate by a small
         # amount from those it receives as input. Perhaps they're being smoothed/
-        # interpolated as part of the tracking process? ㅑn any case, this complicates
+        # interpolated as part of the tracking process? In any case, this complicates
         # the matching process.
         # One approach is to match on the pose confidence scores, since ByteTracker
         # just seems to pass those through unmodified. But it's better just to
