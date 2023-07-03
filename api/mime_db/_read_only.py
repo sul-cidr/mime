@@ -46,6 +46,13 @@ async def get_pose_data_from_video(self, video_id: UUID) -> list:
     )
 
 
+async def get_unique_track_ids_from_video(self, video_id: UUID) -> list:
+    return await self._pool.fetch(
+        f"SELECT UNIQUE track_id FROM pose WHERE video_id = $1;",
+        video_id,
+    )
+
+
 async def get_video_id(self, video_name: str) -> asyncpg.Record:
     return await self._pool.fetch(
         f"SELECT id FROM video WHERE video_name = $1;", video_name

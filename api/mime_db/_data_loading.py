@@ -104,6 +104,42 @@ async def add_video_tracks(self, video_id: UUID | None, track_data) -> None:
             )
 
 
+async def add_video_movelets(self, movelets_data, reindex=True) -> None:
+    data = [tuple(movelet) for movelet in movelets_data]
+    await self._pool.executemany(
+        """
+        INSERT INTO movelet (
+            video_id,
+            track_id,
+            tick,
+            start_frame,
+            end_frame,
+            pose_idx,
+            start_timecode,
+            end_timecode,
+            prev_norm,
+            norm,
+            motion)
+            VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+        ;
+        """,
+        data,
+    )
+
+    logging.info(f"Loaded {len(movelets_data)} movelets!")
+
+    if reindex:
+        logging.info("Creating approximate distance index for movelets...")
+        async with self._pool.acquire() as conn:
+            await conn.execute(
+                """
+                CREATE INDEX ON movelet
+                USING ivfflat (motion vector_cosine_ops)
+                ;
+                """,
+            )
+
+
 async def annotate_pose(
     self,
     column: str,

@@ -18,3 +18,6 @@ default:
 
 @add-tracks path:
   docker compose exec api sh -c "/app/track_video.py --video-path \"\$VIDEO_SRC_FOLDER/$1\""
+
+@add-motion path:
+  docker compose exec api sh -c "/app/track_video_motion.py --video-path \"\$VIDEO_SRC_FOLDER/$1\""

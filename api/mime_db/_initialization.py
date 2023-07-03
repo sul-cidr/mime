@@ -6,6 +6,7 @@ async def initialize_db(conn, drop=False) -> None:
         logging.warn("Dropping database tables...")
         await conn.execute("DROP TABLE IF EXISTS video CASCADE;")
         await conn.execute("DROP TABLE IF EXISTS pose CASCADE;")
+        await conn.execute("DROP TABLE IF EXISTS movelet CASCADE;")
 
     await conn.execute(
         """
@@ -34,6 +35,26 @@ async def initialize_db(conn, drop=False) -> None:
             category INTEGER,
             track_id INTEGER NOT NULL DEFAULT 0,
             PRIMARY KEY(video_id, frame, pose_idx, track_id)
+        )
+        ;
+        """
+    )
+
+    await conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS movelet (
+            video_id uuid NOT NULL REFERENCES video(id) ON DELETE CASCADE,
+            track_id INTEGER NOT NULL,
+            tick INTEGER NOT NULL,
+            start_frame INTEGER NOT NULL,
+            end_frame INTEGER NOT NULL,
+            pose_idx INTEGER NOT NULL,
+            start_timecode FLOAT NOT NULL,
+            end_timecode FLOAT NOT NULL,
+            prev_norm vector(34) NOT NULL,
+            norm vector(34) NOT NULL,
+            motion vector(68) NOT NULL,
+            PRIMARY KEY(video_id, track_id, tick)
         )
         ;
         """
