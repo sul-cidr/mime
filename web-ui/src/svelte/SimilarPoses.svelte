@@ -5,7 +5,7 @@
   import { formatSeconds } from "../lib/utils";
 
   import { API_BASE } from "@config";
-  import { currentPose, currentVideo, similarPoseFrames } from "@svelte/stores";
+  import { currentPose, currentVideo, similarPoseFrames, similarMoveletFrames } from "@svelte/stores";
 
   let showFrame: boolean = false;
   export let similarityMetric = "cosine";
@@ -22,6 +22,7 @@
   const updatePoseData = (data: Array<PoseRecord>) => {
     poses = data;
     $similarPoseFrames = {};
+    $similarMoveletFrames = {};
     poses.forEach((pose) => {
       $similarPoseFrames[pose['frame']] = 1;
     });

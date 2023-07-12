@@ -5,9 +5,10 @@
   import VideosTable from "@svelte/VideosTable.svelte";
   import PoseDataExplorer from "@svelte/PoseDataExplorer.svelte";
   import FrameViewer from "@svelte/FrameViewer.svelte";
+  import SimilarMovelets from "@svelte/SimilarMovelets.svelte";
   import SimilarPoses from "@svelte/SimilarPoses.svelte";
   import Icon from "@svelte/Icon.svelte";
-  import { currentVideo, currentFrame, currentPose } from "@svelte/stores";
+  import { currentVideo, currentFrame, currentPose, currentMoveletPose } from "@svelte/stores";
   import { tooltip } from "@svelte/actions/tooltip";
 
   import { baseTitle } from "@/site-metadata.json";
@@ -57,6 +58,9 @@
     {/if}
     {#if $currentFrame}
       <FrameViewer />
+    {/if}
+    {#if $currentMoveletPose}
+      <SimilarMovelets />
     {/if}
     {#if $currentPose}
       <SimilarPoses />

@@ -49,6 +49,7 @@
   export let poseData: CocoSkeletonWithConfidence | CocoSkeletonNoConfidence;
   export let scaleFactor = 1;
   export let normalizedPose = false;
+  export let opacity = 1;
   let segments: FixedLengthArray<
     FixedLengthArray<number, 2> | FixedLengthArray<number, 3>,
     17
@@ -83,6 +84,7 @@
       // "Scale your canvas size to retina screens."
       // (see https://layercake.graphics/guide#scalecanvas)
       scaleCanvas($ctx, $width, $height);
+      $ctx.globalAlpha = opacity;
       $ctx.clearRect(0, 0, $width, $height);
 
       const normalizationFactor = normalizedPose ? $width / 100 : 1;

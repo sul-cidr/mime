@@ -185,3 +185,52 @@ async def annotate_pose(
                 """,
             )
     return
+
+
+async def annotate_movelet(
+    self,
+    column: str,
+    col_type: str,
+    video_id: UUID | None,
+    annotation_func: Callable,
+    reindex=True,
+) -> None:
+    async with self._pool.acquire() as conn:
+        await conn.execute(
+            f"ALTER TABLE movelet ADD COLUMN IF NOT EXISTS {column} {col_type};"
+        )
+
+        movelets = await conn.fetch(
+            "SELECT * FROM movelets WHERE video_id = $1;", video_id
+        )
+        async with conn.transaction():
+            for i, movelet in enumerate(movelets):
+                if i % (len(movelets) // 10) == 0:
+                    logging.info(
+                        f"Annotating movelet {i:7}/{len(movelets)} "
+                        f"({10 * (i // (len(movelets) // 10)):3}%)..."
+                    )
+                annotation_value = annotation_func(movelet)
+                await conn.execute(
+                    f"""
+                    UPDATE movelet
+                    SET {column} = $1
+                    WHERE video_id = $2 AND tick = $3 AND track_id = $4
+                    ;
+                    """,
+                    annotation_value,
+                    video_id,
+                    movelet["tick"],
+                    movelet["track_id"],
+                )
+
+        if reindex:
+            logging.info("Creating approximate index for cosine distance...")
+            await conn.execute(
+                f"""
+                CREATE INDEX ON movelet
+                USING ivfflat ({column} vector_cosine_ops)
+                ;
+                """,
+            )
+    return

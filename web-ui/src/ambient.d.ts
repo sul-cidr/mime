@@ -39,3 +39,15 @@ type FrameRecord = {
   trackCt: number;
   similar: number | undefined;
 };
+
+type MoveletRecord = {
+  video_id: number;
+  track_id: number;
+  start_frame: number;
+  end_frame: number;
+  pose_idx: number;
+  prev_norm: CocoSkeletonNoConfidence;
+  norm: CocoSkeletonNoConfidence;
+  hidden: boolean | undefined;
+  distance?: number;
+};

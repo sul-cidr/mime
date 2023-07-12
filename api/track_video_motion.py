@@ -151,6 +151,18 @@ async def main() -> None:
         list
     ) + tracks_tick_df["motion_vector"].apply(list)
 
+    tracks_tick_df["movelet_vector"] = tracks_tick_df["movelet_vector"].apply(
+        lambda x: np.nan_to_num(x, nan=-1)
+    )
+
+    tracks_tick_df["prev_tick_norm"] = tracks_tick_df["prev_tick_norm"].apply(
+        lambda x: np.nan_to_num(x, nan=-1)
+    )
+
+    tracks_tick_df["tick_norm"] = tracks_tick_df["tick_norm"].apply(
+        lambda x: np.nan_to_num(x, nan=-1)
+    )
+
     movelets = tracks_tick_df[
         [
             "video_id",
@@ -170,6 +182,13 @@ async def main() -> None:
     logging.info(f"Loading {len(movelets)} movelets into DB.")
 
     await db.add_video_movelets(movelets)
+
+    # await db.annotate_movelet(
+    #     "normed_motion",
+    #     "vector(68)",
+    #     video_id,
+    #     lambda movelet: tuple(np.nan_to_num(), nan=-1).tolist()),
+    # )
 
     # unique_track_ids = await db.get_unique_track_ids_from_video(video_id)
 

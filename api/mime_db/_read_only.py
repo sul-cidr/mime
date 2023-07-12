@@ -72,7 +72,7 @@ async def get_frame_data(self, video_id: UUID, frame: int) -> list:
     )
 
 
-async def get_nearest_neighbors(
+async def get_nearest_poses(
     self, video_id: UUID, frame: int, pose_idx: int, metric="cosine", limit=500
 ) -> list:
     sub_query = """
@@ -97,5 +97,46 @@ async def get_nearest_neighbors(
         video_id,
         frame,
         pose_idx,
+        limit,
+    )
+
+
+async def get_movelet_from_pose(
+    self, video_id: UUID, frame: int, track_id: int
+) -> asyncpg.Record:
+    return await self._pool.fetchrow(
+        "SELECT * FROM movelet WHERE video_id = $1 AND start_frame <= $2 AND end_frame >= $2 AND track_id = $3;",
+        video_id,
+        frame,
+        track_id,
+    )
+
+
+async def get_nearest_movelets(
+    self, video_id: UUID, frame: int, track_id: int, metric="cosine", limit=500
+) -> list:
+    sub_query = """
+        SELECT motion
+        FROM movelet
+        WHERE video_id = $1 AND start_frame <= $2 AND end_frame >= $2 AND track_id = $3
+        LIMIT 1
+        """
+
+    distance = {
+        "cosine": f"motion <=> ({sub_query})",
+        "euclidean": f"motion <-> ({sub_query})",
+        "innerproduct": f"motion <#> ({sub_query})",
+    }[metric]
+
+    return await self._pool.fetch(
+        f"""
+        SELECT *, {distance} AS distance FROM movelet
+        WHERE video_id = $1 AND NOT (start_frame <= $2 AND end_frame >= $2 AND track_id = $3)
+        ORDER BY distance
+        LIMIT $4;
+        """,
+        video_id,
+        frame,
+        track_id,
         limit,
     )

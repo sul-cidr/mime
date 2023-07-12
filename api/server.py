@@ -120,14 +120,40 @@ async def poses_by_frame(video_id: UUID, frame: int, request: Request):
 
 
 @mime_api.get("/poses/similar/{metric}/{video_id}/{frame}/{pose_idx}/")
-async def get_nearest_neighbors(
+async def get_nearest_poses(
     metric: str, video_id: UUID, frame: int, pose_idx: int, request: Request
 ):
-    frame_data = await request.app.state.db.get_nearest_neighbors(
+    frame_data = await request.app.state.db.get_nearest_poses(
         video_id, frame, pose_idx, metric
     )
     return Response(
         content=json.dumps(frame_data, cls=MimeJSONEncoder),
+        media_type="application/json",
+    )
+
+
+@mime_api.get("/movelets/pose/{video_id}/{frame}/{track_id}/")
+async def get_movelet_from_pose(
+    video_id: UUID, frame: int, track_id: int, request: Request
+):
+    movelet_data = await request.app.state.db.get_movelet_from_pose(
+        video_id, frame, track_id
+    )
+    return Response(
+        content=json.dumps(movelet_data, cls=MimeJSONEncoder),
+        media_type="application/json",
+    )
+
+
+@mime_api.get("/movelets/similar/{metric}/{video_id}/{frame}/{track_id}/")
+async def get_nearest_movelets(
+    metric: str, video_id: UUID, frame: int, track_id: int, request: Request
+):
+    movelet_data = await request.app.state.db.get_nearest_movelets(
+        video_id, frame, track_id, metric
+    )
+    return Response(
+        content=json.dumps(movelet_data, cls=MimeJSONEncoder),
         media_type="application/json",
     )
 

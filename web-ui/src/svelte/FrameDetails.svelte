@@ -1,11 +1,12 @@
 <script lang="ts">
-  import { currentVideo, currentFrame, currentPose } from "@svelte/stores";
+  import { currentVideo, currentFrame, currentPose, currentMoveletPose } from "@svelte/stores";
   import { formatSeconds } from "@utils";
   import Icon from "@svelte/Icon.svelte";
 
   export let poses: Array<PoseRecord>;
   export let trackCt: number | 0;
   export let hoveredPoseIdx: number | undefined;
+
 </script>
 
 <div class="card variant-ghost-secondary p-4 w-full">
@@ -39,8 +40,18 @@
               $currentPose = pose;
             }}
           >
-            similar
+            sim pose
           </button>
+          {#if pose.track_id != 0}
+            <button
+              class="button px-2 variant-filled"
+              on:click={() => {
+                $currentMoveletPose = pose;
+              }}
+            >
+              sim movelet
+            </button>
+          {/if}
           <button
             class="btn p-2"
             class:variant-filled={!pose.hidden}
