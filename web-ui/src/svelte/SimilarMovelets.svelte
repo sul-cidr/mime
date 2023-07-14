@@ -1,11 +1,11 @@
 <script lang="ts">
-    import { Paginator, RadioGroup, RadioItem, SlideToggle } from "@skeletonlabs/skeleton";
-    import { LayerCake, Canvas, Html } from "layercake";
+    import { Paginator, RadioGroup, RadioItem } from "@skeletonlabs/skeleton";
+    import { LayerCake, Canvas } from "layercake";
     import Movelet from "@svelte/Movelet.svelte";
     import { formatSeconds } from "../lib/utils";
   
     import { API_BASE } from "@config";
-    import { currentMovelet, currentMoveletPose, currentVideo, similarMoveletFrames, similarPoseFrames } from "@svelte/stores";
+    import { currentMovelet, currentMoveletPose, currentVideo, similarMoveletFrames } from "@svelte/stores";
   
     //let showFrame: boolean = false;
     export let similarityMetric = "cosine";
@@ -18,15 +18,15 @@
       size: 50,
       amounts: [simStep]
     };
+
+    const resetMovelets = () => $similarMoveletFrames = {};
   
     const updateMoveletData = (data: MoveletRecord[]) => {
       movelets = data;
       $similarMoveletFrames = {};
-      $similarPoseFrames = {};
       movelets.forEach((movelet) => {
         for (let i = movelet['start_frame']; i <= movelet['end_frame']; i++) {
             $similarMoveletFrames[i] = 1;
-            $similarPoseFrames[i] = 1;
         }
       });
       simPager.size=movelets.length
@@ -137,6 +137,7 @@
       class="variant-ghost-secondary px-4 pt-4 pb-8 flex flex-col gap-4 items-center"
     >
       <div class="p-1 inline-flex items-center space-x-1 rounded-token">
+        <span><strong>Movelets similarity:</strong></span>
         <RadioGroup>
           <RadioItem
             bind:group={similarityMetric}
@@ -154,6 +155,7 @@
             value="innerproduct">Inner Product</RadioItem
           >
         </RadioGroup>
+        <span><strong><button class="btn-sm variant-filled" type="button" on:click={resetMovelets}>X</button></strong></span>
         <!-- <SlideToggle name="slider-label" bind:checked={showFrame} size="sm">
           Show Image
         </SlideToggle> -->

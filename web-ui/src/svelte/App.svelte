@@ -8,7 +8,7 @@
   import SimilarMovelets from "@svelte/SimilarMovelets.svelte";
   import SimilarPoses from "@svelte/SimilarPoses.svelte";
   import Icon from "@svelte/Icon.svelte";
-  import { currentVideo, currentFrame, currentPose, currentMoveletPose } from "@svelte/stores";
+  import { currentVideo, currentFrame, currentPose, similarPoseFrames, similarMoveletFrames, currentMoveletPose } from "@svelte/stores";
   import { tooltip } from "@svelte/actions/tooltip";
 
   import { baseTitle } from "@/site-metadata.json";
@@ -59,10 +59,10 @@
     {#if $currentFrame}
       <FrameViewer />
     {/if}
-    {#if $currentMoveletPose}
+    {#if $similarMoveletFrames && $currentMoveletPose}
       <SimilarMovelets />
     {/if}
-    {#if $currentPose}
+    {#if $similarPoseFrames && $currentPose}
       <SimilarPoses />
     {/if}
   </section>

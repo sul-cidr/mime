@@ -37,7 +37,8 @@ type FrameRecord = {
   avgScore: number;
   poseCt: number;
   trackCt: number;
-  similar: number | undefined;
+  sim_pose: number | undefined;
+  sim_move: number | undefined;
 };
 
 type MoveletRecord = {

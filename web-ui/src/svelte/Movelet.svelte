@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { LayerCake, Canvas, Html } from "layercake";
+  import { LayerCake, Canvas } from "layercake";
   import Pose from "@svelte/Pose.svelte";
 
   export let moveletData: MoveletRecord;

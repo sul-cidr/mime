@@ -36,6 +36,8 @@
 
   const selectVideoHandler = ({ detail: video }: { detail: VideoRecord }) => {
     $currentVideo = video;
+    // $currentPose = null;
+    // $currentMovelet = null;
     $similarPoseFrames = {};
     $similarMoveletFrames = {};
   };
