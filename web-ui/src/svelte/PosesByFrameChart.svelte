@@ -10,7 +10,7 @@
   import ProgressLine from "@/src/svelte/layercake/ProgressLine.svelte";
   import SharedTooltip from "@layercake/SharedTooltip.html.svelte";
 
-  import { currentFrame, currentVideo, similarMoveletFrames, similarPoseFrames } from "@svelte/stores";
+  import { currentFrame, currentVideo, currentPose, currentMovelet, seriesNames, similarMoveletFrames, similarPoseFrames } from "@svelte/stores";
 
   export let data: Array<FrameRecord>;
 
@@ -20,13 +20,7 @@
   const formatTickX = (d: unknown) => d;
   const formatTickY = (d: unknown) => d;
 
-  const seriesNames = Object.keys(data[0]!).filter((d) => d !== "frame");
-  if (!seriesNames.includes("sim_pose")) {
-    seriesNames.push("sim_pose");
-  }
-  if (!seriesNames.includes("sim_move")) {
-    seriesNames.push("sim_move");
-  }
+  $seriesNames = Object.keys(data[0]!).filter((d) => d !== "frame");
 
   let hiddenSeries: Array<string> = [];
 
@@ -97,8 +91,24 @@
 
   const formatTitle = (d: string) => `Frame ${d}`;
 
+  $: if ($currentPose) {
+    if (Object.keys($similarPoseFrames).length && !$seriesNames.includes("sim_pose")) {
+      $seriesNames.push("sim_pose");
+    } else if (!Object.keys($similarPoseFrames).length && $seriesNames.includes("sim_pose")) {
+      $seriesNames.splice($seriesNames.indexOf("sim_pose"), 1);
+    }
+  }
+
+  $: if ($currentMovelet) {
+    if (Object.keys($similarMoveletFrames).length && !$seriesNames.includes("sim_move")) {
+      $seriesNames.push("sim_move");
+    } else if (!Object.keys($similarMoveletFrames).length && $seriesNames.includes("sim_move")) {
+      $seriesNames.splice($seriesNames.indexOf("sim_move", 1));
+    }
+  }
+
   $: {
-    groupedData = groupLonger(fillEmptyFrames(data, $similarPoseFrames, $similarMoveletFrames), seriesNames, {
+    groupedData = groupLonger(fillEmptyFrames(data, $similarPoseFrames, $similarMoveletFrames), $seriesNames, {
       groupTo: "series",
       valueTo: "value",
     });
@@ -119,7 +129,7 @@
     );
     groupedBrushedData = groupLonger(
       fillEmptyFrames(data, $similarPoseFrames, $similarMoveletFrames, startFrame, endFrame),
-      seriesNames,
+      $seriesNames,
       {
         groupTo: "series",
         valueTo: "value",

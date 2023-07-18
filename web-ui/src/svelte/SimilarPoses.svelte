@@ -5,7 +5,7 @@
   import { formatSeconds } from "../lib/utils";
 
   import { API_BASE } from "@config";
-  import { currentPose, currentVideo, similarPoseFrames, similarMoveletFrames } from "@svelte/stores";
+  import { currentPose, currentVideo, similarPoseFrames } from "@svelte/stores";
 
   let showFrame: boolean = false;
   export let similarityMetric = "cosine";
@@ -19,10 +19,11 @@
     amounts: [simStep]
   };
 
+  const resetPoses = () => $similarPoseFrames = {};
+
   const updatePoseData = (data: Array<PoseRecord>) => {
     poses = data;
     $similarPoseFrames = {};
-    $similarMoveletFrames = {};
     poses.forEach((pose) => {
       $similarPoseFrames[pose['frame']] = 1;
     });
@@ -113,6 +114,7 @@
     class="variant-ghost-secondary px-4 pt-4 pb-8 flex flex-col gap-4 items-center"
   >
     <div class="p-1 inline-flex items-center space-x-1 rounded-token">
+      <span><strong>Poses similarity:</strong></span>
       <RadioGroup>
         <RadioItem
           bind:group={similarityMetric}
@@ -133,6 +135,7 @@
       <SlideToggle name="slider-label" bind:checked={showFrame} size="sm">
         Show Image
       </SlideToggle>
+      <span><strong><button class="btn-sm variant-filled" type="button" on:click={resetPoses}>X</button></strong></span>
     </div>
     {#if poses}
       <div class="flex gap-4">
