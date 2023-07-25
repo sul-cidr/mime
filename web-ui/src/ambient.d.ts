@@ -28,6 +28,7 @@ type PoseRecord = {
   score: number;
   track_id: number;
   norm: CocoSkeletonNoConfidence;
+  face_bbox: FixedLengthArray<number, 4>;
   hidden: boolean | undefined;
   distance?: number;
 };

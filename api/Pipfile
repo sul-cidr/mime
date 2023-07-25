@@ -6,6 +6,7 @@ name = "pypi"
 [packages]
 asyncpg = "*"
 av = "*"
+deepface = "*"
 faiss-cpu = "*"
 fastapi = "*"
 fastapi-utils = "*"

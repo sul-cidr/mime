@@ -13,6 +13,8 @@
   export let displayWidthPx = 640;
 
   const scaleFactor = displayWidthPx / frameWidth;
+
+  console.log(poses[0]);
 </script>
 
 <div>
@@ -67,6 +69,23 @@
                 pointer-events="visible"
                 style="cursor: pointer"
               />
+              {#if poseData.face_bbox != null}
+                <rect
+                  x={poseData.face_bbox[0]}
+                  y={poseData.face_bbox[1]}
+                  height={poseData.face_bbox[3]}
+                  width={poseData.face_bbox[2]}
+                  stroke="blue"
+                  fill="none"
+                  stroke-width="1"
+                  class:selected={hoveredPoseIdx === i}
+                  on:click={() => console.log(`bbox ${i}`)}
+                  on:mouseover={() => (hoveredPoseIdx = i)}
+                  on:mouseout={() => (hoveredPoseIdx = undefined)}
+                  pointer-events="visible"
+                  style="cursor: pointer"
+                />
+              {/if}
               <text
                 dominant-baseline="hanging"
                 x={poseData.bbox[0] + 2}

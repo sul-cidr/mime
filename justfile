@@ -21,3 +21,15 @@ default:
 
 @add-motion path:
   docker compose exec api sh -c "/app/track_video_motion.py --video-path \"\$VIDEO_SRC_FOLDER/$1\""
+
+@add-faces path:
+  docker compose exec api sh -c "/app/detect_pose_faces.py --video-path \"\$VIDEO_SRC_FOLDER/$1\""
+
+@load-faces path:
+  docker compose exec api sh -c "/app/load_face_data.py --json-path \"\$VIDEO_SRC_FOLDER/$1\""
+
+@match-faces path:
+  docker compose exec api sh -c "/app/match_faces_to_poses.py --video-name \"\$VIDEO_SRC_FOLDER/$1\""
+
+@cluster-faces path:
+  docker compose exec api sh -c "/app/cluster_pose_faces.py --video-path \"\$VIDEO_SRC_FOLDER/$1\""
