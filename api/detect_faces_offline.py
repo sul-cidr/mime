@@ -13,7 +13,147 @@ import jsonlines
 import numpy as np
 import pandas as pd
 from deepface import DeepFace
+from deepface.commons import functions
+from retinaface import RetinaFace  # this is not a must dependency
+from retinaface.commons import postprocess
 from rich.logging import RichHandler
+
+
+def detect_retinaface(face_detector, retinaface_model, img, align=True):
+    resp = []
+
+    obj = RetinaFace.detect_faces(img, model=retinaface_model, threshold=0.9)
+
+    if isinstance(obj, dict):
+        for face_idx in obj.keys():
+            identity = obj[face_idx]
+            facial_area = identity["facial_area"]
+
+            y = facial_area[1]
+            h = facial_area[3] - y
+            x = facial_area[0]
+            w = facial_area[2] - x
+            img_region = [x, y, w, h]
+            confidence = identity["score"]
+
+            # detected_face = img[int(y):int(y+h), int(x):int(x+w)] #opencv
+            detected_face = img[
+                facial_area[1] : facial_area[3], facial_area[0] : facial_area[2]
+            ]
+
+            if align:
+                landmarks = identity["landmarks"]
+                left_eye = landmarks["left_eye"]
+                right_eye = landmarks["right_eye"]
+                nose = landmarks["nose"]
+                # mouth_right = landmarks["mouth_right"]
+                # mouth_left = landmarks["mouth_left"]
+
+                detected_face = postprocess.alignment_procedure(
+                    detected_face, right_eye, left_eye, nose
+                )
+
+            resp.append((detected_face, img_region, confidence, identity["landmarks"]))
+
+    return resp
+
+
+# This should be a replacement for functions.extract_faces()
+# that also returns the landmarks. This will then be followed
+# by stand-in code for the rest of DeepFace.represent()
+def extract_retinaface(
+    face_detector,
+    retinaface_model,
+    img,
+    align=True,
+    enforce_detection=False,
+    grayscale=False,
+):
+    extracted_faces = []
+
+    img = functions.load_image(img)
+    # Only used if no face sub-images are detected
+    img_region = [0, 0, img.shape[1], img.shape[0]]
+
+    target_size = functions.find_target_size(model_name="DeepFace")
+
+    face_objs = detect_retinaface(face_detector, retinaface_model, img, align)
+
+    if len(face_objs) == 0 and enforce_detection is True:
+        raise ValueError(
+            "Face could not be detected. Please confirm that the picture is a face photo "
+            + "or consider to set enforce_detection param to False."
+        )
+
+    if len(face_objs) == 0 and enforce_detection is False:
+        face_objs = [(img, img_region, 0, {})]
+
+    for current_img, current_region, confidence, landmarks in face_objs:
+        if current_img.shape[0] > 0 and current_img.shape[1] > 0:
+            if grayscale is True:
+                current_img = cv2.cvtColor(current_img, cv2.COLOR_BGR2GRAY)
+
+            # resize and padding
+            if current_img.shape[0] > 0 and current_img.shape[1] > 0:
+                factor_0 = target_size[0] / current_img.shape[0]
+                factor_1 = target_size[1] / current_img.shape[1]
+                factor = min(factor_0, factor_1)
+
+                dsize = (
+                    int(current_img.shape[1] * factor),
+                    int(current_img.shape[0] * factor),
+                )
+                current_img = cv2.resize(current_img, dsize)
+
+                diff_0 = target_size[0] - current_img.shape[0]
+                diff_1 = target_size[1] - current_img.shape[1]
+                if grayscale is False:
+                    # Put the base image in the middle of the padded image
+                    current_img = np.pad(
+                        current_img,
+                        (
+                            (diff_0 // 2, diff_0 - diff_0 // 2),
+                            (diff_1 // 2, diff_1 - diff_1 // 2),
+                            (0, 0),
+                        ),
+                        "constant",
+                    )
+                else:
+                    current_img = np.pad(
+                        current_img,
+                        (
+                            (diff_0 // 2, diff_0 - diff_0 // 2),
+                            (diff_1 // 2, diff_1 - diff_1 // 2),
+                        ),
+                        "constant",
+                    )
+
+            # double check: if target image is not still the same size with target.
+            if current_img.shape[0:2] != target_size:
+                current_img = cv2.resize(current_img, target_size)
+
+            # normalizing the image pixels
+            img_pixels = np.asarray(current_img, dtype="uint8")
+            img_pixels = np.expand_dims(img_pixels, axis=0)
+            img_pixels = img_pixels / 255
+
+            # int cast is for the exception - object of type 'float32' is not JSON serializable
+            region_obj = {
+                "x": float(current_region[0]),
+                "y": float(current_region[1]),
+                "w": float(current_region[2]),
+                "h": float(current_region[3]),
+            }
+
+            extracted_face = [img_pixels, region_obj, confidence, landmarks]
+            extracted_faces.append(extracted_face)
+
+    if len(extracted_faces) == 0 and enforce_detection == True:
+        raise ValueError(
+            f"Detected face shape is {img.shape}. Consider to set enforce_detection arg to False."
+        )
+
+    return extracted_faces
 
 
 async def main() -> None:
@@ -75,49 +215,46 @@ async def main() -> None:
         cap = cv2.VideoCapture(video_file)
         cap.set(1, frameno)
         ret, img = cap.read()
-        # rgb_bg = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        # img = cv2.cvtColor(rgb_bg, cv2.COLOR_RGB2RGBA)
-        # image = np.asarray(img)
-        # cap.release()
-        # return image
         return img
+
+    deepface_model = DeepFace.build_model("DeepFace")
+
+    retinaface_model = RetinaFace.build_model()
 
     with jsonlines.open(output_path, mode="a") as writer:
         for frameno in range(video_frames):
             output_json = []
             img = image_from_video_frame(str(video_path), frameno)
-            face_vectors = []
-            try:
-                face_vectors = DeepFace.represent(
-                    img,
-                    model_name="DeepFace",
-                    enforce_detection=True,
-                    detector_backend="retinaface",
-                )
-            except Exception as ex:
-                logging.info(
-                    f"Unable to find faces in tracked pose frame {frameno + 1}"
-                )
-                continue
+            img_objs = extract_retinaface(deepface_model, retinaface_model, img)
 
-            for face_vector in face_vectors:
+            # for face_vector in face_vectors:
+            for img, region, confidence, landmarks in img_objs:
+                # custom normalization
+                img = functions.normalize_input(img=img, normalization="base")
+                embedding = deepface_model.predict(img)[0].tolist()
+
                 face_bbox = [
-                    face_vector["facial_area"]["x"],
-                    face_vector["facial_area"]["y"],
-                    face_vector["facial_area"]["w"],
-                    face_vector["facial_area"]["h"],
+                    region["x"],
+                    region["y"],
+                    region["w"],
+                    region["h"],
                 ]
+
+                float_landmarks = {}
+                for part in landmarks:
+                    float_coords = [float(num) for num in landmarks[part]]
+                    float_landmarks[part] = float_coords
+
                 output_json.append(
                     {
                         "frame": frameno + 1,
                         "bbox": face_bbox,
-                        "embedding": face_vector["embedding"],
+                        "embedding": embedding,
+                        "landmarks": float_landmarks,
+                        "confidence": confidence,
                     }
                 )
-            logging.info(f"found {len(face_vectors)} faces in frame {frameno+1}")
-
-            # with open(output_path, "w", encoding="utf-8") as out_file:
-            #     json.dump(output_json, out_file, indent=2)
+            logging.info(f"found {len(img_objs)} faces in frame {frameno+1}")
             writer.write_all(output_json)
 
 
