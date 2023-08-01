@@ -72,6 +72,19 @@ async def get_frame_data(self, video_id: UUID, frame: int) -> list:
     )
 
 
+async def get_frame_faces(self, video_id: UUID, frame: int) -> list:
+    return await self._pool.fetch(
+        "SELECT * FROM face WHERE video_id = $1 AND frame = $2;", video_id, frame
+    )
+
+
+async def get_track_frames(self, video_id: UUID) -> list:
+    return await self._pool.fetch(
+        "SELECT DISTINCT frame FROM pose WHERE video_id = $1 AND track_id > 0 ORDER BY frame ASC;",
+        video_id,
+    )
+
+
 async def get_nearest_poses(
     self, video_id: UUID, frame: int, pose_idx: int, metric="cosine", limit=500
 ) -> list:

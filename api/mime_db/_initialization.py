@@ -34,7 +34,23 @@ async def initialize_db(conn, drop=False) -> None:
             score FLOAT NOT NULL,
             category INTEGER,
             track_id INTEGER NOT NULL DEFAULT 0,
+            face_bbox FLOAT[4],
+            face_embedding vector(4096),
             PRIMARY KEY(video_id, frame, pose_idx, track_id)
+        )
+        ;
+        """
+    )
+
+    await conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS face (
+            video_id uuid NOT NULL REFERENCES video(id) ON DELETE CASCADE,
+            frame INTEGER NOT NULL,
+            bbox FLOAT[4] NOT NULL,
+            confidence FLOAT NOT NULL,
+            landmarks vector(10) NOT NULL,
+            embedding vector(4096) NOT NULL
         )
         ;
         """

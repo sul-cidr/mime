@@ -87,7 +87,7 @@ async def main() -> None:
     track_frames = await db.get_track_frames(video_id)
 
     for track_frame in track_frames:
-        print("matching tracked poses to faces in frame", track_frame["frame"])
+        logging.info(f"matching tracked poses to faces in frame {track_frame['frame']}")
 
         frame_faces = await db.get_frame_faces(video_id, track_frame["frame"])
         frame_poses = await db.get_frame_data(video_id, track_frame["frame"])
@@ -119,17 +119,12 @@ async def main() -> None:
                     track_frame["frame"],
                     pose["pose_idx"],
                     frame_faces[best_match]["bbox"],
+                    frame_faces[best_match]["confidence"],
+                    frame_faces[best_match]["landmarks"],
                     frame_faces[best_match]["embedding"],
                 )
-                print(
-                    "matched face",
-                    frame_faces[best_match]["bbox"],
-                    "to pose",
-                    pose["pose_idx"],
-                    "track",
-                    pose["track_id"],
-                    "with head bbox",
-                    head_bbox,
+                logging.info(
+                    f"matched face {frame_faces[best_match]['bbox']} to pose {pose['pose_idx']}, track {pose['track_id']} with head bbox {head_bbox}"
                 )
 
 

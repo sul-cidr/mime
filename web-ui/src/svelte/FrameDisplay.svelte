@@ -14,7 +14,6 @@
 
   const scaleFactor = displayWidthPx / frameWidth;
 
-  console.log(poses[0]);
 </script>
 
 <div>
@@ -35,7 +34,7 @@
         {#each poses as poseData}
           {#if !poseData.hidden}
             <Canvas zIndex={1}>
-              <Pose poseData={poseData.keypoints} {scaleFactor} />
+              <Pose poseData={poseData.keypoints} faceData={poseData.face_landmarks} {scaleFactor} />
             </Canvas>
           {/if}
         {/each}
@@ -75,7 +74,7 @@
                   y={poseData.face_bbox[1]}
                   height={poseData.face_bbox[3]}
                   width={poseData.face_bbox[2]}
-                  stroke="blue"
+                  stroke="limegreen"
                   fill="none"
                   stroke-width="1"
                   class:selected={hoveredPoseIdx === i}

@@ -6,6 +6,7 @@ type FixedLengthArray<
 
 type CocoSkeletonWithConfidence = FixedLengthArray<number, 51>;
 type CocoSkeletonNoConfidence = FixedLengthArray<number, 34>;
+type FaceLandmarks = FixedLengthArray<number, 10>;
 
 type VideoRecord = {
   id: string; // TODO UUID
@@ -29,6 +30,7 @@ type PoseRecord = {
   track_id: number;
   norm: CocoSkeletonNoConfidence;
   face_bbox: FixedLengthArray<number, 4>;
+  face_landmarks: FaceLandmarks;
   hidden: boolean | undefined;
   distance?: number;
 };

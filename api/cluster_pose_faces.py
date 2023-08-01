@@ -10,10 +10,13 @@ from pathlib import Path
 import imageio.v3 as iio
 import numpy as np
 import pandas as pd
-
-# from deepface import DeepFace
+from deepface.commons import distance as dst
+from deepface.commons import functions, realtime
 from mime_db import MimeDb
 from rich.logging import RichHandler
+
+DISTANCE_THRESHOLD = 0.13
+SIZE_THRESHOLD = 40  # pixels of width
 
 
 async def main() -> None:
@@ -64,7 +67,7 @@ async def main() -> None:
     poses_df = pd.DataFrame.from_records(video_poses, columns=video_poses[0].keys())
 
     # This assumes that every track only follows one person, which is correct
-    # in theory (but in practice )
+    # in theory (but in practice ...)
     logging.info("Averaging face vectors for tracks")
 
     def average_face_embeddings(embeddings):
@@ -81,6 +84,9 @@ async def main() -> None:
         if p["face_bbox"] is None:
             return 0
         return p["face_bbox"][2] * p["face_bbox"][3]
+
+    similarity_threshold = dst.findThreshold("DeepFace", "cosine")
+    logging.info(f"Similarity threshold for DeepFace+cosine is {similarity_threshold}")
 
     # We can use the largest face image as a thumbnail (if desired)
     poses_df["face_area"] = poses_df[~poses_df["face_bbox"].isnull()].apply(
@@ -116,23 +122,32 @@ async def main() -> None:
         for j, second_pose in enumerate(rep_poses):
             if i >= j:
                 continue
-            dist = cosine_distance(first_pose["face_avg"], second_pose["face_avg"])
-            # if dist < 0.2:
-            #     print(i, j, dist)
-            #     x, y, w, h = [round(coord) for coord in first_pose["bbox"]]
-            #     video_file = f"/videos/{video_name}"
-            #     img = iio.imread(
-            #         video_file, index=first_pose["frame"] - 1, plugin="pyav"
-            #     )
-            #     img_region = img[y : y + h, x : x + w]
-            #     iio.imwrite(f"{i}_{j}_1.jpg", img_region, extension=".jpeg")
-            #     x, y, w, h = [round(coord) for coord in second_pose["bbox"]]
-            #     video_file = f"/videos/{video_name}"
-            #     img = iio.imread(
-            #         video_file, index=second_pose["frame"] - 1, plugin="pyav"
-            #     )
-            #     img_region = img[y : y + h, x : x + w]
-            #     iio.imwrite(f"{i}_{j}_2.jpg", img_region, extension=".jpeg")
+            if (
+                first_pose["face_bbox"][2] < SIZE_THRESHOLD
+                or second_pose["face_bbox"][2] < SIZE_THRESHOLD
+            ):
+                continue
+            # dist = cosine_distance(first_pose["face_avg"], second_pose["face_avg"])
+            dist = cosine_distance(
+                first_pose["face_embedding"], second_pose["face_embedding"]
+            )
+            # if dist <= similarity_threshold:
+            if dist <= DISTANCE_THRESHOLD:
+                print(i, j, dist)
+                x, y, w, h = [round(coord) for coord in first_pose["face_bbox"]]
+                video_file = f"/videos/{video_name}"
+                img = iio.imread(
+                    video_file, index=first_pose["frame"] - 1, plugin="pyav"
+                )
+                img_region = img[y : y + h, x : x + w]
+                iio.imwrite(f"{i}_{j}_1.jpg", img_region, extension=".jpeg")
+                x, y, w, h = [round(coord) for coord in second_pose["face_bbox"]]
+                video_file = f"/videos/{video_name}"
+                img = iio.imread(
+                    video_file, index=second_pose["frame"] - 1, plugin="pyav"
+                )
+                img_region = img[y : y + h, x : x + w]
+                iio.imwrite(f"{i}_{j}_2.jpg", img_region, extension=".jpeg")
 
 
 if __name__ == "__main__":

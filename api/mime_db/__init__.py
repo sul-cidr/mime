@@ -29,9 +29,11 @@ class MimeDb:
 
     from mime_db._data_loading import (
         add_video,
+        add_video_faces,
         add_video_movelets,
         add_video_tracks,
         annotate_pose,
+        assign_pose_face,
         clear_poses,
         load_openpifpaf_predictions,
     )
@@ -39,11 +41,13 @@ class MimeDb:
     from mime_db._read_only import (
         get_available_videos,
         get_frame_data,
+        get_frame_faces,
         get_movelet_from_pose,
         get_nearest_movelets,
         get_nearest_poses,
         get_pose_data_by_frame,
         get_pose_data_from_video,
+        get_track_frames,
         get_video_by_id,
         get_video_id,
     )

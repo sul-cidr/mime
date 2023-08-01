@@ -73,7 +73,21 @@ async def main() -> None:
             if len(faces_to_add) >= BATCH_SIZE:
                 await db.add_video_faces(video_id, faces_to_add)
                 faces_to_add = []
-            faces_to_add.append(face)
+            # Don't bother
+            if face["confidence"] == 0 or not face["landmarks"]:
+                continue
+            landmarks_vector = [
+                coord for pair in face["landmarks"].values() for coord in pair
+            ]
+            faces_to_add.append(
+                [
+                    face["frame"],
+                    face["bbox"],
+                    face["confidence"],
+                    landmarks_vector,
+                    face["embedding"],
+                ]
+            )
         if len(faces_to_add) > 0:
             await db.add_video_faces(video_id, faces_to_add)
 
