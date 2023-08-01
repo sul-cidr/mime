@@ -18,11 +18,13 @@ from retinaface import RetinaFace  # this is not a must dependency
 from retinaface.commons import postprocess
 from rich.logging import RichHandler
 
+frontend_model_name = "ArcFace"  # "DeepFace" (could be a cmd line param)
 
-def detect_retinaface(face_detector, retinaface_model, img, align=True):
+
+def detect_retinaface(backend_model, img, align=True):
     resp = []
 
-    obj = RetinaFace.detect_faces(img, model=retinaface_model, threshold=0.9)
+    obj = RetinaFace.detect_faces(img, model=backend_model, threshold=0.9)
 
     if isinstance(obj, dict):
         for face_idx in obj.keys():
@@ -61,9 +63,8 @@ def detect_retinaface(face_detector, retinaface_model, img, align=True):
 # This should be a replacement for functions.extract_faces()
 # that also returns the landmarks. This will then be followed
 # by stand-in code for the rest of DeepFace.represent()
-def extract_retinaface(
-    face_detector,
-    retinaface_model,
+def extract_face_regions(
+    backend_model,
     img,
     align=True,
     enforce_detection=False,
@@ -75,9 +76,9 @@ def extract_retinaface(
     # Only used if no face sub-images are detected
     img_region = [0, 0, img.shape[1], img.shape[0]]
 
-    target_size = functions.find_target_size(model_name="DeepFace")
+    target_size = functions.find_target_size(model_name=frontend_model_name)
 
-    face_objs = detect_retinaface(face_detector, retinaface_model, img, align)
+    face_objs = detect_retinaface(backend_model, img, align)
 
     if len(face_objs) == 0 and enforce_detection is True:
         raise ValueError(
@@ -217,21 +218,21 @@ async def main() -> None:
         ret, img = cap.read()
         return img
 
-    deepface_model = DeepFace.build_model("DeepFace")
+    frontend_model = DeepFace.build_model(frontend_model_name)
 
-    retinaface_model = RetinaFace.build_model()
+    backend_model = RetinaFace.build_model()
 
     with jsonlines.open(output_path, mode="a") as writer:
         for frameno in range(video_frames):
             output_json = []
             img = image_from_video_frame(str(video_path), frameno)
-            img_objs = extract_retinaface(deepface_model, retinaface_model, img)
+            img_objs = extract_face_regions(backend_model, img)
 
             # for face_vector in face_vectors:
             for img, region, confidence, landmarks in img_objs:
                 # custom normalization
                 img = functions.normalize_input(img=img, normalization="base")
-                embedding = deepface_model.predict(img)[0].tolist()
+                embedding = frontend_model.predict(img)[0].tolist()
 
                 face_bbox = [
                     region["x"],
