@@ -5,6 +5,7 @@
 import argparse
 import asyncio
 import logging
+import os
 from pathlib import Path
 
 import imageio.v3 as iio
@@ -14,9 +15,10 @@ from deepface.commons import distance as dst
 from deepface.commons import functions, realtime
 from mime_db import MimeDb
 from rich.logging import RichHandler
+from sklearn.cluster import HDBSCAN
 
 DISTANCE_THRESHOLD = 0.13
-SIZE_THRESHOLD = 40  # pixels of width
+SIZE_THRESHOLD = 100  # pixels of width
 
 
 async def main() -> None:
@@ -66,10 +68,8 @@ async def main() -> None:
 
     poses_df = pd.DataFrame.from_records(video_poses, columns=video_poses[0].keys())
 
-    # This assumes that every track only follows one person, which is correct
-    # in theory (but in practice ...)
-    logging.info("Averaging face vectors for tracks")
-
+    # This assumes that every track always follows the same person throughout
+    # its duration, which is correct in theory (but in practice ...)
     def average_face_embeddings(embeddings):
         # Not sure why all these conversions are necessary...
         embeddings = np.array([embed for embed in embeddings])
@@ -85,29 +85,84 @@ async def main() -> None:
             return 0
         return p["face_bbox"][2] * p["face_bbox"][3]
 
-    similarity_threshold = dst.findThreshold("DeepFace", "cosine")
-    logging.info(f"Similarity threshold for DeepFace+cosine is {similarity_threshold}")
+    def get_face_width(p):
+        if p["face_bbox"] is None:
+            return 0
+        return p["face_bbox"][2]
 
-    # We can use the largest face image as a thumbnail (if desired)
-    poses_df["face_area"] = poses_df[~poses_df["face_bbox"].isnull()].apply(
-        get_face_area, axis=1
+    poses_df["face_width"] = poses_df.apply(get_face_width, axis=1)
+
+    similarity_threshold = dst.findThreshold("DeepFace", "cosine")
+    logging.info(
+        f"Suggested similarity threshold for DeepFace+cosine is {similarity_threshold}"
     )
 
-    poses_df["face_avg"] = (
-        poses_df[~poses_df["face_bbox"].isnull()]
-        .groupby(["track_id"])["face_embedding"]
-        .transform(average_face_embeddings)
+    print("Total poses:", len(poses_df))
+
+    print(poses_df[["face_bbox", "face_confidence"]].head(1))
+
+    poses_df = poses_df[
+        (
+            (~np.isnan(poses_df["face_confidence"]))
+            & (poses_df["face_confidence"] > 0)
+            & (poses_df["face_width"] > SIZE_THRESHOLD)
+        )
+    ].reset_index()
+
+    print("Poses with usable faces:", len(poses_df))
+
+    print(poses_df[["face_bbox", "face_confidence"]].head(1))
+
+    # We can use the largest face image as a thumbnail/rep (if desired)
+    poses_df["face_area"] = poses_df.apply(get_face_area, axis=1)
+
+    poses_df["face_avg"] = poses_df.groupby(["track_id"])["face_embedding"].transform(
+        average_face_embeddings
     )
 
     rep_poses_df = poses_df.iloc[
         (
-            poses_df[~poses_df["face_avg"].isnull()]
-            .groupby(["track_id"])["face_area"]
-            .idxmax()
+            # poses_df.groupby(["track_id"])["face_area"].idxmax()
+            # This is always pretty close to 1...
+            poses_df.groupby(["track_id"])["face_confidence"].idxmax()
         )
     ]
 
-    print(rep_poses_df[["track_id", "frame", "face_bbox", "face_area", "face_avg"]])
+    print("Faces representing a track:", len(rep_poses_df))
+
+    print(
+        rep_poses_df[["track_id", "frame", "face_bbox", "face_area", "face_confidence"]]
+    )
+
+    print(rep_poses_df.index)
+
+    features = rep_poses_df["face_embedding"].to_list()
+    hdb = HDBSCAN(min_cluster_size=5, max_cluster_size=30)
+    print("fitting HDBSCAN")
+    hdb.fit(features)
+    labels_list = hdb.labels_.tolist()
+    for cluster_id in range(0, max(labels_list) + 1):
+        if not os.path.isdir(str(cluster_id)):
+            os.mkdir(str(cluster_id))
+        print("Faces in cluster", cluster_id, labels_list.count(cluster_id))
+
+    for i, cluster_id in enumerate(labels_list):
+        if cluster_id == -1:
+            continue
+        try:
+            cluster_pose = rep_poses_df.iloc[i]
+        except Exception as e:
+            print("Error referencing face", i)
+            print(e)
+            continue
+        x, y, w, h = [round(coord) for coord in cluster_pose["face_bbox"]]
+        video_file = f"/videos/{video_name}"
+        img = iio.imread(video_file, index=cluster_pose["frame"] - 1, plugin="pyav")
+        img_region = img[y : y + h, x : x + w]
+        iio.imwrite(f"{cluster_id}/{i}.jpg", img_region, extension=".jpeg")
+    return
+
+    # Code to find and save similar face pairs
 
     rep_poses = rep_poses_df.to_dict("records")
 
@@ -133,7 +188,11 @@ async def main() -> None:
             )
             # if dist <= similarity_threshold:
             if dist <= DISTANCE_THRESHOLD:
-                print(i, j, dist)
+                print(
+                    i,
+                    j,
+                    round(dist, 2),
+                )
                 x, y, w, h = [round(coord) for coord in first_pose["face_bbox"]]
                 video_file = f"/videos/{video_name}"
                 img = iio.imread(
