@@ -79,13 +79,21 @@ async def main() -> None:
             landmarks_vector = [
                 coord for pair in face["landmarks"].values() for coord in pair
             ]
+            # If a different face feature predictor is used that doesn't return
+            # 4096 features, this should fill in the empty values.
+            # XXX This assumes 4096 features (returned by DeepFace) is the max
+            # we'll ever see. This max extent is baked into the DB as well.
+            embedding = face["embedding"]
+            if len(face["embedding"]) < 4096:
+                embedding.extend([0] * (4096 - len(face["embedding"])))
+
             faces_to_add.append(
                 [
                     face["frame"],
                     face["bbox"],
                     face["confidence"],
                     landmarks_vector,
-                    face["embedding"],
+                    embedding,
                 ]
             )
         if len(faces_to_add) > 0:

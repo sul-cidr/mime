@@ -19,6 +19,8 @@ pgvector = "*"
 python-dotenv = "*"
 rich = "*"
 scipy = "*"
+scikit-learn = "*"
+umap-learn = "*"
 uvicorn = {extras = ["standard"], version = "*"}
 
 [dev-packages]
