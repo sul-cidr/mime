@@ -140,10 +140,10 @@ def extract_face_regions(
 
             # int cast is for the exception - object of type 'float32' is not JSON serializable
             region_obj = {
-                "x": float(current_region[0]),
-                "y": float(current_region[1]),
-                "w": float(current_region[2]),
-                "h": float(current_region[3]),
+                "x": round(float(current_region[0]), 2),
+                "y": round(float(current_region[1]), 2),
+                "w": round(float(current_region[2]), 2),
+                "h": round(float(current_region[3]), 2),
             }
 
             extracted_face = [img_pixels, region_obj, confidence, landmarks]
@@ -243,7 +243,7 @@ async def main() -> None:
 
                 float_landmarks = {}
                 for part in landmarks:
-                    float_coords = [float(num) for num in landmarks[part]]
+                    float_coords = [round(float(num), 2) for num in landmarks[part]]
                     float_landmarks[part] = float_coords
 
                 output_json.append(
