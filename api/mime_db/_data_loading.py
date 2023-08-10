@@ -120,6 +120,22 @@ async def add_video_faces(self, video_id: UUID | None, faces_data) -> None:
     logging.info(f"Loaded {len(faces_data)} faces!")
 
 
+async def add_pose_faces(self, faces_data) -> None:
+    data = [tuple(face) for face in faces_data]
+
+    await self._pool.executemany(
+        """
+        INSERT INTO face (
+            video_id, frame, pose_idx, bbox, confidence, landmarks, embedding)
+            VALUES($1, $2, $3, $4, $5, $6, $7)
+        ;
+        """,
+        data,
+    )
+
+    logging.info(f"Loaded {len(faces_data)} matched faces!")
+
+
 async def assign_pose_face(
     self,
     video_id: UUID | None,

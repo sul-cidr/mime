@@ -11,14 +11,11 @@ from pathlib import Path
 import cv2
 import jsonlines
 import numpy as np
-import pandas as pd
 from deepface import DeepFace
 from deepface.commons import functions
 from retinaface import RetinaFace  # this is not a must dependency
 from retinaface.commons import postprocess
 from rich.logging import RichHandler
-
-frontend_model_name = "ArcFace"  # "DeepFace" (could be a cmd line param)
 
 
 def detect_retinaface(backend_model, img, align=True):
@@ -65,6 +62,7 @@ def detect_retinaface(backend_model, img, align=True):
 # by stand-in code for the rest of DeepFace.represent()
 def extract_face_regions(
     backend_model,
+    frontend_model_name,
     img,
     align=True,
     enforce_detection=False,
@@ -178,6 +176,14 @@ async def main() -> None:
 
     parser.add_argument("--video-path", action="store", required=True)
 
+    parser.add_argument(
+        "--model-name",
+        action="store",
+        required=False,
+        default="ArcFace",
+        help="Model to use for face feature extraction (e.g., ArcFace, DeepFace)",
+    )
+
     args = parser.parse_args()
 
     log_level = logging.DEBUG if args.verbose else logging.INFO
@@ -205,9 +211,6 @@ async def main() -> None:
     logging.info(f"Running face detection on video {video_name}")
 
     cap = cv2.VideoCapture(str(video_path))
-    video_fps = cap.get(cv2.CAP_PROP_FPS)
-    video_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-    video_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     video_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     cap.release()
 
@@ -218,7 +221,7 @@ async def main() -> None:
         ret, img = cap.read()
         return img
 
-    frontend_model = DeepFace.build_model(frontend_model_name)
+    frontend_model = DeepFace.build_model(args.model_name)
 
     backend_model = RetinaFace.build_model()
 
@@ -226,7 +229,7 @@ async def main() -> None:
         for frameno in range(video_frames):
             output_json = []
             img = image_from_video_frame(str(video_path), frameno)
-            img_objs = extract_face_regions(backend_model, img)
+            img_objs = extract_face_regions(backend_model, args.model_name, img)
 
             # for face_vector in face_vectors:
             for img, region, confidence, landmarks in img_objs:

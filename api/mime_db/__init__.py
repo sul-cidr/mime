@@ -28,6 +28,7 @@ class MimeDb:
     """Class to interact with the database."""
 
     from mime_db._data_loading import (
+        add_pose_faces,
         add_video,
         add_video_faces,
         add_video_movelets,
@@ -41,6 +42,7 @@ class MimeDb:
     from mime_db._read_only import (
         get_available_videos,
         get_frame_data,
+        get_frame_data_range,
         get_frame_faces,
         get_movelet_from_pose,
         get_nearest_movelets,

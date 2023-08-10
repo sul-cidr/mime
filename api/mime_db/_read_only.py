@@ -78,6 +78,23 @@ async def get_frame_faces(self, video_id: UUID, frame: int) -> list:
     )
 
 
+async def get_frame_data_range(
+    self, video_id: UUID, min_frame: int, max_frame: int
+) -> list:
+    return await self._pool.fetch(
+        "SELECT * FROM pose WHERE video_id = $1 AND frame >= $2 AND frame <= $3;",
+        video_id,
+        min_frame,
+        max_frame,
+    )
+
+
+async def get_frame_faces(self, video_id: UUID, frame: int) -> list:
+    return await self._pool.fetch(
+        "SELECT * FROM face WHERE video_id = $1 AND frame = $2;", video_id, frame
+    )
+
+
 async def get_track_frames(self, video_id: UUID) -> list:
     return await self._pool.fetch(
         "SELECT DISTINCT frame FROM pose WHERE video_id = $1 AND track_id > 0 ORDER BY frame ASC;",

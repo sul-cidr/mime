@@ -47,6 +47,7 @@ async def initialize_db(conn, drop=False) -> None:
         CREATE TABLE IF NOT EXISTS face (
             video_id uuid NOT NULL REFERENCES video(id) ON DELETE CASCADE,
             frame INTEGER NOT NULL,
+            pose_idx INTEGER,
             bbox FLOAT[4] NOT NULL,
             confidence FLOAT NOT NULL,
             landmarks vector(10) NOT NULL,

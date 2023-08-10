@@ -119,6 +119,15 @@ async def poses_by_frame(video_id: UUID, frame: int, request: Request):
     )
 
 
+@mime_api.get("/faces/{video_id}/{frame}/")
+async def faces_by_frame(video_id: UUID, frame: int, request: Request):
+    frame_data = await request.app.state.db.get_frame_faces(video_id, frame)
+    return Response(
+        content=json.dumps(frame_data, cls=MimeJSONEncoder),
+        media_type="application/json",
+    )
+
+
 @mime_api.get("/poses/similar/{metric}/{video_id}/{frame}/{pose_idx}/")
 async def get_nearest_poses(
     metric: str, video_id: UUID, frame: int, pose_idx: int, request: Request

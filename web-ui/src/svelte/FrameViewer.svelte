@@ -25,7 +25,25 @@
       }
       trackCt = trackCount;
     }
+    getFaceData($currentVideo.id, $currentFrame!).then((data) =>
+      integrateFaceData(data),
+    );
   };
+
+  const integrateFaceData = (data: Array<FaceRecord>) => {
+    if (data && poseData) {
+      if (data.length && poseData.length) {
+        data.forEach((fr: FaceRecord) => {
+          poseData.forEach((pr: PoseRecord, pi: number) => {
+            if (fr.pose_idx == pr.pose_idx) {
+              poseData[pi]!.face_bbox = fr.bbox;
+              poseData[pi]!.face_landmarks = fr.landmarks;
+            }
+          })
+        })
+      }
+    }
+  }
 
   async function getPoseData(videoId: string, frame: number) {
     if (!frame) {
@@ -35,9 +53,20 @@
     return await response.json();
   }
 
+  async function getFaceData(videoId: string, frame: number) {
+    if (!frame) {
+      return null;
+    }
+    const response = await fetch(`${API_BASE}/faces/${videoId}/${frame}/`);
+    return await response.json();
+  }
+
   $: getPoseData($currentVideo.id, $currentFrame!).then((data) =>
     updatePoseData(data),
   );
+  // $: getFaceData($currentVideo.id, $currentFrame!).then((data) =>
+  //   integrateFaceData(data),
+  // );
 </script>
 
 <div>
