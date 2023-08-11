@@ -49,6 +49,7 @@ class MimeDb:
         get_nearest_poses,
         get_pose_data_by_frame,
         get_pose_data_from_video,
+        get_poses_with_faces,
         get_track_frames,
         get_video_by_id,
         get_video_id,

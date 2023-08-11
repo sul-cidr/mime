@@ -89,9 +89,10 @@ async def get_frame_data_range(
     )
 
 
-async def get_frame_faces(self, video_id: UUID, frame: int) -> list:
+async def get_poses_with_faces(self, video_id: UUID) -> list:
     return await self._pool.fetch(
-        "SELECT * FROM face WHERE video_id = $1 AND frame = $2;", video_id, frame
+        f"SELECT pose.video_id as video_id, pose.frame as frame, pose.pose_idx as pose_idx, pose.track_id as track_id, face.bbox as face_bbox, face.confidence as face_confidence, face.embedding as face_embedding FROM pose, face WHERE pose.video_id = $1 AND face.video_id = $1 AND pose.frame = face.frame AND pose.pose_idx = face.pose_idx ORDER BY frame ASC;",
+        video_id,
     )
 
 
