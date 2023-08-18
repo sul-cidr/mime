@@ -11,11 +11,14 @@ from pathlib import Path
 import cv2
 import jsonlines
 import numpy as np
+import pandas as pd
 from deepface import DeepFace
 from deepface.commons import functions
 from retinaface import RetinaFace  # this is not a must dependency
 from retinaface.commons import postprocess
 from rich.logging import RichHandler
+
+frontend_model_name = "ArcFace"  # "DeepFace" (could be a cmd line param)
 
 
 def detect_retinaface(backend_model, img, align=True):
@@ -62,7 +65,6 @@ def detect_retinaface(backend_model, img, align=True):
 # by stand-in code for the rest of DeepFace.represent()
 def extract_face_regions(
     backend_model,
-    frontend_model_name,
     img,
     align=True,
     enforce_detection=False,
@@ -176,14 +178,6 @@ async def main() -> None:
 
     parser.add_argument("--video-path", action="store", required=True)
 
-    parser.add_argument(
-        "--model-name",
-        action="store",
-        required=False,
-        default="ArcFace",
-        help="Model to use for face feature extraction (e.g., ArcFace, DeepFace)",
-    )
-
     args = parser.parse_args()
 
     log_level = logging.DEBUG if args.verbose else logging.INFO
@@ -198,19 +192,40 @@ async def main() -> None:
     # should already be in the DB by the time this is run
     video_path = Path(args.video_path)
 
-    output_path = f"{video_path}.faces.jsonl"
+    output_path = f"{video_path}.faces.{frontend_model_name}.jsonl"
+
+    start_frame = 0
 
     if os.path.exists(output_path) and not args.overwrite:
-        logging.error(
-            f"Output file {output_path} already exists and --overwrite not specified. Exiting."
+        logging.info(
+            f"Output file {output_path} already exists and --overwrite not specified, will append output for any remaining unprocessed frames."
         )
-        return
+        with jsonlines.open(output_path) as reader:
+            for line in reader:
+                start_frame = line["frame"] + 1
+        logging.info(
+            f"Starting at frame {start_frame}."
+        )
+        last_line = ""
+        with open(output_path, "r", encoding="utf-8") as outf:
+            for line in outf:
+                pass
+            last_line = line
+        if "\n" not in last_line:
+            logging.info(
+                "Adding newline to end of output file so appending new JSON lines works properly"
+            )
+            with open(output_path, "a", encoding="utf-8") as outf:
+                outf.write("\n")
 
     video_name = video_path.name
 
     logging.info(f"Running face detection on video {video_name}")
 
     cap = cv2.VideoCapture(str(video_path))
+    video_fps = cap.get(cv2.CAP_PROP_FPS)
+    video_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    video_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     video_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     cap.release()
 
@@ -221,15 +236,15 @@ async def main() -> None:
         ret, img = cap.read()
         return img
 
-    frontend_model = DeepFace.build_model(args.model_name)
+    frontend_model = DeepFace.build_model(frontend_model_name)
 
     backend_model = RetinaFace.build_model()
 
     with jsonlines.open(output_path, mode="a") as writer:
-        for frameno in range(video_frames):
+        for frameno in range(start_frame, video_frames):
             output_json = []
             img = image_from_video_frame(str(video_path), frameno)
-            img_objs = extract_face_regions(backend_model, args.model_name, img)
+            img_objs = extract_face_regions(backend_model, img)
 
             # for face_vector in face_vectors:
             for img, region, confidence, landmarks in img_objs:
