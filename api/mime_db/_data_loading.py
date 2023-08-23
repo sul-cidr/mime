@@ -136,69 +136,6 @@ async def add_pose_faces(self, faces_data) -> None:
     logging.info(f"Loaded {len(faces_data)} matched faces!")
 
 
-async def assign_pose_face(
-    self,
-    video_id: UUID | None,
-    frame: int,
-    pose_idx: int,
-    face_bbox,
-    face_confidence,
-    face_landmarks,
-    face_embedding,
-) -> None:
-    async with self._pool.acquire() as conn:
-        await conn.execute(
-            "ALTER TABLE pose ADD COLUMN IF NOT EXISTS face_bbox FLOAT[4]"
-        )
-        await conn.execute(
-            "ALTER TABLE pose ADD COLUMN IF NOT EXISTS face_confidence FLOAT"
-        )
-        await conn.execute(
-            "ALTER TABLE pose ADD COLUMN IF NOT EXISTS face_landmarks vector(10)"
-        )
-        await conn.execute(
-            "ALTER TABLE pose ADD COLUMN IF NOT EXISTS face_embedding vector(4096)"
-        )
-        await conn.execute(
-            "UPDATE pose SET face_bbox = $1, face_confidence = $2, face_landmarks = $3, face_embedding = $4 WHERE video_id = $5 AND frame = $6 AND pose_idx = $7",
-            face_bbox,
-            face_confidence,
-            face_landmarks,
-            face_embedding,
-            video_id,
-            frame,
-            pose_idx,
-        )
-
-
-# async def add_video_faces(self, video_id: UUID | None, faces_data) -> None:
-#     async with self._pool.acquire() as conn:
-#         await conn.execute(
-#             "ALTER TABLE pose ADD COLUMN IF NOT EXISTS face_bbox INTEGER[4] NULL"
-#         )
-#         await conn.execute(
-#             "ALTER TABLE pose ADD COLUMN IF NOT EXISTS face_embedding vector(4096) NULL"
-#         )
-#         # await conn.execute("UPDATE pose SET face_bbox = NULL, face_embedding = NULL WHERE video_id = $1", video_id)
-
-#         for face in faces_data:
-#             await conn.execute(
-#                 """
-#                 UPDATE pose
-#                 SET face_bbox = $1,
-#                     face_embedding = $2
-#                 WHERE video_id = $3 AND frame = $4 AND pose_idx = $5 AND track_id = $6
-#                 ;
-#                 """,
-#                 face["face_bbox"],
-#                 face["face_embedding"],
-#                 video_id,
-#                 face["frame"],
-#                 face["pose_idx"],
-#                 face["track_id"],
-#             )
-
-
 async def add_video_movelets(self, movelets_data, reindex=True) -> None:
     data = [tuple(movelet) for movelet in movelets_data]
     await self._pool.executemany(

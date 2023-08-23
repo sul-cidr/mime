@@ -166,19 +166,6 @@ async def main() -> None:
                         ]
                     )
 
-                    # await db.assign_pose_face(
-                    #     video_id,
-                    #     track_frame["frame"],
-                    #     pose["pose_idx"],
-                    #     frame_faces[best_match]["bbox"],
-                    #     frame_faces[best_match]["confidence"],
-                    #     frame_faces[best_match]["landmarks"],
-                    #     frame_faces[best_match]["embedding"],
-                    # )
-                    # logging.info(
-                    #     f"matched face {frame_faces[best_match]['bbox']} to pose {pose['pose_idx']}, track {pose['track_id']} with head bbox {head_bbox}"
-                    # )
-
         if len(matches_to_assign) > 0:
             await db.add_pose_faces(matches_to_assign)
 

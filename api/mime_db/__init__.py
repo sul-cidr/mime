@@ -34,7 +34,6 @@ class MimeDb:
         add_video_movelets,
         add_video_tracks,
         annotate_pose,
-        assign_pose_face,
         clear_poses,
         load_openpifpaf_predictions,
     )
