@@ -11,6 +11,7 @@ import numpy as np
 import pandas as pd
 from mime_db import MimeDb
 from rich.logging import RichHandler
+from sklearn.metrics.pairwise import nan_euclidean_distances
 
 TICK_INTERVAL = 0.1666667
 
@@ -140,8 +141,21 @@ async def main() -> None:
             normdiff.extend([x_vel, y_vel])
         return normdiff
 
+    def compute_movement(timediff, last_norm, norm):
+        if np.isnan(timediff) or timediff == 0 or type(last_norm) == float:
+            return 0
+        motion = nan_euclidean_distances([last_norm], [norm])[0]
+        return motion / timediff
+
     tracks_tick_df["motion_vector"] = tracks_tick_df.apply(
         lambda row: compute_motion_vector(
+            row["tick_timediff"], row["prev_tick_norm"], row["tick_norm"]
+        ),
+        axis=1,
+    )
+
+    tracks_tick_df["movement"] = tracks_tick_df.apply(
+        lambda row: compute_movement(
             row["tick_timediff"], row["prev_tick_norm"], row["tick_norm"]
         ),
         axis=1,
@@ -176,6 +190,7 @@ async def main() -> None:
             "prev_tick_norm",
             "tick_norm",
             "movelet_vector",
+            "movement",
         ]
     ].values
 

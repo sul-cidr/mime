@@ -46,6 +46,13 @@ async def get_pose_data_from_video(self, video_id: UUID) -> list:
     )
 
 
+async def get_movelet_data_from_video(self, video_id: UUID) -> list:
+    return await self._pool.fetch(
+        f"SELECT * FROM movelet WHERE video_id = $1 ORDER BY start_frame ASC;",
+        video_id,
+    )
+
+
 async def get_unique_track_ids_from_video(self, video_id: UUID) -> list:
     return await self._pool.fetch(
         f"SELECT UNIQUE track_id FROM pose WHERE video_id = $1;",

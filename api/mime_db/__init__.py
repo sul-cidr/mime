@@ -43,6 +43,7 @@ class MimeDb:
         get_frame_data,
         get_frame_data_range,
         get_frame_faces,
+        get_movelet_data_from_video,
         get_movelet_from_pose,
         get_nearest_movelets,
         get_nearest_poses,

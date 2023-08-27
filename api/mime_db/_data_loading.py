@@ -151,8 +151,9 @@ async def add_video_movelets(self, movelets_data, reindex=True) -> None:
             end_timecode,
             prev_norm,
             norm,
-            motion)
-            VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+            motion,
+            movement)
+            VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
         ;
         """,
         data,

@@ -1,20 +1,19 @@
+import os
+import pickle
+import warnings
+from pathlib import Path
+
 import cv2
-from ipycanvas import Canvas, hold_canvas
-from IPython.display import display
-from ipywidgets import IntProgress
+import faiss
 import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
 import numpy as np
-import os
-from pathlib import Path
-import pickle
-from PIL import Image, ImageColor, ImageDraw, ImageFont, ImageEnhance
-from scipy.spatial.distance import cosine, correlation
-import warnings
-
-import faiss
-
+from ipycanvas import Canvas, hold_canvas
+from IPython.display import display
+from ipywidgets import IntProgress
+from PIL import Image, ImageColor, ImageDraw, ImageEnhance, ImageFont
+from scipy.spatial.distance import correlation, cosine
 
 # All constants are defined up here, though in the future they could be moved into the appropriate sub-modules.
 
@@ -708,7 +707,9 @@ def draw_normalized_and_unflattened_pose(pose_prediction, armature_prevalences=[
     may have armature prevalence values calculated separately. Currently this is only used
     to draw averaged poses as representatives of pose clusters.
     """
-    bg_img = Image.new("RGBA", (POSE_MAX_DIM * UPSCALE, POSE_MAX_DIM * UPSCALE))
+    bg_img = Image.new(
+        "RGBA", (POSE_MAX_DIM * UPSCALE, POSE_MAX_DIM * UPSCALE), (0, 0, 0, 0)
+    )
     drawing = ImageDraw.Draw(bg_img)
     drawing = draw_armatures(pose_prediction, drawing, armature_prevalences)
     return bg_img
