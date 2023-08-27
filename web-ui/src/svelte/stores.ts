@@ -8,3 +8,4 @@ export const similarPoseFrames: Writable<{[frameno: number]: number}> = writable
 export const currentMovelet: Writable<MoveletRecord> = writable();
 export const currentMoveletPose: Writable<PoseRecord> = writable();
 export const similarMoveletFrames: Writable<{[frameno: number]: number}> = writable({});
+export const videoTableData: Writable<JSON> = writable();

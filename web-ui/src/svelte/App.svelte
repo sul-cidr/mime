@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { TabGroup, Tab } from '@skeletonlabs/skeleton';
   import { AppShell } from "@skeletonlabs/skeleton";
   import { AppBar } from "@skeletonlabs/skeleton";
 
@@ -13,6 +14,8 @@
 
   import { baseTitle } from "@/site-metadata.json";
   const base = import.meta.env.BASE_URL;
+
+  let tabSet: number = 0;
 
   $: $currentVideo, ($currentFrame = undefined);
 </script>
@@ -51,19 +54,34 @@
   </svelte:fragment>
 
   <section class="m-8 flex flex-col gap-10">
-    <VideosTable />
-    {#if $currentVideo}
-      <h2>{$currentVideo.video_name}</h2>
-      <PoseDataExplorer videoId={$currentVideo.id} />
-    {/if}
-    {#if $currentFrame}
-      <FrameViewer />
-    {/if}
-    {#if $similarMoveletFrames && $currentMoveletPose}
-      <SimilarMovelets />
-    {/if}
-    {#if $similarPoseFrames && $currentPose}
-      <SimilarPoses />
-    {/if}
+
+    <TabGroup>
+      <Tab bind:group={tabSet} name="tab1" value={0}>Performances</Tab>
+      <Tab bind:group={tabSet} name="tab2" value={1}>Timeline</Tab>
+      <Tab bind:group={tabSet} name="tab3" value={2}>Clusters</Tab>
+      <svelte:fragment slot="panel">
+        {#if tabSet === 0}
+          <VideosTable />
+        {:else if tabSet === 1}
+          {#if $currentVideo}
+            <h2>{$currentVideo.video_name}</h2>
+            <PoseDataExplorer videoId={$currentVideo.id} />
+            {#if $currentFrame}
+              <FrameViewer />
+            {/if}
+            {#if $similarMoveletFrames && $currentMoveletPose}
+              <SimilarMovelets />
+            {/if}
+            {#if $similarPoseFrames && $currentPose}
+              <SimilarPoses />
+            {/if}
+          {/if}
+        {:else}
+          <div></div>
+        {/if}
+      </svelte:fragment>
+    </TabGroup>
+
   </section>
+
 </AppShell>
