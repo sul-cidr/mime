@@ -13,7 +13,7 @@ from mime_db import MimeDb
 from rich.logging import RichHandler
 from sklearn.metrics.pairwise import nan_euclidean_distances
 
-TICK_INTERVAL = 0.1666667
+TICK_INTERVAL = 0.1666667  # 1/6 of a second
 
 
 async def main() -> None:
@@ -143,7 +143,7 @@ async def main() -> None:
 
     def compute_movement(timediff, last_norm, norm):
         if np.isnan(timediff) or timediff == 0 or type(last_norm) == float:
-            return 0
+            return np.nan  # usually this is the first frame in the movelet
         motion = nan_euclidean_distances([last_norm], [norm])[0]
         return motion / timediff
 

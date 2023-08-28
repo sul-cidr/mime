@@ -57,8 +57,8 @@
 
     <TabGroup>
       <Tab bind:group={tabSet} name="tab1" value={0}>Performances</Tab>
-      <Tab bind:group={tabSet} name="tab2" value={1}>Timeline</Tab>
-      <Tab bind:group={tabSet} name="tab3" value={2}>Clusters</Tab>
+      <Tab bind:group={tabSet} name="tab2" value={1} class={$currentVideo ? "opacity-100" : "opacity-50"}>Timeline</Tab>
+      <Tab bind:group={tabSet} name="tab3" value={2} class={$currentVideo ? "opacity-100" : "opacity-50"}>Clusters</Tab>
       <svelte:fragment slot="panel">
         {#if tabSet === 0}
           <VideosTable />
