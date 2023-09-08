@@ -50,6 +50,14 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD:?}
 
 
+  web-extras:
+    container_name: mime-web-extras
+    build: ./web-extras
+    
+    volumes:
+      - ./web-extras:/app
+
+
   web-proxy:
     container_name: mime-web-proxy
     image: nginx:alpine
@@ -61,6 +69,7 @@ services:
 
     depends_on:
       - api
+      - web-extras
       - web-ui
 
     stop_grace_period: 0s
