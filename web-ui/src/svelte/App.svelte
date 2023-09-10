@@ -17,7 +17,10 @@
 
   let tabSet: number = 0;
 
+  let poseplotFrame = "";
+
   $: $currentVideo, ($currentFrame = undefined);
+  $: poseplotFrame = `<iframe src="/poseplot/${$currentVideo?.video_name}/index.html" width="100%" height="1200" title="Pose Cluster Explorer" />`;
 </script>
 
 <AppShell>
@@ -77,7 +80,7 @@
             {/if}
           {/if}
         {:else}
-          <div></div>
+          <div>{@html poseplotFrame}</div>
         {/if}
       </svelte:fragment>
     </TabGroup>

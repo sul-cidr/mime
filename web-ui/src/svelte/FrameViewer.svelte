@@ -64,9 +64,6 @@
   $: getPoseData($currentVideo.id, $currentFrame!).then((data) =>
     updatePoseData(data),
   );
-  // $: getFaceData($currentVideo.id, $currentFrame!).then((data) =>
-  //   integrateFaceData(data),
-  // );
 </script>
 
 <div>

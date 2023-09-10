@@ -71,7 +71,7 @@
     getContext("canvas");
 
   const segmentArray = (arr: Array<number>, l = 3) => {
-    if (arr === null) {
+    if (arr == null) {
       return null
     }
     const _arr = [...arr];
