@@ -8,6 +8,7 @@ services:
     volumes:
       - ./api:/app:Z
       - ${VIDEO_SRC_FOLDER:?}:/videos
+      - ./web-extras:/extras
 
     environment:
       DB_HOST: db
@@ -56,6 +57,8 @@ services:
     
     volumes:
       - ./web-extras:/app
+
+    stop_grace_period: 0s
 
 
   web-proxy:

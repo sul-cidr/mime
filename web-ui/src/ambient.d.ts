@@ -18,6 +18,7 @@ type VideoRecord = {
   fps: number;
   pose_ct: number;
   poses_per_frame: number;
+  face_ct: number;
   track_ct: number;
 };
 
