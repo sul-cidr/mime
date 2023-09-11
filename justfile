@@ -40,4 +40,5 @@ default:
 @plot-poses path:
   docker compose exec api sh -c "/app/poseplot_prep.py --video-path \"\$VIDEO_SRC_FOLDER/$1\""
   docker compose exec web-extras sh -c "pixplot --images \"input/$1/pose_images/*.jpg\" --vectors input/$1/pose_features --metadata input/$1/$1.csv"
+  docker compose exec web-extras sh -c "/bin/mkdir /app/poseplot/$1"
   docker compose exec web-extras sh -c "/bin/mv /app/output/* /app/poseplot/$1/."
