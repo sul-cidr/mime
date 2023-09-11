@@ -212,7 +212,6 @@ async def main() -> None:
                         "movement": movement,
                     }
                 )
-                print("Adding static pose")
                 static_pose_id += 1
                 start_tick = tick
                 end_tick = None
