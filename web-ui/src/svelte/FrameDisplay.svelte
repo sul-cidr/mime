@@ -92,7 +92,7 @@
                 stroke="white"
                 fill="white"
               >
-                {#if poseData.track_id != 0}
+                {#if poseData.track_id !== null}
                   {poseData.track_id}
                 {:else}
                   {i + 1}

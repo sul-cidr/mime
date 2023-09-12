@@ -29,13 +29,17 @@ type PoseRecord = {
   keypoints: CocoSkeletonWithConfidence;
   bbox: FixedLengthArray<number, 4>; // bbox format for PifPaf is x0, y0, width, height
   score: number;
-  track_id: number;
+  track_id: number | null;
   norm: CocoSkeletonNoConfidence;
   face_bbox: FixedLengthArray<number, 4> | undefined; // copied from FaceRecord
   face_landmarks: FaceLandmarks | undefined;          // if match is found
   hidden: boolean | undefined;
   distance?: number;
 };
+
+interface MoveletPoseRecord extends PoseRecord {
+  track_id: number;
+}
 
 type FaceRecord = {
   video_id: number;
