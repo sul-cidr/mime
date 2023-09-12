@@ -18,13 +18,14 @@ services:
       DB_NAME: ${DB_NAME:?}
       DB_USER: ${DB_USER:?}
       DB_PASSWORD: ${DB_PASSWORD:?}
+      JUPYTER_TOKEN: ${JUPYTER_PASSWORD:?}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
       VIDEO_SRC_FOLDER: /videos
 
     depends_on:
       - db
 
-    command: bash -c 'while !</dev/tcp/db/5432; do sleep 1; done; /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf' 
+    command: bash -c 'while !</dev/tcp/db/5432; do sleep 1; done; /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf'
 
   web-ui:
     container_name: mime-web-ui
@@ -35,7 +36,6 @@ services:
 
     environment:
       PUBLIC_API_BASE: /api
-
 
   db:
     container_name: mime-db
@@ -50,16 +50,14 @@ services:
       POSTGRES_USER: ${DB_USER:?}
       POSTGRES_PASSWORD: ${DB_PASSWORD:?}
 
-
   web-extras:
     container_name: mime-web-extras
     build: ./web-extras
-    
+
     volumes:
       - ./web-extras:/app
 
     stop_grace_period: 0s
-
 
   web-proxy:
     container_name: mime-web-proxy

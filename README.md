@@ -14,10 +14,13 @@ cat > .env <<EOL
 DB_NAME=mime
 DB_USER=mime
 DB_PASSWORD=$(LC_ALL=C tr -cd 'a-zA-Z0-9' < /dev/urandom | fold -w24 | head -n 1)
-VIDEO_SRC_FOLDER=/path/to/source/videos
-
 # DB_HOST=localhost    ## Ignored if using docker-compose.yaml
 # DB_PORT=5432         ## Ignored if using docker-compose.yaml
+
+VIDEO_SRC_FOLDER=/path/to/source/videos
+
+JUPYTER_PASSWORD=secret_password
+
 # LOG_LEVEL=INFO       ## Optional: INFO is default, set to DEBUG for additional logging
 EOL
 
