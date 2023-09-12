@@ -75,3 +75,25 @@ async def initialize_db(conn, drop=False) -> None:
         ;
         """
     )
+
+    # consider DROP IF EXISTS to recreate the index from scratch every time the DB
+    #  is initialized (protects against future changes at minimal cost?)
+    await conn.execute(
+        """
+        CREATE MATERIALIZED VIEW IF NOT EXISTS video_meta AS
+            SELECT video.*,
+                COUNT(pose) AS pose_ct,
+                COUNT(DISTINCT pose.track_id) AS track_ct,
+                TRUNC(COUNT(pose)::decimal / video.frame_count, 2) AS poses_per_frame,
+                COUNT(face) AS face_ct
+            FROM video
+                LEFT JOIN pose ON video.id = pose.video_id
+                LEFT JOIN face ON video.id = face.video_id
+            GROUP BY video.id
+            ORDER BY video_name
+        WITH DATA
+        ;
+
+        CREATE UNIQUE INDEX IF NOT EXISTS video_meta_id_idx ON video_meta (id);
+        """
+    )

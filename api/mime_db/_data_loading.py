@@ -7,6 +7,19 @@ from uuid import UUID
 import numpy as np
 
 
+def post_update(func):
+    async def wrapper(*args, **kw):
+        output = await func(*args, **kw)
+        logging.debug("Refreshing `video_meta` view...")
+        await args[0]._pool.execute(
+            "REFRESH MATERIALIZED VIEW CONCURRENTLY video_meta;"
+        )
+        return output
+
+    return wrapper
+
+
+@post_update
 async def add_video(self, video_name: str, video_metadata: dict) -> UUID:
     video_id = await self._pool.fetchval(
         """
@@ -29,10 +42,12 @@ async def add_video(self, video_name: str, video_metadata: dict) -> UUID:
     return video_id
 
 
+@post_update
 async def clear_poses(self, video_id: UUID) -> None:
     await self._pool.execute("DELETE FROM pose WHERE video_id = $1;", video_id)
 
 
+@post_update
 async def load_openpifpaf_predictions(
     self, video_id: UUID, json_path: Path, clear=True
 ) -> None:
@@ -82,6 +97,7 @@ async def load_openpifpaf_predictions(
     logging.info(f"Loaded {len(poses)} predictions!")
 
 
+@post_update
 async def add_video_tracks(self, video_id: UUID | None, track_data) -> None:
     async with self._pool.acquire() as conn:
         await conn.execute(
@@ -107,6 +123,7 @@ async def add_video_tracks(self, video_id: UUID | None, track_data) -> None:
             )
 
 
+@post_update
 async def add_video_faces(self, video_id: UUID | None, faces_data) -> None:
     data = [(video_id,) + tuple(face) for face in faces_data]
 
@@ -123,6 +140,7 @@ async def add_video_faces(self, video_id: UUID | None, faces_data) -> None:
     logging.info(f"Loaded {len(faces_data)} faces!")
 
 
+@post_update
 async def add_pose_faces(self, faces_data) -> None:
     data = [tuple(face) for face in faces_data]
 
@@ -176,6 +194,7 @@ async def add_video_movelets(self, movelets_data, reindex=True) -> None:
             )
 
 
+@post_update
 async def annotate_pose(
     self,
     column: str,
