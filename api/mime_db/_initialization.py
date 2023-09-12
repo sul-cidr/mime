@@ -34,7 +34,7 @@ async def initialize_db(conn, drop=False) -> None:
             score FLOAT NOT NULL,
             category INTEGER,
             track_id INTEGER NOT NULL DEFAULT 0,
-            PRIMARY KEY(video_id, frame, pose_idx, track_id)
+            PRIMARY KEY(video_id, frame, pose_idx)
         )
         ;
         """
