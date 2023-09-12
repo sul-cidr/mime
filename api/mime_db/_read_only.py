@@ -65,14 +65,14 @@ async def get_pose_data_from_video(self, video_id: UUID) -> list:
 
 async def get_movelet_data_from_video(self, video_id: UUID) -> list:
     return await self._pool.fetch(
-        f"SELECT * FROM movelet WHERE video_id = $1 ORDER BY start_frame ASC;",
+        "SELECT * FROM movelet WHERE video_id = $1 ORDER BY start_frame ASC;",
         video_id,
     )
 
 
 async def get_unique_track_ids_from_video(self, video_id: UUID) -> list:
     return await self._pool.fetch(
-        f"SELECT UNIQUE track_id FROM pose WHERE video_id = $1;",
+        "SELECT UNIQUE track_id FROM pose WHERE video_id = $1;",
         video_id,
     )
 
@@ -115,7 +115,7 @@ async def get_frame_data_range(
 
 async def get_poses_with_faces(self, video_id: UUID) -> list:
     return await self._pool.fetch(
-        f"SELECT pose.video_id as video_id, pose.frame as frame, pose.pose_idx as pose_idx, pose.track_id as track_id, face.bbox as face_bbox, face.confidence as face_confidence, face.embedding as face_embedding FROM pose, face WHERE pose.video_id = $1 AND face.video_id = $1 AND pose.frame = face.frame AND pose.pose_idx = face.pose_idx ORDER BY frame ASC;",
+        "SELECT pose.video_id as video_id, pose.frame as frame, pose.pose_idx as pose_idx, pose.track_id as track_id, face.bbox as face_bbox, face.confidence as face_confidence, face.embedding as face_embedding FROM pose, face WHERE pose.video_id = $1 AND face.video_id = $1 AND pose.frame = face.frame AND pose.pose_idx = face.pose_idx ORDER BY frame ASC;",
         video_id,
     )
 

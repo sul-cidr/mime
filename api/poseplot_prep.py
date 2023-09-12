@@ -13,11 +13,12 @@ import imageio.v3 as iio
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from lib.pose_drawing import UPSCALE, draw_armatures
-from mime_db import MimeDb
 from PIL import Image, ImageDraw
 from rich.logging import RichHandler
 from sklearn.metrics.pairwise import nan_euclidean_distances
+
+from lib.pose_drawing import UPSCALE, draw_armatures
+from mime_db import MimeDb
 
 # import sys
 
@@ -278,7 +279,7 @@ async def main() -> None:
                 (poses_df["frame"] == target_frame)
                 & (poses_df["track_id"] == movelet["track_id"])
             ].iloc[0]
-        except Exception as e:
+        except Exception:
             print(
                 "Couldn't find representative pose from movelet middle or beginning, skipping"
             )
@@ -382,7 +383,7 @@ async def main() -> None:
             imgs_to_keep.add(img_fn)
 
     print(len(imgs_to_keep),"unique images in metadata file")
-            
+
     for fn in os.listdir(images_dir):
         if os.path.isfile(f"{images_dir}/{fn}"):
             if fn not in imgs_to_keep:
