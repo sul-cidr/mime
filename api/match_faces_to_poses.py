@@ -8,8 +8,9 @@ import logging
 from pathlib import Path
 
 import numpy as np
-from mime_db import MimeDb
 from rich.logging import RichHandler
+
+from mime_db import MimeDb
 
 
 def unflatten_pose_data(keypoints):

@@ -11,7 +11,6 @@ from pathlib import Path
 import cv2
 import jsonlines
 import numpy as np
-import pandas as pd
 from deepface import DeepFace
 from deepface.commons import functions
 from retinaface import RetinaFace  # this is not a must dependency
@@ -149,7 +148,7 @@ def extract_face_regions(
             extracted_face = [img_pixels, region_obj, confidence, landmarks]
             extracted_faces.append(extracted_face)
 
-    if len(extracted_faces) == 0 and enforce_detection == True:
+    if len(extracted_faces) == 0 and enforce_detection is True:
         raise ValueError(
             f"Detected face shape is {img.shape}. Consider to set enforce_detection arg to False."
         )
@@ -223,9 +222,9 @@ async def main() -> None:
     logging.info(f"Running face detection on video {video_name}")
 
     cap = cv2.VideoCapture(str(video_path))
-    video_fps = cap.get(cv2.CAP_PROP_FPS)
-    video_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-    video_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    cap.get(cv2.CAP_PROP_FPS)
+    int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     video_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     cap.release()
 

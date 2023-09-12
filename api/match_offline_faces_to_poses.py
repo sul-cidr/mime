@@ -9,8 +9,9 @@ from pathlib import Path
 
 import jsonlines
 import numpy as np
-from mime_db import MimeDb
 from rich.logging import RichHandler
+
+from mime_db import MimeDb
 
 BATCH_SIZE = 1000
 

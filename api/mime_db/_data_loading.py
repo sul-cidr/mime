@@ -108,7 +108,7 @@ async def add_video_tracks(self, video_id: UUID | None, track_data) -> None:
 
 
 async def add_video_faces(self, video_id: UUID | None, faces_data) -> None:
-    data = [tuple([video_id]) + tuple(face) for face in faces_data]
+    data = [(video_id,) + tuple(face) for face in faces_data]
 
     await self._pool.executemany(
         """

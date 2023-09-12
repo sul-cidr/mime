@@ -8,8 +8,9 @@ import logging
 from pathlib import Path
 
 import jsonlines
-from mime_db import MimeDb
 from rich.logging import RichHandler
+
+from mime_db import MimeDb
 
 BATCH_SIZE = 1000  # How many faces to load into DB at one time
 
