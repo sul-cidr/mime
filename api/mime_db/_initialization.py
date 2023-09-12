@@ -33,7 +33,7 @@ async def initialize_db(conn, drop=False) -> None:
             bbox FLOAT[4] NOT NULL,
             score FLOAT NOT NULL,
             category INTEGER,
-            track_id INTEGER NOT NULL DEFAULT 0,
+            track_id INTEGER DEFAULT NULL,
             PRIMARY KEY(video_id, frame, pose_idx)
         )
         ;
