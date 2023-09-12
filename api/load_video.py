@@ -5,6 +5,7 @@
 import argparse
 import asyncio
 import logging
+import os
 from pathlib import Path
 
 import cv2
@@ -39,13 +40,6 @@ async def main() -> None:
     """Command-line entry-point."""
 
     parser = argparse.ArgumentParser(description="Description: {}".format(__doc__))
-    parser.add_argument(
-        "-v",
-        "--verbose",
-        action="store_true",
-        default=False,
-        help="Enable debug logging",
-    )
 
     parser.add_argument(
         "--drop",
@@ -59,9 +53,8 @@ async def main() -> None:
 
     args = parser.parse_args()
 
-    log_level = logging.DEBUG if args.verbose else logging.INFO
     logging.basicConfig(
-        level=log_level,
+        level=(os.getenv("LOG_LEVEL") or "INFO").upper(),
         format="%(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
         handlers=[RichHandler(rich_tracebacks=True)],
@@ -79,6 +72,7 @@ async def main() -> None:
     assert json_path.exists(), f"'{json_path}' does not exist"
 
     # Create database
+    logging.info("Initializing DB...")
     db = await MimeDb.create(drop=args.drop)
 
     # Get video metadata and add to database
