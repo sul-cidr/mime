@@ -19,7 +19,7 @@
       let trackCount = 0;
       if (data.length) {
         data.forEach((pr: PoseRecord) => {
-          if (pr.track_id != 0)
+          if (pr.track_id !== null)
             trackCount += 1;
         })
       }

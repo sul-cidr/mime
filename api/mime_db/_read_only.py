@@ -5,34 +5,20 @@ import numpy as np
 
 
 async def get_available_videos(self) -> list:
-    video_info = await self._pool.fetch(
+    videos = await self._pool.fetch(
         """
-        SELECT * FROM video ORDER BY video_name;
+        SELECT video.*,
+          COUNT(pose) AS pose_ct,
+          COUNT(DISTINCT pose.track_id) AS track_ct,
+          TRUNC(COUNT(pose)::decimal / video.frame_count, 2) AS poses_per_frame,
+          COUNT(face) AS face_ct
+        FROM video
+          LEFT JOIN pose ON (video.id = pose.video_id)
+          LEFT JOIN face ON video.id = face.video_id
+        GROUP BY video.id
+        ORDER BY video_name;
         """
     )
-    videos = []
-    for video in video_info:
-        pose_info = await self._pool.fetch(
-            """
-            SELECT COUNT(pose) as pose_ct,
-                   COUNT(DISTINCT pose.track_id) filter (WHERE track_id > 0) AS track_ct,
-                   TRUNC(COUNT(pose)::decimal / $2, 2) AS poses_per_frame
-            FROM pose WHERE pose.video_id = $1;
-            """,
-            video["id"],
-            video["frame_count"],
-        )
-
-        face_info = await self._pool.fetch(
-            """
-            SELECT COUNT(face) as face_ct
-            FROM face WHERE face.video_id = $1;
-            """,
-            video["id"],
-        )
-
-        videos.append({**video, **pose_info[0], **face_info[0]})
-
     return videos
 
 

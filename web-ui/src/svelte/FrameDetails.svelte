@@ -31,7 +31,7 @@
         on:mouseover={() => (hoveredPoseIdx = i)}
         on:mouseout={() => (hoveredPoseIdx = undefined)}
       >
-        Pose #{i + 1} | Confidence: {pose.score} {#if pose.track_id != 0} | Track {pose.track_id} {/if }
+        Pose #{i + 1} | Confidence: {pose.score} {#if pose.track_id !== null} | Track {pose.track_id} {/if }
         <div class="flex align-stretch gap-2">
           <button
             class="button px-2 variant-filled"
@@ -42,7 +42,7 @@
           >
             sim pose
           </button>
-          {#if pose.track_id != 0}
+          {#if pose.track_id !== null}
             <button
               class="button px-2 variant-filled"
               on:click={() => {
