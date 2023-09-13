@@ -5,27 +5,23 @@
 import argparse
 import asyncio
 import logging
+import math
+import os
 from pathlib import Path
 
 import jsonlines
+from rich import print
 from rich.logging import RichHandler
 
 from mime_db import MimeDb
 
-BATCH_SIZE = 1000  # How many faces to load into DB at one time
+BATCH_SIZE = math.inf  # How many faces to load into DB at one time
 
 
 async def main() -> None:
     """Command-line entry-point."""
 
     parser = argparse.ArgumentParser(description="Description: {}".format(__doc__))
-    parser.add_argument(
-        "-v",
-        "--verbose",
-        action="store_true",
-        default=False,
-        help="Enable debug logging",
-    )
 
     parser.add_argument(
         "--overwrite",
@@ -43,9 +39,8 @@ async def main() -> None:
 
     args = parser.parse_args()
 
-    log_level = logging.DEBUG if args.verbose else logging.INFO
     logging.basicConfig(
-        level=log_level,
+        level=(os.getenv("LOG_LEVEL") or "INFO").upper(),
         format="%(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
         handlers=[RichHandler(rich_tracebacks=True)],
@@ -61,10 +56,10 @@ async def main() -> None:
     # Get video metadata
     json_file = input_path.name
 
-    video_name = json_file.replace(".faces.jsonl", "")
-
+    video_name = json_file.replace(".faces.ArcFace.jsonl", "")
+    print(f"{video_name=}")
     video_id = await db.get_video_id(video_name)
-    video_id = video_id[0]["id"]
+    # video_id = video_id[0]["id"]
 
     logging.info("Loading face detection results from JSON file into the DB")
 
@@ -72,7 +67,9 @@ async def main() -> None:
         faces_to_add = []
         for face in reader:
             if len(faces_to_add) >= BATCH_SIZE:
+                logging.debug(f"Accumulated {BATCH_SIZE}; adding to db...")
                 await db.add_video_faces(video_id, faces_to_add)
+                logging.debug("done!")
                 faces_to_add = []
             # Don't bother
             if face["confidence"] == 0 or not face["landmarks"]:
@@ -80,6 +77,9 @@ async def main() -> None:
             landmarks_vector = [
                 coord for pair in face["landmarks"].values() for coord in pair
             ]
+            # landmarks_vector = list(itertools.chain(*face["landmarks"].values()))
+            # print(face["landmarks"])
+            # print(landmarks_vector)
             # If a different face feature predictor is used that doesn't return
             # 4096 features, this should fill in the empty values.
             # XXX This assumes 4096 features (returned by DeepFace) is the max

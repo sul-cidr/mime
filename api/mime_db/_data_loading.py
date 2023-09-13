@@ -14,6 +14,7 @@ def post_update(func):
         await args[0]._pool.execute(
             "REFRESH MATERIALIZED VIEW CONCURRENTLY video_meta;"
         )
+        logging.debug("...refreshed!")
         return output
 
     return wrapper
@@ -123,7 +124,7 @@ async def add_video_tracks(self, video_id: UUID | None, track_data) -> None:
             )
 
 
-@post_update
+# @post_update
 async def add_video_faces(self, video_id: UUID | None, faces_data) -> None:
     data = [(video_id,) + tuple(face) for face in faces_data]
 

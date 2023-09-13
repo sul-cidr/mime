@@ -80,6 +80,9 @@ async def initialize_db(conn, drop=False) -> None:
     #  is initialized (protects against future changes at minimal cost?)
     await conn.execute(
         """
+        DROP MATERIALIZED VIEW IF EXISTS video_meta;
+        DROP INDEX IF EXISTS video_meta_id_idx;
+
         CREATE MATERIALIZED VIEW IF NOT EXISTS video_meta AS
             SELECT video.*,
                 COUNT(pose) AS pose_ct,
