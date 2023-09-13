@@ -25,6 +25,7 @@
     "imwrite",
     "ivfflat",
     "layercake",
+    "movelet",
     "pgproto",
     "pyav",
     "skeletonlabs",
