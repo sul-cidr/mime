@@ -22,6 +22,7 @@ scipy = "*"
 scikit-learn = "*"
 umap-learn = "*"
 uvicorn = {extras = ["standard"], version = "*"}
+typer = "*"
 
 [dev-packages]
 black = "*"
