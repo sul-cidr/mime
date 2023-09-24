@@ -9,9 +9,8 @@ from pathlib import Path
 
 import jsonlines
 import numpy as np
-from rich.logging import RichHandler
-
 from mime_db import MimeDb
+from rich.logging import RichHandler
 
 BATCH_SIZE = 1000
 
@@ -89,7 +88,6 @@ async def main() -> None:
     # Get video metadata
     video_name = video_name.name
     video_id = await db.get_video_id(video_name)
-    video_id = video_id[0]["id"]
 
     track_frame_records = await db.get_track_frames(video_id)
 

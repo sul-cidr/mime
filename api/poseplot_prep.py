@@ -13,12 +13,11 @@ import imageio.v3 as iio
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from lib.pose_drawing import UPSCALE, draw_armatures
+from mime_db import MimeDb
 from PIL import Image, ImageDraw
 from rich.logging import RichHandler
 from sklearn.metrics.pairwise import nan_euclidean_distances
-
-from lib.pose_drawing import UPSCALE, draw_armatures
-from mime_db import MimeDb
 
 # import sys
 
@@ -74,7 +73,6 @@ async def main() -> None:
     # Get video metadata
     video_name = video_path.name
     video_id = await db.get_video_id(video_name)
-    video_id = video_id[0]["id"]
 
     video_data = await db.get_video_by_id(video_id)
     video_fps = video_data["fps"]
