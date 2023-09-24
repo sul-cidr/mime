@@ -1,7 +1,7 @@
 set positional-arguments
 set dotenv-load
 
-[private]
+# [private]
 default:
   @just --list
 
@@ -29,24 +29,27 @@ default:
 @add-tracks path:
   docker compose exec api sh -c "LOG_LEVEL=$LOG_LEVEL /app/track_video.py --video-path \"\$VIDEO_SRC_FOLDER/$1\""
 
+# Provide paths relative to $VIDEO_SRC_FOLDER
 @add-motion path:
   docker compose exec api sh -c "LOG_LEVEL=$LOG_LEVEL /app/track_video_motion.py --video-path \"\$VIDEO_SRC_FOLDER/$1\""
 
-@add-faces path:
-  docker compose exec api sh -c "LOG_LEVEL=$LOG_LEVEL /app/detect_pose_faces.py --video-path \"\$VIDEO_SRC_FOLDER/$1\""
+# @add-faces path:
+#   docker compose exec api sh -c "LOG_LEVEL=$LOG_LEVEL /app/detect_pose_faces.py --video-path \"\$VIDEO_SRC_FOLDER/$1\""
 
-@load-faces path:
-  docker compose exec api sh -c "LOG_LEVEL=$LOG_LEVEL /app/load_face_data.py --json-path \"\$VIDEO_SRC_FOLDER/$1\""
+# @load-faces path:
+#   docker compose exec api sh -c "LOG_LEVEL=$LOG_LEVEL /app/load_face_data.py --json-path \"\$VIDEO_SRC_FOLDER/$1\""
 
-#@match-faces :
-#  docker compose exec api sh -c "LOG_LEVEL=$LOG_LEVEL /app/match_faces_to_poses.py --video-name \"\$VIDEO_SRC_FOLDER/$1\""
+# @match-faces :
+#   docker compose exec api sh -c "LOG_LEVEL=$LOG_LEVEL /app/match_faces_to_poses.py --video-name \"\$VIDEO_SRC_FOLDER/$1\""
 
+# Ditto re: $VIDEO_SRC_FOLDER
 @match-faces video_path faces_path:
   docker compose exec api sh -c "LOG_LEVEL=$LOG_LEVEL /app/match_offline_faces_to_poses.py --video-name \"\$VIDEO_SRC_FOLDER/$1\" --faces-file \"\$VIDEO_SRC_FOLDER/$2\""
 
-@cluster-faces path:
-  docker compose exec api sh -c "LOG_LEVEL=$LOG_LEVEL /app/cluster_pose_faces.py --video-path \"\$VIDEO_SRC_FOLDER/$1\""
+# @cluster-faces path:
+#   docker compose exec api sh -c "LOG_LEVEL=$LOG_LEVEL /app/cluster_pose_faces.py --video-path \"\$VIDEO_SRC_FOLDER/$1\""
 
+# Paths also relative to $VIDEO_SRC_FOLDER
 @plot-poses path:
   docker compose exec api sh -c "LOG_LEVEL=$LOG_LEVEL /app/poseplot_prep.py --video-path \"\$VIDEO_SRC_FOLDER/$1\""
   docker compose exec web-extras sh -c "pixplot --images \"input/$1/pose_images/*.jpg\" --vectors input/$1/pose_features --metadata input/$1/$1.csv"
