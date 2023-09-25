@@ -11,7 +11,6 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_utils.timing import add_timing_middleware
-
 from lib.json_encoder import MimeJSONEncoder
 from mime_db import MimeDb
 
@@ -52,8 +51,8 @@ async def root():
 
 @mime_api.get("/videos/")
 async def videos(request: Request):
-    videos = await request.app.state.db.get_available_videos()
-    return {"videos": videos}
+    available_videos = await request.app.state.db.get_available_videos()
+    return {"videos": available_videos}
 
 
 @mime_api.get("/frame/{video_id}/{frame}/")
@@ -117,6 +116,15 @@ async def poses(video_id: UUID, request: Request):
 @mime_api.get("/poses/{video_id}/{frame}/")
 async def poses_by_frame(video_id: UUID, frame: int, request: Request):
     frame_data = await request.app.state.db.get_frame_data(video_id, frame)
+    return Response(
+        content=json.dumps(frame_data, cls=MimeJSONEncoder),
+        media_type="application/json",
+    )
+
+
+@mime_api.get("/clustered_faces/{video_id}/")
+async def clustered_faces(video_id: UUID, request: Request):
+    frame_data = await request.app.state.db.get_clustered_face_data_from_video(video_id)
     return Response(
         content=json.dumps(frame_data, cls=MimeJSONEncoder),
         media_type="application/json",

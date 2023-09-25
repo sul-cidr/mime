@@ -34,12 +34,14 @@ class MimeDb:
         add_video_movelets,
         add_video_tracks,
         annotate_pose,
+        assign_face_clusters,
         clear_poses,
         load_openpifpaf_predictions,
     )
     from mime_db._initialization import initialize_db
     from mime_db._read_only import (
         get_available_videos,
+        get_clustered_face_data_from_video,
         get_frame_data,
         get_frame_data_range,
         get_frame_faces,

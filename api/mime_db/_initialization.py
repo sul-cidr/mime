@@ -49,7 +49,8 @@ async def initialize_db(conn, drop=False) -> None:
             bbox FLOAT[4] NOT NULL,
             confidence FLOAT NOT NULL,
             landmarks vector(10) NOT NULL,
-            embedding vector(4096) NOT NULL
+            embedding vector(4096) NOT NULL,
+            cluster_id INTEGER
         )
         ;
         """

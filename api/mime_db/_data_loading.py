@@ -176,6 +176,27 @@ async def add_video_movelets(self, movelets_data, reindex=True) -> None:
             )
 
 
+async def assign_face_clusters(self, video_id, cluster_id, faces_data) -> None:
+    async with self._pool.acquire() as conn:
+        await conn.execute(
+            "ALTER TABLE face ADD COLUMN IF NOT EXISTS cluster_id INTEGER;"
+        )
+        async with conn.transaction():
+            for pose_face in faces_data:
+                await conn.execute(
+                    """
+                        UPDATE face
+                        SET cluster_id = $1
+                        WHERE video_id = $2 AND frame = $3 AND pose_idx = $4
+                        ;
+                    """,
+                    cluster_id,
+                    video_id,
+                    pose_face["frame"],
+                    pose_face["pose_idx"],
+                )
+
+
 async def annotate_pose(
     self,
     column: str,

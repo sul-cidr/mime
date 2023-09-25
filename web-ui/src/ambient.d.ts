@@ -49,6 +49,7 @@ type FaceRecord = {
   confidence: number;
   landmarks: FaceLandmarks;
   embedding: FaceEmbedding;
+  cluster_id: number;
 }
 
 type FrameRecord = {
