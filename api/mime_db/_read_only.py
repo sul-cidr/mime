@@ -43,17 +43,34 @@ async def get_video_by_name(self, video_name: str) -> asyncpg.Record:
 async def get_pose_data_by_frame(self, video_id: UUID) -> list:
     return await self._pool.fetch(
         """
-        SELECT frame,
-                count(pose_idx) AS "poseCt",
-                count(NULLIF(track_id,0)) AS "trackCt",
-                ROUND(AVG(score)::numeric, 2) AS "avgScore"
-        FROM pose
-        WHERE video_id = $1
-        GROUP BY frame
-        ORDER BY frame;
+        SELECT pose.frame,
+                count(pose.pose_idx) AS "poseCt",
+                count(NULLIF(pose.track_id,0)) AS "trackCt",
+                count(face.pose_idx) AS "faceCt",
+                ROUND(AVG(pose.score)::numeric, 2) AS "avgScore"
+        FROM pose LEFT JOIN face ON pose.video_id = face.video_id AND pose.frame = face.frame AND pose.pose_idx = face.pose_idx
+        WHERE pose.video_id = $1
+        GROUP BY pose.frame
+        ORDER BY pose.frame;
         """,
         video_id,
     )
+
+
+# async def get_pose_data_by_frame(self, video_id: UUID) -> list:
+#     return await self._pool.fetch(
+#         """
+#         SELECT frame,
+#                 count(pose_idx) AS "poseCt",
+#                 count(NULLIF(track_id,0)) AS "trackCt",
+#                 ROUND(AVG(score)::numeric, 2) AS "avgScore"
+#         FROM pose
+#         WHERE video_id = $1
+#         GROUP BY frame
+#         ORDER BY frame;
+#         """,
+#         video_id,
+#     )
 
 
 async def get_pose_data_from_video(self, video_id: UUID) -> list:
