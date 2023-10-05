@@ -7,7 +7,7 @@
   import Brush from "@layercake/Brush.html.svelte";
   import Key from "@layercake/Key.html.svelte";
   import MultiLine from "@layercake/MultiLine.svelte";
-  import ProgressLine from "@/src/svelte/layercake/ProgressLine.svelte";
+  import ProgressLine from "@layercake/ProgressLine.svelte";
   import SharedTooltip from "@layercake/SharedTooltip.html.svelte";
 
   import { currentFrame, currentVideo, currentPose, currentMovelet, seriesNames, similarMoveletFrames, similarPoseFrames } from "@svelte/stores";
@@ -69,7 +69,7 @@
     let i = startFrame;
     framesInRange.forEach((frame: FrameRecord) => {
       while (i < frame.frame) {
-        timeSeries.push({ frame: i, avgScore: 0, poseCt: 0, trackCt: 0, sim_pose: 0, sim_move: 0});
+        timeSeries.push({ frame: i, avgScore: 0, poseCt: 0, faceCt: 0, trackCt: 0, sim_pose: 0, sim_move: 0});
         i++;
       }
       let frameWithSimilarMatches = frame;
@@ -83,7 +83,7 @@
       i++;
     });
     while (i < endFrame) {
-      timeSeries.push({ frame: i, avgScore: 0, poseCt: 0, trackCt: 0, sim_pose: 0, sim_move: 0});
+      timeSeries.push({ frame: i, avgScore: 0, poseCt: 0, faceCt: 0, trackCt: 0, sim_pose: 0, sim_move: 0});
       i++;
     }
     return timeSeries;
@@ -161,11 +161,11 @@
       />
       <AxisY ticks={5} formatTick={formatTickY} />
       <MultiLine {hiddenSeries} />
-      <ProgressLine frameno={$currentFrame || 0} />
+      <ProgressLine frameno={$currentFrame || 0} yDomain={[0, maxValue]} />
     </Svg>
 
     <Html>
-      <SharedTooltip {formatTitle} dataset={data} />
+      <SharedTooltip {formatTitle} dataset={data} hiddenKeys={["sim_pose", "sim_move"]} />
       <Key align="end" bind:hiddenSeries />
     </Html>
   </LayerCake>
