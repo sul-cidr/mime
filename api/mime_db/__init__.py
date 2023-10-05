@@ -52,6 +52,7 @@ class MimeDb:
         get_poses_with_faces,
         get_track_frames,
         get_video_by_id,
+        get_video_by_name,
         get_video_id,
     )
 
