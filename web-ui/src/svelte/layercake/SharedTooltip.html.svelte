@@ -6,7 +6,8 @@
   import { getContext } from "svelte";
   import { format } from "d3-format";
 
-  import QuadTree from "./QuadTree.html.svelte";
+  import QuadTree from "./QuadTree.svelte";
+  //import QuadTree from "./QuadTree.html.svelte";
 
   const { data, width, yScale, config } = getContext("LayerCake");
 
@@ -27,6 +28,12 @@
 
   /** @type {Array} [dataset] - The dataset to work off of—defaults to $data if left unset. You can pass something custom in here in case you don't want to use the main data or it's in a strange format. */
   export let dataset = undefined;
+
+  /** @type {String} [searchRadius] – The number of pixels to search around the mouse's location. This is the third argument passed to [`quadtree.find`](https://github.com/d3/d3-quadtree#quadtree_find) and by default a value of `undefined` means an unlimited range. */
+  export let searchRadius = undefined;
+
+  /** @type {Array} [hiddenKeys] – Keys from the data rows that should not be shown in the tooltip. */
+  export let hiddenKeys = [];
 
   const w = 150;
   const w2 = w / 2;
@@ -52,6 +59,7 @@
 
 <QuadTree
   dataset={dataset || $data}
+  searchRadius={searchRadius}
   y="x"
   let:x
   let:y
@@ -72,12 +80,20 @@
     >
       <div class="title">{formatTitle(found[$config.x])}</div>
       {#each foundSorted as row}
-        <div class="row">
-          <span class="key">{formatKey(row.key)}:</span>
-          {formatValue(row.value)}
-        </div>
+        {#if !hiddenKeys.includes(row.key)}
+          <div class="row">
+            <span class="key">{formatKey(row.key)}:</span>
+            {formatValue(row.value)}
+          </div>
+        {/if}
       {/each}
     </div>
+    {#if searchRadius !== undefined}
+      <div
+        class="circle"
+        style="top:{$yScale(foundSorted[0].value)}px;left:{x}px;display: { visible ? 'block' : 'none' };"
+      ></div>
+    {/if}
   {/if}
 </QuadTree>
 
@@ -110,5 +126,14 @@
   }
   .key {
     color: #999;
+  }
+  .circle {
+    position: absolute;
+    border-radius: 50%;
+    background-color: rgba(171,0, 214);
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    width: 10px;
+    height: 10px;
   }
 </style>
