@@ -6,9 +6,10 @@ import argparse
 import asyncio
 import logging
 import os
+import subprocess
+import sys
 from pathlib import Path
 
-import imageio.v3 as iio
 from rich.logging import RichHandler
 
 from mime_db import MimeDb
@@ -69,12 +70,15 @@ async def main() -> None:
     logging.info(f"Video UUID: {video_uuid}")
     logging.info(f"Frame Count: {frame_count}")
 
-    Path(f"/static/{video_uuid}/frames").mkdir(parents=True, exist_ok=True)
+    output_dir = Path(f"/static/{video_uuid}/frames")
+    output_dir.mkdir(parents=True, exist_ok=True)
 
-    for i in range(frame_count):
-        img = iio.imread(video_path, index=i, plugin="pyav")
-        logging.info(f"Caching frame {i + 1} / {frame_count}")
-        iio.imwrite(f"/static/{video_uuid}/frames/{i+1}.jpeg", img, extension=".jpeg")
+    subprocess.run(
+        ["ffmpeg", "-i", video_path, "-f", "image2", "%d.jpeg"],
+        cwd=output_dir,
+        stdout=sys.stdout,
+        stderr=sys.stderr,
+    )
 
 
 if __name__ == "__main__":
