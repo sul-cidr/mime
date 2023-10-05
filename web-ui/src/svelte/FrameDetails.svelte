@@ -5,6 +5,7 @@
 
   export let poses: Array<PoseRecord>;
   export let trackCt: number;
+  export let faceCt: number;
   export let hoveredPoseIdx: number | undefined;
 
 </script>
@@ -18,6 +19,8 @@
     <dd>{poses.length}</dd>
     <dt>#Tracked Poses:</dt>
     <dd>{trackCt}</dd>
+    <dt>#Detected Faces:</dt>
+    <dd>{faceCt}</dd>
     <dt>Time:</dt>
     <dd>{formatSeconds(($currentFrame || 0) / $currentVideo.fps)}</dd>
   </dl>
