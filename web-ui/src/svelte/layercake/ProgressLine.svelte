@@ -2,15 +2,18 @@
 	@component
 	Generates a vertical SVG line of unit length at the given X (frame) position.
  -->
- <script>
-	import { getContext } from 'svelte';
+<script>
+  import { getContext } from 'svelte';
 
   export let frameno = 0;
+
+	export let yKey = "value";
+	export let yDomain = [0, 1];
 
 	const { data, xGet, yGet } = getContext('LayerCake');
 
   $: path = (frameno) => {
-      return 'M' + $xGet({'frame': frameno}) + ',' + $yGet({'value': 0}) + ' v-' + $yGet({'value': 1});
+    return 'M' + $xGet({'frame': frameno}) + ',' + $yGet({[yKey]: yDomain[0]}) + ' v-' + ($yGet({[yKey]: yDomain[0]}) - $yGet({[yKey]: yDomain[1]}));
   };
 </script>
 
