@@ -12,3 +12,6 @@ src = ["api"]
 [tool.ruff.isort]
 known-first-party = ["lib", "mime_db"]
 known-local-folder = ["api"]
+
+[tool.ruff.flake8-bugbear]
+extend-immutable-calls = ["typer.Option"]
