@@ -5,11 +5,12 @@
 
   import AxisX from "@layercake/AxisX.svelte";
   import AxisY from "@layercake/AxisY.svelte";
+  import ProgressLine from "@layercake/ProgressLine.svelte";
   import ScatterSvg from "@layercake/ScatterSvg.svelte";
+  import SharedTooltip from "@layercake/SharedTooltip.html.svelte";
+  // import QuadTree from "@layercake/QuadTree.svelte";
+  import { currentFrame, currentVideo } from "@svelte/stores";
 
-  //import SharedTooltip from "@layercake/SharedTooltip.html.svelte";
-
-  import { currentVideo /*,  currentFrame */ } from "@svelte/stores";
 
   export let videoId: string;
 
@@ -40,7 +41,7 @@
     }
   }
 
-  const formatTitle = (d: string) => `Face ${d}`;
+  const formatTitle = (d: string) => `Frame ${d}`;
 
   async function getClusteredFacesData(videoId: string) {
     const response = await fetch(`${API_BASE}/clustered_faces/${videoId}/`);
@@ -89,7 +90,11 @@
           r={dotRadius}
           fill={'rgba(0, 0, 204, 0.75)'}
         />
+        <ProgressLine frameno={$currentFrame || 0} yKey="cluster_id" yDomain={[0, maxCluster]} />
       </Svg>
+      <Html>
+        <SharedTooltip {formatTitle} dataset={facesData} searchRadius={"10"}/>
+      </Html>
     </LayerCake>
   </div>
 {:else}
