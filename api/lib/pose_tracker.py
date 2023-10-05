@@ -10,12 +10,13 @@ class TrackerArgs:
     """Default arguments to use when instantiating a BYTETracker"""
 
     def __init__(self):
-        self.track_thresh = 0.5  # min pose score for tracking -- lower this?
+        self.track_thresh = 0.4  # must be < .5 for <half-body poses (faces)
         self.track_buffer = 30
         self.match_thresh = 0.8
-        self.aspect_ratio_thresh = 1.6
+        self.aspect_ratio_thresh = 1.9  # Also needed to accommodate faces
         self.min_box_area = 10
         self.mot20 = False
+        self.time_thresh = 5  # 5 seconds between detections = new scene
 
 
 def track_poses(pose_data, video_fps, video_width, video_height):
@@ -36,11 +37,17 @@ def track_poses(pose_data, video_fps, video_width, video_height):
     prev_frame = -1
     detections = []
 
+    base_track_id = 0
+
     # ! pose_data MUST be ordered by frame number
     # (or we could just re-sort them here)
     for pose in pose_data:
         frameno = pose["frame"]
         if frameno > prev_frame:
+            if tracking_ids and (frameno - prev_frame) / video_fps > args.time_thresh:
+                tracker = BYTETracker(args, frame_rate=video_fps)
+                base_track_id = max(tracking_ids)
+
             # Args 2 and 3 can differ if the image has been scaled at some
             # point, but we don't do that
             if len(detections) > 0:
@@ -54,7 +61,7 @@ def track_poses(pose_data, video_fps, video_width, video_height):
                     tid = t.track_id
                     vertical = tlwh[2] / tlwh[3] > args.aspect_ratio_thresh
                     if tlwh[2] * tlwh[3] > args.min_box_area and not vertical:
-                        tracking_ids.add(tid)
+                        tracking_ids.add(tid + base_track_id)
                         tracking_results.append(
                             [
                                 frameno,
