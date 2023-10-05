@@ -9,6 +9,7 @@
 
   let poseData: Array<PoseRecord>;
   let trackCt: number;
+  let faceCt: number;
   let showFrame: boolean = true;
   let playInterval: number | undefined;
   let hoveredPoseIdx: number | undefined;
@@ -31,11 +32,13 @@
   };
 
   const integrateFaceData = (data: Array<FaceRecord>) => {
+    faceCt = 0;
     if (data && poseData) {
       if (data.length && poseData.length) {
         data.forEach((fr: FaceRecord) => {
           poseData.forEach((pr: PoseRecord, pi: number) => {
             if (fr.pose_idx == pr.pose_idx) {
+              faceCt += 1;
               poseData[pi]!.face_bbox = fr.bbox;
               poseData[pi]!.face_landmarks = fr.landmarks;
             }
@@ -121,7 +124,7 @@
   <div class="flex gap-4 p-4 bg-surface-100-800-token">
     {#if poseData}
       <FrameDisplay {showFrame} bind:poses={poseData} bind:hoveredPoseIdx />
-      <FrameDetails bind:poses={poseData} {trackCt} bind:hoveredPoseIdx />
+      <FrameDetails bind:poses={poseData} {trackCt} {faceCt} bind:hoveredPoseIdx />
     {:else}
       Loading pose data... <ProgressBar />
     {/if}
