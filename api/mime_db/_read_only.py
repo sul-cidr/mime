@@ -57,22 +57,6 @@ async def get_pose_data_by_frame(self, video_id: UUID) -> list:
     )
 
 
-# async def get_pose_data_by_frame(self, video_id: UUID) -> list:
-#     return await self._pool.fetch(
-#         """
-#         SELECT frame,
-#                 count(pose_idx) AS "poseCt",
-#                 count(NULLIF(track_id,0)) AS "trackCt",
-#                 ROUND(AVG(score)::numeric, 2) AS "avgScore"
-#         FROM pose
-#         WHERE video_id = $1
-#         GROUP BY frame
-#         ORDER BY frame;
-#         """,
-#         video_id,
-#     )
-
-
 async def get_pose_data_from_video(self, video_id: UUID) -> list:
     return await self._pool.fetch(
         "SELECT * FROM pose WHERE video_id = $1 ORDER BY frame ASC;",
