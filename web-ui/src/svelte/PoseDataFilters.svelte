@@ -22,7 +22,7 @@
         ) {
           return p;
         }
-        return { frame: p.frame, avgScore: 0, poseCt: 0 };
+        return { frame: p.frame, avgScore: 0, poseCt: 0, faceCt: 0 };
       });
     }
     if (filterByPoseCountActive) {
@@ -33,7 +33,7 @@
         ) {
           return p;
         }
-        return { frame: p.frame, avgScore: 0, poseCt: 0 };
+        return { frame: p.frame, avgScore: 0, poseCt: 0, faceCt: 0 };
       });
     }
   };
