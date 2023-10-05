@@ -57,6 +57,7 @@ type FrameRecord = {
   avgScore: number;
   poseCt: number;
   trackCt: number;
+  faceCt: number;
   sim_pose: number | undefined;
   sim_move: number | undefined;
 };
