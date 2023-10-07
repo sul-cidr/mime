@@ -49,6 +49,7 @@ type FaceRecord = {
   confidence: number;
   landmarks: FaceLandmarks;
   embedding: FaceEmbedding;
+  track_id: number;
   cluster_id: number;
 }
 

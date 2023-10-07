@@ -162,6 +162,7 @@ async def main() -> None:
                             frame_faces[best_match]["confidence"],
                             landmarks_vector,
                             embedding,
+                            pose["track_id"],
                         ]
                     )
 

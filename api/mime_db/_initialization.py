@@ -50,7 +50,8 @@ async def initialize_db(conn, drop=False) -> None:
             confidence FLOAT NOT NULL,
             landmarks vector(10) NOT NULL,
             embedding vector(4096) NOT NULL,
-            cluster_id INTEGER
+            track_id INTEGER DEFAULT NULL,
+            cluster_id INTEGER DEFAULT NULL
         )
         ;
         """

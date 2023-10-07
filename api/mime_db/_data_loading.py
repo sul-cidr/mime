@@ -128,8 +128,8 @@ async def add_pose_faces(self, faces_data) -> None:
     await self._pool.executemany(
         """
         INSERT INTO face (
-            video_id, frame, pose_idx, bbox, confidence, landmarks, embedding)
-            VALUES($1, $2, $3, $4, $5, $6, $7)
+            video_id, frame, pose_idx, bbox, confidence, landmarks, embedding, track_id)
+            VALUES($1, $2, $3, $4, $5, $6, $7, $8)
         ;
         """,
         data,
@@ -194,6 +194,24 @@ async def assign_face_clusters(self, video_id, cluster_id, faces_data) -> None:
                     pose_face["frame"],
                     pose_face["pose_idx"],
                 )
+
+
+async def assign_face_clusters_by_track(self, video_id, cluster_id, track_id) -> None:
+    async with self._pool.acquire() as conn:
+        await conn.execute(
+            "ALTER TABLE face ADD COLUMN IF NOT EXISTS cluster_id INTEGER;"
+        )
+        await conn.execute(
+            """
+                UPDATE face
+                SET cluster_id = $1
+                WHERE video_id = $2 AND track_id = $3
+                ;
+            """,
+            cluster_id,
+            video_id,
+            track_id,
+        )
 
 
 async def annotate_pose(
