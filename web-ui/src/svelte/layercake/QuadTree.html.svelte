@@ -49,7 +49,6 @@
     .x(xGetter)
     .y(yGetter)
     .addAll(dataset || $data);
-    //.addAll((dataset || $data).filter((d) => d.poseCt > 0));
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
