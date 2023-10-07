@@ -6,8 +6,7 @@
   import { getContext } from "svelte";
   import { format } from "d3-format";
 
-  import QuadTree from "./QuadTree.svelte";
-  //import QuadTree from "./QuadTree.html.svelte";
+  import QuadTree from "./QuadTree.html.svelte";
 
   const { data, width, yScale, config } = getContext("LayerCake");
 
@@ -32,6 +31,9 @@
   /** @type {String} [searchRadius] – The number of pixels to search around the mouse's location. This is the third argument passed to [`quadtree.find`](https://github.com/d3/d3-quadtree#quadtree_find) and by default a value of `undefined` means an unlimited range. */
   export let searchRadius = undefined;
 
+  /** @type {String} [highlightKey] – The key of the matching search item that should be used for the Y value of the highlight circle. */
+  export let highlightKey = undefined;
+
   /** @type {Array} [hiddenKeys] – Keys from the data rows that should not be shown in the tooltip. */
   export let hiddenKeys = [];
 
@@ -55,12 +57,23 @@
 
     return rows;
   }
+
+  /* --------------------------------------------
+   * If a highlight key is specified, get its value
+   */
+   function getHighlightValue(result) {
+    if ((Object.keys(result).length > 0) && (Object.keys(result).includes(highlightKey)))
+      return result[highlightKey];
+    return null;
+  }
+
+
 </script>
 
 <QuadTree
   dataset={dataset || $data}
   searchRadius={searchRadius}
-  y="x"
+  y = {(highlightKey ? undefined : "x")}
   let:x
   let:y
   let:visible
@@ -68,6 +81,7 @@
   let:e
 >
   {@const foundSorted = sortResult(found)}
+  {@const highlightKeyValue = getHighlightValue(found)}
   {#if visible === true}
     <div style="left:{x}px;" class="line" />
     <div
@@ -75,7 +89,7 @@
       style="
         width:{w}px;
         display: {visible ? 'block' : 'none'};
-        top:{$yScale(foundSorted[0].value) + offset}px;
+        top:{$yScale(highlightKeyValue === null ? foundSorted[0].value : highlightKeyValue) + offset}px;
         left:{Math.min(Math.max(w2, x), $width - w2)}px;"
     >
       <div class="title">{formatTitle(found[$config.x])}</div>
@@ -88,10 +102,10 @@
         {/if}
       {/each}
     </div>
-    {#if searchRadius !== undefined}
+    {#if searchRadius !== undefined && highlightKey !== undefined}
       <div
         class="circle"
-        style="top:{$yScale(foundSorted[0].value)}px;left:{x}px;display: { visible ? 'block' : 'none' };"
+        style="top:{$yScale(highlightKeyValue)}px;left:{x}px;display: { visible ? 'block' : 'none' };"
       ></div>
     {/if}
   {/if}

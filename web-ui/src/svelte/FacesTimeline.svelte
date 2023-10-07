@@ -8,7 +8,6 @@
   import ProgressLine from "@layercake/ProgressLine.svelte";
   import ScatterSvg from "@layercake/ScatterSvg.svelte";
   import SharedTooltip from "@layercake/SharedTooltip.html.svelte";
-  // import QuadTree from "@layercake/QuadTree.svelte";
   import { currentFrame, currentVideo } from "@svelte/stores";
 
 
@@ -93,7 +92,7 @@
         <ProgressLine frameno={$currentFrame || 0} yKey="cluster_id" yDomain={[0, maxCluster]} />
       </Svg>
       <Html>
-        <SharedTooltip {formatTitle} dataset={facesData} searchRadius={"10"}/>
+        <SharedTooltip formatTitle={formatTitle} dataset={facesData} searchRadius={"10"} highlightKey={"cluster_id"}/>
       </Html>
     </LayerCake>
   </div>
