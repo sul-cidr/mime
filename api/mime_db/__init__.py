@@ -29,6 +29,7 @@ class MimeDb:
 
     from mime_db._data_loading import (
         add_pose_faces,
+        add_shot_boundaries,
         add_video,
         add_video_faces,
         add_video_movelets,
