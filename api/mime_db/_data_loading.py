@@ -82,6 +82,20 @@ async def load_openpifpaf_predictions(
     logging.info(f"Loaded {len(poses)} predictions!")
 
 
+async def add_shot_boundaries(self, video_id: UUID | None, frames_data) -> None:
+    data = [(video_id,) + tuple(face) for face in frames_data]
+
+    await self._pool.executemany(
+        """
+        INSERT INTO frame (        
+            video_id, frame, local_shot_prob, global_shot_prob, is_shot_boundary)
+            VALUES($1, $2, $3, $4, $5)
+        ;
+        """,
+        data,
+    )
+
+
 async def add_video_tracks(self, video_id: UUID | None, track_data) -> None:
     async with self._pool.acquire() as conn:
         await conn.execute(

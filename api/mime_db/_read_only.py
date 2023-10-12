@@ -43,15 +43,26 @@ async def get_video_by_name(self, video_name: str) -> asyncpg.Record:
 async def get_pose_data_by_frame(self, video_id: UUID) -> list:
     return await self._pool.fetch(
         """
-        SELECT pose.frame,
-                count(pose.pose_idx) AS "poseCt",
-                count(NULLIF(pose.track_id,0)) AS "trackCt",
-                count(face.pose_idx) AS "faceCt",
-                ROUND(AVG(pose.score)::numeric, 2) AS "avgScore"
-        FROM pose LEFT JOIN face ON pose.video_id = face.video_id AND pose.frame = face.frame AND pose.pose_idx = face.pose_idx
-        WHERE pose.video_id = $1
-        GROUP BY pose.frame
-        ORDER BY pose.frame;
+        SELECT posefaces.frame,
+                posefaces.posect AS "poseCt",
+                posefaces.trackct AS "trackCt",
+                posefaces.facect AS "faceCt",
+                posefaces.avgscore AS "avgScore",
+                frame.local_shot_prob AS "localShotBoundary",
+                frame.global_shot_prob AS "globalShotBoundary",
+                CAST(frame.is_shot_boundary AS INT) AS "isShotBoundary"
+        FROM (SELECT pose.video_id,
+                    pose.frame,
+                    count(pose.pose_idx) AS "posect",
+                    count(NULLIF(pose.track_id,0)) AS "trackct",
+                    count(face.pose_idx) AS "facect",
+                    ROUND(AVG(pose.score)::numeric, 2) AS "avgscore"
+            FROM pose LEFT JOIN face ON pose.video_id = face.video_id AND pose.frame = face.frame AND pose.pose_idx = face.pose_idx
+            WHERE pose.video_id = $1
+            GROUP BY pose.video_id, pose.frame
+            ORDER BY pose.frame) AS posefaces
+        LEFT JOIN frame ON posefaces.video_id = frame.video_id AND posefaces.frame = frame.frame
+        ORDER BY posefaces.frame
         """,
         video_id,
     )
