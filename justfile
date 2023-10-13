@@ -25,6 +25,10 @@ default:
 @add-video path:
   docker compose exec api sh -c "LOG_LEVEL=$LOG_LEVEL /app/load_video.py --video-path \"\$VIDEO_SRC_FOLDER/$1\""
 
+# Load detected shot boundary data; input file is in $VIDEO_SRC_FOLDER with extension .shots.TransNetV2.pkl
+@add-shots path:
+  docker compose exec api sh -c "LOG_LEVEL=$LOG_LEVEL /app/load_shot_boundaries.py --video-path \"\$VIDEO_SRC_FOLDER/$1\""
+
 # Provide paths relative to $VIDEO_SRC_FOLDER
 @add-tracks path:
   docker compose exec api sh -c "LOG_LEVEL=$LOG_LEVEL /app/track_video.py --video-path \"\$VIDEO_SRC_FOLDER/$1\""

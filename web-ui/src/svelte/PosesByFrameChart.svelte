@@ -69,7 +69,7 @@
     let i = startFrame;
     framesInRange.forEach((frame: FrameRecord) => {
       while (i < frame.frame) {
-        timeSeries.push({ frame: i, avgScore: 0, poseCt: 0, faceCt: 0, trackCt: 0, localShotBoundary: 0, globalShotBoundary: 0, isShotBoundary: 0, sim_pose: 0, sim_move: 0 });
+        timeSeries.push({ frame: i, avgScore: 0, poseCt: 0, faceCt: 0, trackCt: 0, localShot: 0, globalShot: 0, isShot: 0, sim_pose: 0, sim_move: 0 });
         i++;
       }
       let frameWithSimilarMatches = frame;
@@ -83,7 +83,7 @@
       i++;
     });
     while (i < endFrame) {
-      timeSeries.push({ frame: i, avgScore: 0, poseCt: 0, faceCt: 0, trackCt: 0, localShotBoundary: 0, globalShotBoundary: 0, isShotBoundary: 0, sim_pose: 0, sim_move: 0 });
+      timeSeries.push({ frame: i, avgScore: 0, poseCt: 0, faceCt: 0, trackCt: 0, localShot: 0, globalShot: 0, isShot: 0, sim_pose: 0, sim_move: 0 });
       i++;
     }
     return timeSeries;
@@ -108,34 +108,38 @@
   }
 
   $: {
-    groupedData = groupLonger(fillEmptyFrames(data, $similarPoseFrames, $similarMoveletFrames), $seriesNames, {
-      groupTo: "series",
-      valueTo: "value",
-    });
-    xTicks = Array.from(
-      { length: Math.ceil($currentVideo.frame_count / 10000) },
-      (_, i) => i * 10000,
-    );
+    if (maxValue != 0) {
+      groupedData = groupLonger(fillEmptyFrames(data, $similarPoseFrames, $similarMoveletFrames), $seriesNames, {
+        groupTo: "series",
+        valueTo: "value",
+      });
+      xTicks = Array.from(
+        { length: Math.ceil($currentVideo.frame_count / 10000) },
+        (_, i) => i * 10000,
+      );
+    }
   }
 
   $: {
-    const startFrame = Math.max(
-      1,
-      Math.ceil($currentVideo.frame_count * (brushExtents[0] || 0)),
-    );
-    const endFrame = Math.min(
-      $currentVideo.frame_count,
-      Math.ceil($currentVideo.frame_count * (brushExtents[1] || 1)),
-    );
-    if (startFrame !== endFrame) {
-      groupedBrushedData = groupLonger(
-        fillEmptyFrames(data, $similarPoseFrames, $similarMoveletFrames, startFrame, endFrame),
-        $seriesNames,
-        {
-          groupTo: "series",
-          valueTo: "value",
-        },
+    if (maxValue != 0) {
+      const startFrame = Math.max(
+        1,
+        Math.ceil($currentVideo.frame_count * (brushExtents[0] || 0)),
       );
+      const endFrame = Math.min(
+        $currentVideo.frame_count,
+        Math.ceil($currentVideo.frame_count * (brushExtents[1] || 1)),
+      );
+      if (startFrame !== endFrame) {
+        groupedBrushedData = groupLonger(
+          fillEmptyFrames(data, $similarPoseFrames, $similarMoveletFrames, startFrame, endFrame),
+          $seriesNames,
+          {
+            groupTo: "series",
+            valueTo: "value",
+          },
+        );
+      }
     }
     maxValue = getMaxValue(data);
   }

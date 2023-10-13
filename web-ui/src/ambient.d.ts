@@ -58,9 +58,9 @@ type FrameRecord = {
   avgScore: number;
   poseCt: number;
   trackCt: number;
-  localShotBoundary: number | undefined;
-  globalShotBoundary: number | undefined;
-  isShotBoundary: number | undefined;
+  localShot: number | undefined;
+  globalShot: number | undefined;
+  isShot: number | undefined;
   sim_pose: number | undefined;
   sim_move: number | undefined;
 };

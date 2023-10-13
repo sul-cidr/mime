@@ -48,9 +48,9 @@ async def get_pose_data_by_frame(self, video_id: UUID) -> list:
                 posefaces.trackct AS "trackCt",
                 posefaces.facect AS "faceCt",
                 posefaces.avgscore AS "avgScore",
-                frame.local_shot_prob AS "localShotBoundary",
-                frame.global_shot_prob AS "globalShotBoundary",
-                CAST(frame.is_shot_boundary AS INT) AS "isShotBoundary"
+                frame.local_shot_prob AS "localShot",
+                frame.global_shot_prob AS "globalShot",
+                CAST(frame.is_shot_boundary AS INT) AS "isShot"
         FROM (SELECT pose.video_id,
                     pose.frame,
                     count(pose.pose_idx) AS "posect",
