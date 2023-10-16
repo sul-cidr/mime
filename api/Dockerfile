@@ -16,7 +16,7 @@ ENV BOKEH_ALLOW_WS_ORIGIN=localhost:8080
 # * installing python3-opencv is the easiest way to ensure we have
 #    the needed libraries that will support pip-installed cv2
 RUN apt-get update -qq \
-  && apt-get install -y supervisor build-essential python3-opencv \
+  && apt-get install -y supervisor build-essential python3-opencv ffmpeg \
   && rm -rf /var/lib/apt/lists/*
 
 # Configure supervisord

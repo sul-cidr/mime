@@ -34,6 +34,12 @@ async def get_video_by_id(self, video_id: UUID) -> asyncpg.Record:
     return await self._pool.fetchrow("SELECT * FROM video WHERE id = $1;", video_id)
 
 
+async def get_video_by_name(self, video_name: str) -> asyncpg.Record:
+    return await self._pool.fetchrow(
+        "SELECT * FROM video WHERE video_name = $1;", video_name
+    )
+
+
 async def get_pose_data_by_frame(self, video_id: UUID) -> list:
     return await self._pool.fetch(
         """

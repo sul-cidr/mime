@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+from pathlib import Path
 from uuid import UUID
 
 import cv2
@@ -60,6 +61,8 @@ async def get_frame(video_id: UUID, frame: int, request: Request):
     video = await request.app.state.db.get_video_by_id(video_id)
     video_path = f"/videos/{video['video_name']}"
     img = iio.imread(video_path, index=frame - 1, plugin="pyav")
+    Path(f"/static/{video_id}/frames").mkdir(parents=True, exist_ok=True)
+    iio.imwrite(f"/static/{video_id}/frames/{frame}.jpeg", img, extension=".jpeg")
     return Response(
         content=iio.imwrite("<bytes>", img, extension=".jpeg"),
         media_type="image/jpeg",
