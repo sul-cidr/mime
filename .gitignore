@@ -1,4 +1,5 @@
 .ruff_cache
 .env
 mime-cache
-
+.DS_Store
+__pycache__/
