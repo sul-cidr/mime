@@ -61,10 +61,12 @@ In addition to making it possible to run parts of the stack independently of the
 
 ## Ingesting videos for analysis
 
-The processing steps are highly subject to change as analytical methods are added or modified, but as of late September 2023, the full sequence for adding a performance video to the platform is as described below. The provided file paths are all relative to the folder on the host system set by `VIDEO_SRC_FOLDER=` in the `.env` file.
+The processing steps are highly subject to change as analytical methods are added or modified, but as of late October 2023, the full sequence for adding a performance video to the platform is as described below. The provided file paths are all relative to the folder on the host system set by `VIDEO_SRC_FOLDER=` in the `.env` file.
 
 1. `just add-video Video_File_Name.ext` - Creates a DB entry for the video, then locates the pose estimation output file as `Video_File_Name.ext.openpifpaf.json` and imports the data into the DB.
-2. `just add-tracks Video_File_Name.ext` - Applies object tracking to the pose position data in the DB to join adjacent poses by the same figure into "tracks" that are saved in the DB.
-3. `just add-motion Video_File_Name.ext` - Segments pose tracks into "movelets" consisting of the average position of consecutive poses that occur within 1/6 of a second of each other, then computes the degree of motion between adjacent movelets.
-4. `just match-faces Video_File_Name.ext Video_Faces_File_Name.ext` - [optional] If face detection output has been generated for the video via the `detect_faces_offline.py` script in the repo, this matches detected poses with detected faces and adds the information to the DB.
-5. `just plot-poses Video_File_Name.ext` - Generates data for the pose clustering visualization.
+1. `just add-shots Video_File_Name.ext` - Looks for a shot detection output file named `Video_File_Name.ext.shots.TransNetV2.pkl` generated for the video via the `app/detect_shots_offline.py` script in the repo and imports the data into the DB.
+1. `just add-tracks Video_File_Name.ext` - Applies object tracking to the pose position data in the DB to join adjacent poses by the same figure into "tracks" that are saved in the DB.
+1. `just add-motion Video_File_Name.ext` - Segments pose tracks into "movelets" consisting of the average position of consecutive poses that occur within 1/6 of a second of each other, then computes the degree of motion between adjacent movelets.
+1. `just match-faces Video_File_Name.ext` - Looks for a face detection output file named `Video_File_Name.ext.faces.ArcFace.jsonl` generated for the video via the `app/detect_faces_offline.py` script in the repo, matches detected poses with detected faces and adds the information to the DB.
+1. `just cluster-faces Video_File_Name.ext [NUMBER_OF_PERSONS]` - If face detection output has been loaded into the DB, performs face clustering and saves results to the DB for the clustering timeline of every (suspected) occurrence of a person in the video. NUMBER_OF_PERSONS is approximately the total number of individual faces expected to be in the video (which may or may not correspond to the size of the cast).
+1. `just plot-poses Video_File_Name.ext` - Generates data for the pose clustering visualization.

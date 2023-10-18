@@ -9,9 +9,8 @@ from pathlib import Path
 
 import jsonlines
 import numpy as np
-from rich.logging import RichHandler
-
 from mime_db import MimeDb
+from rich.logging import RichHandler
 
 BATCH_SIZE = 1000
 
@@ -139,13 +138,6 @@ async def main() -> None:
         help="The name of the video file (with extension)",
     )
 
-    parser.add_argument(
-        "--faces-file",
-        action="store",
-        required=True,
-        help="The filename should be [video_filename].faces.jsonl",
-    )
-
     args = parser.parse_args()
 
     log_level = logging.DEBUG if args.verbose else logging.INFO
@@ -155,6 +147,8 @@ async def main() -> None:
         datefmt="%Y-%m-%d %H:%M:%S",
         handlers=[RichHandler(rich_tracebacks=True)],
     )
+
+    faces_file = Path(f"{args.video_name}.faces.ArcFace.jsonl")
 
     video_name = Path(args.video_name)
 
@@ -175,7 +169,7 @@ async def main() -> None:
 
     logging.info("Matching tracked poses to faces detected in video")
 
-    with jsonlines.open(args.faces_file) as reader:
+    with jsonlines.open(faces_file) as reader:
         for face in reader:
             if (
                 face["confidence"] == 0
