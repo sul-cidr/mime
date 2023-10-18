@@ -11,10 +11,9 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import umap
+from mime_db import MimeDb
 from rich.logging import RichHandler
 from sklearn.cluster import KMeans
-
-from mime_db import MimeDb
 
 # from PIL import Image
 
@@ -186,6 +185,7 @@ async def main() -> None:
     )
 
     # Draw representative faces for each cluster
+    # Commented out here for now, but may be useful in the future
     # for i, cluster_id in enumerate(labels):
     #     try:
     #         cluster_pose = rep_pf_df.iloc[i]
