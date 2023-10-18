@@ -8,9 +8,9 @@ import logging
 import pickle
 from pathlib import Path
 
-import numpy as np
-from mime_db import MimeDb
 from rich.logging import RichHandler
+
+from mime_db import MimeDb
 
 SHOT_DETECT_THRESHOLD = 0.5
 

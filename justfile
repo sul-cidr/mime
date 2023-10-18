@@ -53,6 +53,10 @@ default:
 # @cluster-faces path:
 #   docker compose exec api sh -c "LOG_LEVEL=$LOG_LEVEL /app/cluster_pose_faces.py --video-path \"\$VIDEO_SRC_FOLDER/$1\""
 
+# Ditto re: $VIDEO_SRC_FOLDER
+@cluster-faces path:
+  docker compose exec api sh -c "LOG_LEVEL=$LOG_LEVEL /app/cluster_video_faces.py --video-name \"\$VIDEO_SRC_FOLDER/$1\""
+
 # Paths also relative to $VIDEO_SRC_FOLDER
 @plot-poses path:
   docker compose exec api sh -c "LOG_LEVEL=$LOG_LEVEL /app/poseplot_prep.py --video-path \"\$VIDEO_SRC_FOLDER/$1\""

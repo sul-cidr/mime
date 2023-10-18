@@ -19,7 +19,25 @@ class TrackerArgs:
         self.time_thresh = 5  # 5 seconds between detections = new scene
 
 
-def track_poses(pose_data, video_fps, video_width, video_height):
+def shot_boundary_between_frames(prev_frame, current_frame, shot_boundary_frames):
+    """
+    Given a sorted list of shot boundaries, determine whether one or more
+    of these boundaries falls between the previous frame number and the current
+    frame number.
+    It's probably OK just to do a linear search here (?)
+    """
+    in_bounds = False
+    for boundary_frame in shot_boundary_frames:
+        if not in_bounds and boundary_frame["frame"] > prev_frame:
+            in_bounds = True
+        if in_bounds and boundary_frame["frame"] < current_frame:
+            return True
+        if in_bounds and boundary_frame["frame"] > current_frame:
+            return False
+    return False
+
+
+def track_poses(pose_data, video_fps, video_width, video_height, shot_boundary_frames):
     """
     Use a BYTETracker to detect consecutive pose 'tracklets' in the precomputed
     pose_data input (e.g., per-frame detections from Open PifPaf) that likely
@@ -44,7 +62,17 @@ def track_poses(pose_data, video_fps, video_width, video_height):
     for pose in pose_data:
         frameno = pose["frame"]
         if frameno > prev_frame:
-            if tracking_ids and (frameno - prev_frame) / video_fps > args.time_thresh:
+            # Preemptively increment the base track ID (effectively terminating
+            # the previous entity tracks and starting new ones) if the amount
+            # of time since any pose has been seen is > the threshold (about 5
+            # seconds seems good?), or if there is a detected shot boundary
+            # between the last frame with a pose and the current one.
+            if tracking_ids and (
+                (frameno - prev_frame) / video_fps > args.time_thresh
+                or shot_boundary_between_frames(
+                    prev_frame, frameno, shot_boundary_frames
+                )
+            ):
                 tracker = BYTETracker(args, frame_rate=video_fps)
                 base_track_id = max(tracking_ids)
 

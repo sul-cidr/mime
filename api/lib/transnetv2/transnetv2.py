@@ -1,4 +1,5 @@
 import os
+
 import numpy as np
 import tensorflow as tf
 
@@ -177,8 +178,8 @@ class TransNetV2:
 
 
 def main():
-    import sys
     import argparse
+    import sys
 
     parser = argparse.ArgumentParser()
     parser.add_argument(

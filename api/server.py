@@ -11,6 +11,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_utils.timing import add_timing_middleware
+
 from lib.json_encoder import MimeJSONEncoder
 from mime_db import MimeDb
 
@@ -107,7 +108,6 @@ async def get_frame_region_resized(
 @mime_api.get("/poses/{video_id}/")
 async def poses(video_id: UUID, request: Request):
     frame_data = await request.app.state.db.get_pose_data_by_frame(video_id)
-    print("Length of frame_data:", len(frame_data))
     return Response(
         content=json.dumps(frame_data, cls=MimeJSONEncoder),
         media_type="application/json",

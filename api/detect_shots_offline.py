@@ -12,15 +12,15 @@ try:
     import ffmpeg
 except ModuleNotFoundError:
     raise ModuleNotFoundError(
-        "For `predict_video` function `ffmpeg` needs to be installed in order to extract "
-        "individual frames from video file. Install `ffmpeg` command line tool and then "
-        "install python wrapper by `pip install ffmpeg-python`."
-    )
+        "For `predict_video` function `ffmpeg` needs to be installed in order to "
+        "extract individual frames from video file. Install `ffmpeg` command line tool "
+        "and then install python wrapper by `pip install ffmpeg-python`."
+    ) from None
 import numpy as np
+from rich.logging import RichHandler
 
 # Using TransNetV2 (https://github.com/soCzech/TransNetV2/tree/master/inference)
 from lib.transnetv2.transnetv2 import TransNetV2
-from rich.logging import RichHandler
 
 
 async def main() -> None:
@@ -61,6 +61,8 @@ async def main() -> None:
     model = TransNetV2()
 
     output_path = f"{video_path}.shots.TransNetV2.pkl"
+
+    logging.info("Reading video file into memory...")
 
     # XXX The reference implementation at
     # https://github.com/soCzech/TransNetV2/blob/master/inference/transnetv2.py
