@@ -39,7 +39,6 @@
           <button
             class="button px-2 variant-filled"
             on:click={() => {
-              // console.log(pose);
               $currentPose = pose;
             }}
           >

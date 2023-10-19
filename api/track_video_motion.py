@@ -9,10 +9,9 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+from mime_db import MimeDb
 from rich.logging import RichHandler
 from sklearn.metrics.pairwise import nan_euclidean_distances
-
-from mime_db import MimeDb
 
 TICK_INTERVAL = 0.1666667  # 1/6 of a second
 
@@ -82,10 +81,7 @@ async def main() -> None:
 
     def avg_norm_data(norms):
         norms_with_nans = [np.where(norm == -1, np.nan, norm) for norm in norms]
-        if np.array(norms_with_nans).size == 0 or np.isnan(norms_with_nans).all():
-            data_mean = 0
-        else:
-            data_mean = np.nanmean(norms_with_nans, axis=0)
+        data_mean = np.nanmean(norms_with_nans, axis=0)
         return [data_mean] * len(norms)
 
     tracks_df["tick_norm"] = tracks_df.groupby(["track_id", "tick"])["norm"].transform(
@@ -147,7 +143,7 @@ async def main() -> None:
 
     def compute_movement(timediff, last_norm, norm):
         if np.isnan(timediff) or timediff == 0 or isinstance(last_norm, float):
-            return np.nan  # usually this is the first frame in the movelet
+            return 0  # usually this is the first frame in the movelet
         motion = nan_euclidean_distances([last_norm], [norm])[0]
         return motion / timediff
 

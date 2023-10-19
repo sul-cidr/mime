@@ -3,7 +3,7 @@
   import { ProgressBar, Table } from "@skeletonlabs/skeleton";
   import type { TableSource } from "@skeletonlabs/skeleton";
 
-  import { videoTableData, currentVideo, similarPoseFrames, similarMoveletFrames } from "@svelte/stores";
+  import { videoTableData, currentVideo, similarPoseFrames, similarMoveletFrames, currentPose, currentMovelet, currentMoveletPose } from "@svelte/stores";
 
   import { API_BASE } from "@config";
 
@@ -62,8 +62,9 @@
   const selectVideoHandler = ({ detail: video }: { detail: VideoRecord }) => {
     $currentVideo = video;
     highlightVideoRow(video);
-    // $currentPose = null;
-    // $currentMovelet = null;
+    $currentPose = null;
+    $currentMovelet = null;
+    $currentMoveletPose = null;
     $similarPoseFrames = {};
     $similarMoveletFrames = {};
   };

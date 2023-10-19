@@ -44,7 +44,7 @@ def get_bbox_overlap(box1, box2):
     return 0
 
 
-async def match_faces_in_frames(video_id, faces_to_match, min_frameno, max_frameno):
+async def match_faces_in_frames(video_id, faces_to_match, min_frameno, max_frameno, db):
     logging.info(
         f"Running match_faces_in_frames with start frame {min_frameno} end {max_frameno}"
     )
@@ -195,7 +195,7 @@ async def main() -> None:
 
             if len(faces_to_match) >= BATCH_SIZE:
                 await match_faces_in_frames(
-                    video_id, faces_to_match, min_frameno, max_frameno
+                    video_id, faces_to_match, min_frameno, max_frameno, db
                 )
                 faces_to_match = {}
                 min_frameno = None
@@ -203,7 +203,7 @@ async def main() -> None:
 
         if len(faces_to_match) > 0:
             await match_faces_in_frames(
-                video_id, faces_to_match, min_frameno, max_frameno
+                video_id, faces_to_match, min_frameno, max_frameno, db
             )
 
 
