@@ -8,11 +8,11 @@ import logging
 import pickle
 from pathlib import Path
 
+from mime_db import MimeDb
 from rich.logging import RichHandler
 
-from mime_db import MimeDb
-
 SHOT_DETECT_THRESHOLD = 0.5
+BATCH_SIZE = 1000
 
 
 async def main() -> None:
@@ -67,7 +67,10 @@ async def main() -> None:
         )
 
     frames_to_load = []
-    BATCH_SIZE = 1000
+
+    logging.info(
+        f"Loading shot boundary probabilities for {len(all_frames_probs)} frames"
+    )
 
     for i, frame_prob in enumerate(all_frames_probs):
         frames_to_load.append(
