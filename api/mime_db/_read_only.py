@@ -7,7 +7,7 @@ import numpy as np
 async def get_available_videos(self) -> list:
     videos = await self._pool.fetch(
         """
-        SELECT video.*, pose_ct, track_ct, poses_per_frame, face_ct
+        SELECT video.*, pose_ct, track_ct, shot_ct, poses_per_frame, face_ct
         FROM video
           LEFT JOIN (
             SELECT video.id, COUNT(*) AS face_ct
@@ -15,6 +15,12 @@ async def get_available_videos(self) -> list:
               INNER JOIN face ON video.id = face.video_id
             GROUP BY video.id
           ) AS f ON video.id = f.id
+          LEFT JOIN (
+            SELECT video.id, COUNT(*) filter (where frame.is_shot_boundary) as shot_ct
+            FROM video
+              INNER JOIN frame ON video.id = frame.video_id
+            GROUP BY video.id
+          ) as s on video.id = s.id
           LEFT JOIN (
             SELECT video.id,
                    COUNT(*) AS pose_ct,
