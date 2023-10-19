@@ -154,7 +154,7 @@ async def main() -> None:
     logging.info("fitting clustered model")
 
     # clst = HDBSCAN(min_cluster_size=3, min_samples=4)  # , max_cluster_size=15
-    clst = KMeans(args.n_clusters)
+    clst = KMeans(int(args.n_clusters))
     # embedding = standard_embedding
     embedding = clusterable_embedding
     clst.fit(embedding)
