@@ -65,6 +65,13 @@ type FrameRecord = {
   sim_move: number | undefined;
 };
 
+type ShotRecord = {
+  frame: number;
+  localShot: number | undefined;
+  globalShot: number | undefined;
+  isShot: number | undefined;
+};
+
 type MoveletRecord = {
   video_id: number;
   track_id: number;

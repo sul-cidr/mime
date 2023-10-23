@@ -113,6 +113,15 @@ async def poses(video_id: UUID, request: Request):
     )
 
 
+@mime_api.get("/shots/{video_id}/")
+async def poses(video_id: UUID, request: Request):
+    shot_data = await request.app.state.db.get_video_shot_boundaries(video_id)
+    return Response(
+        content=json.dumps(shot_data, cls=MimeJSONEncoder),
+        media_type="application/json",
+    )
+
+
 @mime_api.get("/poses/{video_id}/{frame}/")
 async def poses_by_frame(video_id: UUID, frame: int, request: Request):
     frame_data = await request.app.state.db.get_frame_data(video_id, frame)

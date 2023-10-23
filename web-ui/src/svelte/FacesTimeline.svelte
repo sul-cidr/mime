@@ -10,10 +10,10 @@
   import SharedTooltip from "@layercake/SharedTooltip.html.svelte";
   import { currentFrame, currentVideo } from "@svelte/stores";
 
-
   export let videoId: string;
 
   let facesData: Array<FaceRecord> | undefined;
+  let shotsData: Array<ShotRecord> | undefined;
 
   let maxCluster:number = 0;
 
@@ -40,6 +40,12 @@
     }
   }
 
+  const updateShotsData = (data: Array<ShotRecord>) => {
+    if (data) {
+      shotsData = data;
+    }
+  }
+
   const formatTitle = (d: string) => `Frame ${d}`;
 
   async function getClusteredFacesData(videoId: string) {
@@ -47,10 +53,22 @@
     return await response.json();
   }
 
+  async function getShotBoundaries(videoId: string) {
+    const response = await fetch(`${API_BASE}/shots/${videoId}/`);
+    return await response.json();
+  }
+
   $: {
     facesData = undefined;
     getClusteredFacesData(videoId).then((data) =>
       updateFacesData(data),
+    );
+  }
+
+  $: {
+    shotsData = undefined;
+    getShotBoundaries(videoId).then((data) =>
+      updateShotsData(data),
     );
   }
 
@@ -85,6 +103,11 @@
         <AxisY
           ticks={yTicks}
         />
+        {#if shotsData}
+          {#each shotsData as shot}
+            <ProgressLine frameno={shot.frame} yKey="cluster_id" yDomain={[0, maxCluster]} lineType="shot-line"/>
+          {/each}
+        {/if}
         <ScatterSvg
           r={dotRadius}
           fill={'rgba(0, 0, 204, 0.75)'}
