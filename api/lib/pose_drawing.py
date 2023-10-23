@@ -1,5 +1,5 @@
 import numpy as np
-from PIL import ImageColor
+from PIL import Image, ImageColor, ImageDraw
 
 # The body part numberings and armature connectors for the 17-keypoint COCO pose format
 # are defined in
@@ -53,6 +53,9 @@ UPSCALE = 5  # See draw_frame()
 
 COORDS_PER_POSE = 17
 
+# Default dimension (length, width, maybe depth, eventually) of single pose viz
+POSE_MAX_DIM = 100
+
 
 def draw_armatures(pose_coords, drawing, line_prevalences=None, x_shift=0, y_shift=0):
     """
@@ -103,3 +106,35 @@ def draw_armatures(pose_coords, drawing, line_prevalences=None, x_shift=0, y_shi
         drawing.line(shape, fill=line_color, width=2 * UPSCALE)
 
     return drawing
+
+
+def draw_normalized_and_unflattened_pose(pose_prediction, armature_prevalences=[]):
+    """
+    Variant of normalize_and_draw_pose() for a pose that has already been normalized and
+    may have armature prevalence values calculated separately. Currently this is only used
+    to draw averaged poses as representatives of pose clusters.
+    """
+    bg_img = Image.new(
+        "RGBA", (POSE_MAX_DIM * UPSCALE, POSE_MAX_DIM * UPSCALE), (0, 0, 0, 0)
+    )
+    drawing = ImageDraw.Draw(bg_img)
+    drawing = draw_armatures(pose_prediction, drawing, armature_prevalences)
+    return bg_img
+
+
+def get_armature_prevalences(cluster_poses):
+    """
+    Count how many times each limb/armature element appears in a group of poses,
+    which then can be used to fade out the elements that are less well represented
+    in the pose when computing an averaged representative pose from the cluster.
+    """
+    armature_appearances = [0] * len(OPP_COCO_SKELETON)
+    for pose_coords in cluster_poses:
+        pose_coords = np.array_split(pose_coords, len(pose_coords) / 2)
+
+        for i, seg in enumerate(OPP_COCO_SKELETON):
+            if not np.isnan(pose_coords[seg[0] - 1][0]) and not np.isnan(
+                pose_coords[seg[1] - 1][1]
+            ):
+                armature_appearances[i] += 1
+    return [segcount / len(cluster_poses) for segcount in armature_appearances]
