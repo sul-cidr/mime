@@ -219,7 +219,7 @@ async def add_video_movelets(self, movelets_data, reindex=True) -> None:
 async def assign_face_clusters(self, video_id, cluster_id, faces_data) -> None:
     async with self._pool.acquire() as conn:
         await conn.execute(
-            "ALTER TABLE face ADD COLUMN IF NOT EXISTS cluster_id INTEGER;"
+            "ALTER TABLE face ADD COLUMN IF NOT EXISTS cluster_id INTEGER DEFAULT NULL;"
         )
         async with conn.transaction():
             for pose_face in faces_data:
@@ -240,7 +240,7 @@ async def assign_face_clusters(self, video_id, cluster_id, faces_data) -> None:
 async def assign_face_clusters_by_track(self, video_id, cluster_id, track_id) -> None:
     async with self._pool.acquire() as conn:
         await conn.execute(
-            "ALTER TABLE face ADD COLUMN IF NOT EXISTS cluster_id INTEGER;"
+            "ALTER TABLE face ADD COLUMN IF NOT EXISTS cluster_id INTEGER DEFAULT NULL;"
         )
         await conn.execute(
             """
@@ -252,6 +252,28 @@ async def assign_face_clusters_by_track(self, video_id, cluster_id, track_id) ->
             cluster_id,
             video_id,
             track_id,
+        )
+
+
+async def assign_movelet_cluster(
+    self, video_id, start_frame, end_frame, pose_idx, cluster_id
+) -> None:
+    async with self._pool.acquire() as conn:
+        await conn.execute(
+            "ALTER TABLE movelet ADD COLUMN IF NOT EXISTS cluster_id INTEGER DEFAULT NULL;"
+        )
+        await conn.execute(
+            """
+                UPDATE movelet
+                SET cluster_id = $1
+                WHERE video_id = $2 AND pose_idx = $3 AND start_frame = $4 AND end_frame = $5
+                ;
+            """,
+            cluster_id,
+            video_id,
+            pose_idx,
+            start_frame,
+            end_frame,
         )
 
 

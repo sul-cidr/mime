@@ -87,6 +87,7 @@ async def initialize_db(conn, drop=False) -> None:
             norm vector(34) NOT NULL,
             motion vector(68) NOT NULL,
             movement FLOAT DEFAULT 0,
+            cluster_id INTEGER DEFAULT NULL,
             PRIMARY KEY(video_id, track_id, tick)
         )
         ;
