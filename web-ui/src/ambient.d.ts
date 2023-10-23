@@ -80,4 +80,5 @@ type MoveletRecord = {
   norm: CocoSkeletonNoConfidence;
   hidden: boolean | undefined;
   distance?: number;
+  cluster_id: number;
 };
