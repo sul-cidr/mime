@@ -20,6 +20,7 @@ type VideoRecord = {
   poses_per_frame: number;
   face_ct: number;
   track_ct: number;
+  shot_ct: number;
 };
 
 type PoseRecord = {
