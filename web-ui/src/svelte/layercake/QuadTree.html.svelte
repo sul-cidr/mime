@@ -57,7 +57,7 @@
   on:mousemove={findItem}
   on:mouseout={() => (visible = false)}
   on:blur={() => (visible = false)}
-  on:click={() => ($currentFrame = found.frame)}
+  on:click={() => ($currentFrame = found.frame || found.start_frame)}
 />
 <slot x={xGetter(found) || 0} y={yGetter(found) || 0} {found} {visible} {e} />
 

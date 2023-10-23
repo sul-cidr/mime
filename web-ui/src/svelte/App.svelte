@@ -7,7 +7,7 @@
   import PoseDataExplorer from "@svelte/PoseDataExplorer.svelte";
   import FacesTimeline from "@svelte/FacesTimeline.svelte";
   import FrameViewer from "@svelte/FrameViewer.svelte";
-  import PosesTimeline from "@svelte/FacesTimeline.svelte";
+  import PosesTimeline from './PosesTimeline.svelte';
   import SimilarMovelets from "@svelte/SimilarMovelets.svelte";
   import SimilarPoses from "@svelte/SimilarPoses.svelte";
   import Icon from "@svelte/Icon.svelte";
@@ -88,7 +88,7 @@
         {:else if tabSet === 2}
           {#if $currentVideo}
             <h2>{$currentVideo.video_name}</h2>
-            <PosesTimeline videoId={$currentVideo.id} />
+            <PosesTimeline videoId={$currentVideo.id} videoName={$currentVideo.video_name} />
             {#if $currentFrame}
               <FrameViewer />
             {/if}
