@@ -7,14 +7,14 @@
   import Brush from "@layercake/Brush.html.svelte";
   import Key from "@layercake/Key.html.svelte";
   import MultiLine from "@layercake/MultiLine.svelte";
-  import ProgressLine from "@/src/svelte/layercake/ProgressLine.svelte";
+  import ProgressLine from "@layercake/ProgressLine.svelte";
   import SharedTooltip from "@layercake/SharedTooltip.html.svelte";
 
   import { currentFrame, currentVideo, currentPose, currentMovelet, seriesNames, similarMoveletFrames, similarPoseFrames } from "@svelte/stores";
 
   export let data: Array<FrameRecord>;
 
-  const seriesColors = ["#0fba81", "#4f46e5", "magenta", "#f9e07688", "#FFA50088", "#brown", "green"];
+  const seriesColors = ["#0fba81", "#4f46e5", "magenta", "#f9e07688", "white", "gray", "black", "#FFA50088", "brown",];
   const formatTickXAsTime = (d: number) => { return new Date(d / $currentVideo.fps * 1000).toISOString().slice(12,19).replace(/^0:/,"");
   }
   const formatTickX = (d: unknown) => d;
@@ -44,8 +44,8 @@
     for (const item of data) {
       for (const [key, value] of Object.entries(item)) {
         if (!hiddenSeries.concat(['frame']).includes(key)) {
-          if (value && value > maxSoFar) {
-            maxSoFar = value;
+          if (value !== undefined && +value > maxSoFar) {
+            maxSoFar = +value;
           }
         }
       }
@@ -64,12 +64,12 @@
     const framesInRange = data.filter(
       (frame: FrameRecord) =>
         frame.frame >= startFrame && frame.frame <= endFrame,
-    );
+    ).sort((aFrame: FrameRecord, bFrame: FrameRecord) => aFrame.frame <= bFrame.frame ? -1 : 1);
     const timeSeries = [];
     let i = startFrame;
     framesInRange.forEach((frame: FrameRecord) => {
       while (i < frame.frame) {
-        timeSeries.push({ frame: i, avgScore: 0, poseCt: 0, trackCt: 0, sim_pose: 0, sim_move: 0});
+        timeSeries.push({ frame: i, avgScore: 0, poseCt: 0, faceCt: 0, trackCt: 0, localShot: 0, globalShot: 0, isShot: 0, sim_pose: 0, sim_move: 0 });
         i++;
       }
       let frameWithSimilarMatches = frame;
@@ -83,7 +83,7 @@
       i++;
     });
     while (i < endFrame) {
-      timeSeries.push({ frame: i, avgScore: 0, poseCt: 0, trackCt: 0, sim_pose: 0, sim_move: 0});
+      timeSeries.push({ frame: i, avgScore: 0, poseCt: 0, faceCt: 0, trackCt: 0, localShot: 0, globalShot: 0, isShot: 0, sim_pose: 0, sim_move: 0 });
       i++;
     }
     return timeSeries;
@@ -108,33 +108,39 @@
   }
 
   $: {
-    groupedData = groupLonger(fillEmptyFrames(data, $similarPoseFrames, $similarMoveletFrames), $seriesNames, {
-      groupTo: "series",
-      valueTo: "value",
-    });
-    xTicks = Array.from(
-      { length: Math.ceil($currentVideo.frame_count / 10000) },
-      (_, i) => i * 10000,
-    );
+    if (maxValue != 0) {
+      groupedData = groupLonger(fillEmptyFrames(data, $similarPoseFrames, $similarMoveletFrames), $seriesNames, {
+        groupTo: "series",
+        valueTo: "value",
+      });
+      xTicks = Array.from(
+        { length: Math.ceil($currentVideo.frame_count / 10000) },
+        (_, i) => i * 10000,
+      );
+    }
   }
 
   $: {
-    const startFrame = Math.max(
-      1,
-      Math.ceil($currentVideo.frame_count * (brushExtents[0] || 0)),
-    );
-    const endFrame = Math.min(
-      $currentVideo.frame_count,
-      Math.ceil($currentVideo.frame_count * (brushExtents[1] || 1)),
-    );
-    groupedBrushedData = groupLonger(
-      fillEmptyFrames(data, $similarPoseFrames, $similarMoveletFrames, startFrame, endFrame),
-      $seriesNames,
-      {
-        groupTo: "series",
-        valueTo: "value",
-      },
-    );
+    if (maxValue != 0) {
+      const startFrame = Math.max(
+        1,
+        Math.ceil($currentVideo.frame_count * (brushExtents[0] || 0)),
+      );
+      const endFrame = Math.min(
+        $currentVideo.frame_count,
+        Math.ceil($currentVideo.frame_count * (brushExtents[1] || 1)),
+      );
+      if (startFrame !== endFrame) {
+        groupedBrushedData = groupLonger(
+          fillEmptyFrames(data, $similarPoseFrames, $similarMoveletFrames, startFrame, endFrame),
+          $seriesNames,
+          {
+            groupTo: "series",
+            valueTo: "value",
+          },
+        );
+      }
+    }
     maxValue = getMaxValue(data);
   }
 </script>
@@ -161,11 +167,11 @@
       />
       <AxisY ticks={5} formatTick={formatTickY} />
       <MultiLine {hiddenSeries} />
-      <ProgressLine frameno={$currentFrame || 0} />
+      <ProgressLine frameno={$currentFrame || 0} yDomain={[0, maxValue]} />
     </Svg>
 
     <Html>
-      <SharedTooltip {formatTitle} dataset={data} />
+      <SharedTooltip {formatTitle} dataset={data} hiddenKeys={["sim_pose", "sim_move"]} />
       <Key align="end" bind:hiddenSeries />
     </Html>
   </LayerCake>

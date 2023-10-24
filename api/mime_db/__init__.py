@@ -29,17 +29,21 @@ class MimeDb:
 
     from mime_db._data_loading import (
         add_pose_faces,
+        add_shot_boundaries,
         add_video,
         add_video_faces,
         add_video_movelets,
         add_video_tracks,
         annotate_pose,
+        assign_face_clusters,
+        assign_face_clusters_by_track,
         clear_poses,
         load_openpifpaf_predictions,
     )
     from mime_db._initialization import initialize_db
     from mime_db._read_only import (
         get_available_videos,
+        get_clustered_face_data_from_video,
         get_frame_data,
         get_frame_data_range,
         get_frame_faces,
@@ -54,6 +58,7 @@ class MimeDb:
         get_video_by_id,
         get_video_by_name,
         get_video_id,
+        get_video_shot_boundaries,
     )
 
     _pool: asyncpg.Pool

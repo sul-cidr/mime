@@ -3,7 +3,7 @@
   import { ProgressBar, Table } from "@skeletonlabs/skeleton";
   import type { TableSource } from "@skeletonlabs/skeleton";
 
-  import { videoTableData, currentVideo, similarPoseFrames, similarMoveletFrames } from "@svelte/stores";
+  import { videoTableData, currentVideo, similarPoseFrames, similarMoveletFrames, currentPose, currentMovelet, currentMoveletPose } from "@svelte/stores";
 
   import { API_BASE } from "@config";
 
@@ -23,7 +23,7 @@
   const updateVideoData = (): Promise<TableSource | void> => {
     return getVideos()
       .then((data) => ({
-        head: ["", "Name", "Meta", "Frame Count", "Pose Count", "Poses/Frame", "Face Count", "Tracked Poses"],
+        head: ["", "Name", "Meta", "Frames", "Poses", "Poses/Frame", "Faces", "Tracks", "Shots"],
         body: data.videos.map((video: VideoRecord) => [
           (video.video_name === $currentVideo?.video_name ? "⮕" : " "),
           video.video_name,
@@ -33,6 +33,7 @@
           video.poses_per_frame,
           video.face_ct,
           video.track_ct,
+          video.shot_ct,
         ]),
         // Passed to the `on:selected` handler:
         meta: data.videos.map((video: VideoRecord) => video),
@@ -62,8 +63,9 @@
   const selectVideoHandler = ({ detail: video }: { detail: VideoRecord }) => {
     $currentVideo = video;
     highlightVideoRow(video);
-    // $currentPose = null;
-    // $currentMovelet = null;
+    $currentPose = null;
+    $currentMovelet = null;
+    $currentMoveletPose = null;
     $similarPoseFrames = {};
     $similarMoveletFrames = {};
   };

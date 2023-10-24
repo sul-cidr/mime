@@ -25,6 +25,20 @@ async def initialize_db(conn, drop=False) -> None:
 
     await conn.execute(
         """
+        CREATE TABLE IF NOT EXISTS frame (
+            video_id uuid NOT NULL REFERENCES video(id) ON DELETE CASCADE,
+            frame INTEGER NOT NULL,
+            local_shot_prob FLOAT NOT NULL,
+            global_shot_prob FLOAT NOT NULL,
+            is_shot_boundary BOOLEAN DEFAULT FALSE,
+            PRIMARY KEY(video_id, frame)
+        )
+        ;
+        """
+    )
+
+    await conn.execute(
+        """
         CREATE TABLE IF NOT EXISTS pose (
             video_id uuid NOT NULL REFERENCES video(id) ON DELETE CASCADE,
             frame INTEGER NOT NULL,
@@ -49,7 +63,9 @@ async def initialize_db(conn, drop=False) -> None:
             bbox FLOAT[4] NOT NULL,
             confidence FLOAT NOT NULL,
             landmarks vector(10) NOT NULL,
-            embedding vector(4096) NOT NULL
+            embedding vector(4096) NOT NULL,
+            track_id INTEGER DEFAULT NULL,
+            cluster_id INTEGER DEFAULT NULL
         )
         ;
         """

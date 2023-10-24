@@ -7,10 +7,9 @@ import asyncio
 import logging
 from pathlib import Path
 
-from rich.logging import RichHandler
-
 import lib.pose_tracker as pose_tracker
 from mime_db import MimeDb
+from rich.logging import RichHandler
 
 
 async def main() -> None:
@@ -60,13 +59,17 @@ async def main() -> None:
 
     pose_data = await db.get_pose_data_from_video(video_id)
 
+    shot_boundary_frames = await db.get_video_shot_boundaries(video_id)
+
     track_data = pose_tracker.track_poses(
         pose_data,
         video_metadata["fps"],
         video_metadata["width"],
         video_metadata["height"],
+        shot_boundary_frames,
     )
 
+    logging.info("Adding pose track data to the DB")
     await db.add_video_tracks(video_id, track_data)
 
 

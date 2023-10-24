@@ -27,6 +27,7 @@
           <img
             src={`${API_BASE}/frame/${videoId}/${$currentFrame}/`}
             alt={`Frame ${$currentFrame}`}
+            style={`width:${displayWidthPx}px;aspect-ratio:${frameWidth}/${frameHeight}`}
           />
         </Html>
       {/if}

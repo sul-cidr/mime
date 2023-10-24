@@ -82,15 +82,28 @@ async def load_openpifpaf_predictions(
     logging.info(f"Loaded {len(poses)} predictions!")
 
 
+async def add_shot_boundaries(self, video_id: UUID | None, frames_data) -> None:
+    data = [(video_id,) + tuple(face) for face in frames_data]
+
+    await self._pool.executemany(
+        """
+        INSERT INTO frame (
+            video_id, frame, local_shot_prob, global_shot_prob, is_shot_boundary)
+            VALUES($1, $2, $3, $4, $5)
+        ;
+        """,
+        data,
+    )
+
+
 async def add_video_tracks(self, video_id: UUID | None, track_data) -> None:
     async with self._pool.acquire() as conn:
         await conn.execute(
             """
-            ALTER TABLE pose ADD COLUMN IF NOT EXISTS track_id INTEGER NOT NULL DEFAULT 0
+            ALTER TABLE pose ADD COLUMN IF NOT EXISTS track_id INTEGER DEFAULT NULL
             ;
             """
         )
-        await conn.execute("UPDATE pose SET track_id = 0 WHERE video_id = $1", video_id)
 
         for track in track_data:
             await conn.execute(
@@ -129,8 +142,8 @@ async def add_pose_faces(self, faces_data) -> None:
     await self._pool.executemany(
         """
         INSERT INTO face (
-            video_id, frame, pose_idx, bbox, confidence, landmarks, embedding)
-            VALUES($1, $2, $3, $4, $5, $6, $7)
+            video_id, frame, pose_idx, bbox, confidence, landmarks, embedding, track_id)
+            VALUES($1, $2, $3, $4, $5, $6, $7, $8)
         ;
         """,
         data,
@@ -174,6 +187,45 @@ async def add_video_movelets(self, movelets_data, reindex=True) -> None:
                 ;
                 """,
             )
+
+
+async def assign_face_clusters(self, video_id, cluster_id, faces_data) -> None:
+    async with self._pool.acquire() as conn:
+        await conn.execute(
+            "ALTER TABLE face ADD COLUMN IF NOT EXISTS cluster_id INTEGER;"
+        )
+        async with conn.transaction():
+            for pose_face in faces_data:
+                await conn.execute(
+                    """
+                        UPDATE face
+                        SET cluster_id = $1
+                        WHERE video_id = $2 AND frame = $3 AND pose_idx = $4
+                        ;
+                    """,
+                    cluster_id,
+                    video_id,
+                    pose_face["frame"],
+                    pose_face["pose_idx"],
+                )
+
+
+async def assign_face_clusters_by_track(self, video_id, cluster_id, track_id) -> None:
+    async with self._pool.acquire() as conn:
+        await conn.execute(
+            "ALTER TABLE face ADD COLUMN IF NOT EXISTS cluster_id INTEGER;"
+        )
+        await conn.execute(
+            """
+                UPDATE face
+                SET cluster_id = $1
+                WHERE video_id = $2 AND track_id = $3
+                ;
+            """,
+            cluster_id,
+            video_id,
+            track_id,
+        )
 
 
 async def annotate_pose(

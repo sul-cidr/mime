@@ -5,6 +5,7 @@
 
   import VideosTable from "@svelte/VideosTable.svelte";
   import PoseDataExplorer from "@svelte/PoseDataExplorer.svelte";
+  import FacesTimeline from "@svelte/FacesTimeline.svelte";
   import FrameViewer from "@svelte/FrameViewer.svelte";
   import SimilarMovelets from "@svelte/SimilarMovelets.svelte";
   import SimilarPoses from "@svelte/SimilarPoses.svelte";
@@ -33,23 +34,24 @@
         <a
           href={`${base}jupyter/notebooks/notebooks/video_posedata_explorer.ipynb`}
           use:tooltip={"PoseData Explorer Notebook"}
+          target="_blank"
         >
           <Icon name="file-analytics" height="24" width="24" />
         </a>
 
-        <a href={`${base}jupyter/tree/notebooks`} use:tooltip={"Jupyter"}>
+        <a href={`${base}jupyter/tree/notebooks`} use:tooltip={"Jupyter"} target="_blank">
           <Icon name="jupyter" height="24" width="24" />
         </a>
 
-        <a href={`${base}api/docs`} use:tooltip={"Swagger API docs"}>
+        <a href={`${base}api/docs`} use:tooltip={"Swagger API docs"} target="_blank">
           <Icon name="book-2" height="24" width="24" />
         </a>
 
-        <a href={`${base}api/redoc`} use:tooltip={"ReDoc API docs"}>
+        <a href={`${base}api/redoc`} use:tooltip={"ReDoc API docs"} target="_blank">
           <Icon name="notebook" height="24" width="24" />
         </a>
 
-        <a href="https://github.com/sul-cidr/mime" use:tooltip={"GitHub"}>
+        <a href="https://github.com/sul-cidr/mime" use:tooltip={"GitHub"} target="_blank">
           <Icon name="github" height="24" width="24" />
         </a>
       </svelte:fragment>
@@ -61,7 +63,9 @@
     <TabGroup>
       <Tab bind:group={tabSet} name="tab1" value={0}>Performances</Tab>
       <Tab bind:group={tabSet} name="tab2" value={1} class={$currentVideo ? "opacity-100" : "opacity-50"}>Timeline</Tab>
-      <Tab bind:group={tabSet} name="tab3" value={2} class={$currentVideo ? "opacity-100" : "opacity-50"}>Clusters</Tab>
+      <Tab bind:group={tabSet} name="tab3" value={2} class={$currentVideo ? "opacity-100" : "opacity-50"}>Poses</Tab>
+      <Tab bind:group={tabSet} name="tab4" value={3} class={$currentVideo ? "opacity-100" : "opacity-50"}>Faces</Tab>
+
       <svelte:fragment slot="panel">
         {#if tabSet === 0}
           <VideosTable />
@@ -79,8 +83,19 @@
               <SimilarPoses />
             {/if}
           {/if}
-        {:else}
-          <div>{@html poseplotFrame}</div>
+        {:else if tabSet === 2}
+          {#if $currentVideo}
+            <h2>{$currentVideo.video_name}</h2>
+            <div>{@html poseplotFrame}</div>
+          {/if}
+        {:else if tabSet === 3}
+          {#if $currentVideo}
+            <h2>{$currentVideo.video_name}</h2>
+            <FacesTimeline videoId={$currentVideo.id} />
+            {#if $currentFrame}
+              <FrameViewer />
+            {/if}
+          {/if}
         {/if}
       </svelte:fragment>
     </TabGroup>

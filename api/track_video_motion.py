@@ -81,7 +81,8 @@ async def main() -> None:
 
     def avg_norm_data(norms):
         norms_with_nans = [np.where(norm == -1, np.nan, norm) for norm in norms]
-        return [np.nanmean(norms_with_nans, axis=0)] * len(norms)
+        data_mean = np.nanmean(norms_with_nans, axis=0)
+        return [data_mean] * len(norms)
 
     tracks_df["tick_norm"] = tracks_df.groupby(["track_id", "tick"])["norm"].transform(
         avg_norm_data
@@ -119,11 +120,11 @@ async def main() -> None:
     ].shift(1)
 
     tracks_tick_df["prev_tick_norm"] = tracks_tick_df["prev_tick_norm"].apply(
-        lambda x: [np.nan] * 34 if type(x) == float else x
+        lambda x: [np.nan] * 34 if isinstance(x, float) else x
     )
 
     def compute_motion_vector(timediff, last_norm, norm):
-        if np.isnan(timediff) or timediff == 0 or type(last_norm) == float:
+        if np.isnan(timediff) or timediff == 0 or isinstance(last_norm, float):
             return [np.nan] * 34
         normdiff = []
         for i in range(0, 34, 2):
@@ -141,8 +142,8 @@ async def main() -> None:
         return normdiff
 
     def compute_movement(timediff, last_norm, norm):
-        if np.isnan(timediff) or timediff == 0 or type(last_norm) == float:
-            return np.nan  # usually this is the first frame in the movelet
+        if np.isnan(timediff) or timediff == 0 or isinstance(last_norm, float):
+            return 0  # usually this is the first frame in the movelet
         motion = nan_euclidean_distances([last_norm], [norm])[0]
         return motion / timediff
 

@@ -13,11 +13,12 @@ import imageio.v3 as iio
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from lib.pose_drawing import UPSCALE, draw_armatures
-from mime_db import MimeDb
 from PIL import Image, ImageDraw
 from rich.logging import RichHandler
 from sklearn.metrics.pairwise import nan_euclidean_distances
+
+from lib.pose_drawing import UPSCALE, draw_armatures
+from mime_db import MimeDb
 
 # import sys
 
@@ -32,8 +33,8 @@ def compute_movement(timediff, last_norm, norm):
     if (
         np.isnan(timediff)
         or timediff == 0
-        or type(last_norm) == float
-        or type(norm) == float
+        or isinstance(last_norm, float)
+        or isinstance(norm, float)
     ):
         return 0  # usually this is the first frame in the movelet
     motion = nan_euclidean_distances([last_norm], [norm])[0]

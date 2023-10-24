@@ -17,8 +17,7 @@
     return await response.json();
   }
 
-  $: {
-    data = undefined;
+  $videoId: {
     getPoseData(videoId).then((_data) => (data = filteredData = _data));
   }
 </script>

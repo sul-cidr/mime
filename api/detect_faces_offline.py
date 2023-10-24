@@ -81,7 +81,8 @@ def extract_face_regions(
 
     if len(face_objs) == 0 and enforce_detection is True:
         raise ValueError(
-            "Face could not be detected. Please confirm that the picture is a face photo "
+            "Face could not be detected. "
+            " Please confirm that the picture is a face photo "
             + "or consider to set enforce_detection param to False."
         )
 
@@ -137,7 +138,8 @@ def extract_face_regions(
             img_pixels = np.expand_dims(img_pixels, axis=0)
             img_pixels = img_pixels / 255
 
-            # int cast is for the exception - object of type 'float32' is not JSON serializable
+            # int cast is for the exception - object of type 'float32' is not
+            # JSON serializable
             region_obj = {
                 "x": round(float(current_region[0]), 2),
                 "y": round(float(current_region[1]), 2),
@@ -202,14 +204,11 @@ async def main() -> None:
         with jsonlines.open(output_path) as reader:
             for line in reader:
                 start_frame = line["frame"] + 1
-        logging.info(
-            f"Starting at frame {start_frame}."
-        )
+        logging.info(f"Starting at frame {start_frame}.")
         last_line = ""
         with open(output_path, "r", encoding="utf-8") as outf:
             for line in outf:
-                pass
-            last_line = line
+                last_line = line
         if "\n" not in last_line:
             logging.info(
                 "Adding newline to end of output file so appending new JSON lines works properly"

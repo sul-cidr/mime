@@ -10,15 +10,34 @@ class TrackerArgs:
     """Default arguments to use when instantiating a BYTETracker"""
 
     def __init__(self):
-        self.track_thresh = 0.5  # min pose score for tracking -- lower this?
+        self.track_thresh = 0.4  # must be < .5 for <half-body poses (faces)
         self.track_buffer = 30
         self.match_thresh = 0.8
-        self.aspect_ratio_thresh = 1.6
+        self.aspect_ratio_thresh = 1.9  # Also needed to accommodate faces
         self.min_box_area = 10
         self.mot20 = False
+        self.time_thresh = 5  # 5 seconds between detections = new scene
 
 
-def track_poses(pose_data, video_fps, video_width, video_height):
+def shot_boundary_between_frames(prev_frame, current_frame, shot_boundary_frames):
+    """
+    Given a sorted list of shot boundaries, determine whether one or more
+    of these boundaries falls between the previous frame number and the current
+    frame number.
+    It's probably OK just to do a linear search here (?)
+    """
+    in_bounds = False
+    for boundary_frame in shot_boundary_frames:
+        if not in_bounds and boundary_frame["frame"] > prev_frame:
+            in_bounds = True
+        if in_bounds and boundary_frame["frame"] < current_frame:
+            return True
+        if in_bounds and boundary_frame["frame"] > current_frame:
+            return False
+    return False
+
+
+def track_poses(pose_data, video_fps, video_width, video_height, shot_boundary_frames):
     """
     Use a BYTETracker to detect consecutive pose 'tracklets' in the precomputed
     pose_data input (e.g., per-frame detections from Open PifPaf) that likely
@@ -36,11 +55,27 @@ def track_poses(pose_data, video_fps, video_width, video_height):
     prev_frame = -1
     detections = []
 
+    base_track_id = 0
+
     # ! pose_data MUST be ordered by frame number
     # (or we could just re-sort them here)
     for pose in pose_data:
         frameno = pose["frame"]
         if frameno > prev_frame:
+            # Preemptively increment the base track ID (effectively terminating
+            # the previous entity tracks and starting new ones) if the amount
+            # of time since any pose has been seen is > the threshold (about 5
+            # seconds seems good?), or if there is a detected shot boundary
+            # between the last frame with a pose and the current one.
+            if tracking_ids and (
+                (frameno - prev_frame) / video_fps > args.time_thresh
+                or shot_boundary_between_frames(
+                    prev_frame, frameno, shot_boundary_frames
+                )
+            ):
+                tracker = BYTETracker(args, frame_rate=video_fps)
+                base_track_id = max(tracking_ids)
+
             # Args 2 and 3 can differ if the image has been scaled at some
             # point, but we don't do that
             if len(detections) > 0:
@@ -54,7 +89,7 @@ def track_poses(pose_data, video_fps, video_width, video_height):
                     tid = t.track_id
                     vertical = tlwh[2] / tlwh[3] > args.aspect_ratio_thresh
                     if tlwh[2] * tlwh[3] > args.min_box_area and not vertical:
-                        tracking_ids.add(tid)
+                        tracking_ids.add(tid + base_track_id)
                         tracking_results.append(
                             [
                                 frameno,
