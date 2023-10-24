@@ -129,9 +129,9 @@
   <div>
     <ul>
       {#each Array(maxCluster+1) as _, index (index)}
-        <li class="ambassadors">
+        <li class="ambassador-box">
           cluster {index}
-          <img src="{`${API_BASE}/pose_cluster_image/${videoName}/${index}`}" class="ambassador-pose">
+          <img src="{`${API_BASE}/pose_cluster_image/${videoName}/${index}`}" class="ambassador-pose-image">
         </li>
       {/each}
     </ul>
@@ -148,10 +148,14 @@
     padding-left: 10px;
     padding-right: 10px;
   }
-  .ambassadors {
+  .ambassador-box {
     display: inline-block;
+    list-style-position:inside;
+    border: 1px solid black;
+    margin: .75em;
+    padding: 5px;
   }
-  .ambassador-pose {
+  .ambassador-pose-image {
     width: 100px;
   }
 </style>
