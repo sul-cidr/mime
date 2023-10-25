@@ -58,8 +58,6 @@ type FrameRecord = {
   avgScore: number;
   poseCt: number;
   trackCt: number;
-  localShot: number | undefined;
-  globalShot: number | undefined;
   isShot: number | undefined;
   sim_pose: number | undefined;
   sim_move: number | undefined;
@@ -67,8 +65,6 @@ type FrameRecord = {
 
 type ShotRecord = {
   frame: number;
-  localShot: number | undefined;
-  globalShot: number | undefined;
   isShot: number | undefined;
 };
 

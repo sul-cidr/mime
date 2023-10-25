@@ -69,7 +69,7 @@
     let i = startFrame;
     framesInRange.forEach((frame: FrameRecord) => {
       while (i < frame.frame) {
-        timeSeries.push({ frame: i, avgScore: 0, poseCt: 0, faceCt: 0, trackCt: 0, localShot: 0, globalShot: 0, isShot: 0, sim_pose: 0, sim_move: 0 });
+        timeSeries.push({ frame: i, avgScore: 0, poseCt: 0, faceCt: 0, trackCt: 0, isShot: 0, sim_pose: 0, sim_move: 0 });
         i++;
       }
       let frameWithSimilarMatches = frame;
@@ -83,7 +83,7 @@
       i++;
     });
     while (i < endFrame) {
-      timeSeries.push({ frame: i, avgScore: 0, poseCt: 0, faceCt: 0, trackCt: 0, localShot: 0, globalShot: 0, isShot: 0, sim_pose: 0, sim_move: 0 });
+      timeSeries.push({ frame: i, avgScore: 0, poseCt: 0, faceCt: 0, trackCt: 0, isShot: 0, sim_pose: 0, sim_move: 0 });
       i++;
     }
     return timeSeries;

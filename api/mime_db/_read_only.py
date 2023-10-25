@@ -54,8 +54,6 @@ async def get_pose_data_by_frame(self, video_id: UUID) -> list:
                 posefaces.trackct AS "trackCt",
                 posefaces.facect AS "faceCt",
                 posefaces.avgscore AS "avgScore",
-                frame.local_shot_prob AS "localShot",
-                frame.global_shot_prob AS "globalShot",
                 CAST(frame.is_shot_boundary AS INT) AS "isShot"
         FROM (SELECT pose.video_id,
                     pose.frame,
@@ -83,7 +81,7 @@ async def get_pose_data_from_video(self, video_id: UUID) -> list:
 
 async def get_video_shot_boundaries(self, video_id: UUID) -> list:
     return await self._pool.fetch(
-        "SELECT frame, local_shot_prob, global_shot_prob FROM frame WHERE video_id = $1 AND is_shot_boundary ORDER BY frame ASC;",
+        "SELECT frame FROM frame WHERE video_id = $1 AND is_shot_boundary ORDER BY frame ASC;",
         video_id,
     )
 
