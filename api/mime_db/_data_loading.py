@@ -96,6 +96,33 @@ async def add_shot_boundaries(self, video_id: UUID | None, frames_data) -> None:
     )
 
 
+async def add_frame_movement(
+    self, video_id: UUID | None, max_movement, movement_data
+) -> None:
+    async with self._pool.acquire() as conn:
+        await conn.execute(
+            """
+            ALTER TABLE frame ADD COLUMN IF NOT EXISTS total_movement FLOAT DEFAULT 0.0
+            ;
+            """
+        )
+
+        safe_max = max(1, max_movement)  # Just in case a 0 sneaks in...
+
+        for frame in movement_data:
+            await conn.execute(
+                """
+                UPDATE frame
+                SET total_movement = $1
+                WHERE video_id = $2 AND frame = $3
+                ;
+                """,
+                movement_data[frame] / safe_max,
+                video_id,
+                frame,
+            )
+
+
 async def add_video_tracks(self, video_id: UUID | None, track_data) -> None:
     async with self._pool.acquire() as conn:
         await conn.execute(

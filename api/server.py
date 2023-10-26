@@ -11,6 +11,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_utils.timing import add_timing_middleware
+
 from lib.json_encoder import MimeJSONEncoder
 from mime_db import MimeDb
 
@@ -114,7 +115,7 @@ async def poses(video_id: UUID, request: Request):
 
 
 @mime_api.get("/shots/{video_id}/")
-async def poses(video_id: UUID, request: Request):
+async def shots(video_id: UUID, request: Request):
     shot_data = await request.app.state.db.get_video_shot_boundaries(video_id)
     return Response(
         content=json.dumps(shot_data, cls=MimeJSONEncoder),

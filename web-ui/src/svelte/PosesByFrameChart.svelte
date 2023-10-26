@@ -14,7 +14,7 @@
 
   export let data: Array<FrameRecord>;
 
-  const seriesColors = ["#0fba81", "#4f46e5", "magenta", "#f9e07688", "white", "gray", "black", "#FFA50088", "brown",];
+  const seriesColors = ["#0fba81", "#4f46e5", "lime", "magenta", "black", "gray", "orange", "#f9e07688", "#FFA50088", "brown"];
   const formatTickXAsTime = (d: number) => { return new Date(d / $currentVideo.fps * 1000).toISOString().slice(12,19).replace(/^0:/,"");
   }
   const formatTickX = (d: unknown) => d;
@@ -69,7 +69,7 @@
     let i = startFrame;
     framesInRange.forEach((frame: FrameRecord) => {
       while (i < frame.frame) {
-        timeSeries.push({ frame: i, avgScore: 0, poseCt: 0, faceCt: 0, trackCt: 0, localShot: 0, globalShot: 0, isShot: 0, sim_pose: 0, sim_move: 0 });
+        timeSeries.push({ frame: i, avgScore: 0, poseCt: 0, faceCt: 0, trackCt: 0, isShot: 0, movement: 0, sim_pose: 0, sim_move: 0 });
         i++;
       }
       let frameWithSimilarMatches = frame;
@@ -83,7 +83,7 @@
       i++;
     });
     while (i < endFrame) {
-      timeSeries.push({ frame: i, avgScore: 0, poseCt: 0, faceCt: 0, trackCt: 0, localShot: 0, globalShot: 0, isShot: 0, sim_pose: 0, sim_move: 0 });
+      timeSeries.push({ frame: i, avgScore: 0, poseCt: 0, faceCt: 0, trackCt: 0, isShot: 0, movement: 0, sim_pose: 0, sim_move: 0 });
       i++;
     }
     return timeSeries;
