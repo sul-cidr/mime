@@ -11,9 +11,10 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import umap
-from mime_db import MimeDb
 from rich.logging import RichHandler
 from sklearn.cluster import KMeans
+
+from mime_db import MimeDb
 
 # from PIL import Image
 
