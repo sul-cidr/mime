@@ -31,6 +31,7 @@ async def initialize_db(conn, drop=False) -> None:
             local_shot_prob FLOAT NOT NULL,
             global_shot_prob FLOAT NOT NULL,
             is_shot_boundary BOOLEAN DEFAULT FALSE,
+            total_movement FLOAT DEFAULT 0.0,
             PRIMARY KEY(video_id, frame)
         )
         ;

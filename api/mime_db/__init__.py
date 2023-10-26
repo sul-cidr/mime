@@ -28,6 +28,7 @@ class MimeDb:
     """Class to interact with the database."""
 
     from mime_db._data_loading import (
+        add_frame_movement,
         add_pose_faces,
         add_shot_boundaries,
         add_video,
