@@ -59,6 +59,7 @@ type FrameRecord = {
   poseCt: number;
   trackCt: number;
   isShot: number | undefined;
+  movement: number | undefined;
   sim_pose: number | undefined;
   sim_move: number | undefined;
 };
