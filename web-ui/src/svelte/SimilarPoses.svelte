@@ -101,7 +101,7 @@
   }
 
 
-  $: getPoseData(
+  $: $currentPose && getPoseData(
     $currentPose.video_id,
     $currentPose.frame,
     $currentPose.pose_idx,

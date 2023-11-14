@@ -1,0 +1,12 @@
+---
+import BaseLayout from "@astro/BaseLayout.astro";
+
+import UrlParamsProvider from "@svelte/UrlParamsProvider.svelte";
+import SimilarPoses from "@svelte/SimilarPoses.svelte";
+---
+
+<BaseLayout>
+  <UrlParamsProvider client:only>
+    <SimilarPoses client:load />
+  </UrlParamsProvider>
+</BaseLayout>
