@@ -9,7 +9,7 @@
       "source.organizeImports": true
     }
   },
-  "ruff.args": ["--config=api/pyproject.toml"],
+  "ruff.lint.args": ["--config=api/pyproject.toml"],
   "python.formatting.provider": "black",
   "python.linting.enabled": true,
   "ruff.interpreter": ["api/.venv/bin/python"],
