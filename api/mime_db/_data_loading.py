@@ -107,7 +107,7 @@ async def add_frame_movement(
             """
         )
 
-        safe_max = max(1, max_movement)  # Just in case a 0 sneaks in...
+        safe_max = min(1, max_movement)  # Just in case a 0 sneaks in...
 
         for frame in movement_data:
             await conn.execute(
