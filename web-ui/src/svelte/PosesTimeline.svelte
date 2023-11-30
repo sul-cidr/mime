@@ -2,6 +2,7 @@
   import { ProgressBar } from "@skeletonlabs/skeleton";
   import { LayerCake, Svg, Html } from "layercake";
   import { API_BASE } from "@config";
+  import { formatSeconds } from "@utils";
 
   import AxisX from "@layercake/AxisX.svelte";
   import AxisY from "@layercake/AxisY.svelte";
@@ -28,6 +29,8 @@
   let xTicks: Array<number>;
   let yTicks: Array<number>;
 
+  // Unsuccessful attempt to display each cluster's "ambassador" pose image as
+  // a y-axis tick to the left of the plot.
   const formatPoseTick = (d: number) => {
     const poseImage = new Image();
     poseImage.src = `${API_BASE}/pose_cluster_image/${videoName}/${d}`;
@@ -42,9 +45,12 @@
         maxCluster = Math.max(maxCluster, pose["cluster_id"]);
         pose[xKey] = +pose[xKey];
         pose[yKey] = +pose[yKey];
+        pose.pose_idx = pose.pose_idx += 1;
+        pose.time = formatSeconds(((pose.start_frame + pose.end_frame) / 2) / $currentVideo.fps);
       });
       yTicks = [...Array(maxCluster+1).keys()];
     }
+    console.log("maxCluster after updatePosesData()", maxCluster);
   }
 
   const updateShotsData = (data: Array<ShotRecord>) => {
@@ -112,14 +118,14 @@
         />
         {#if shotsData}
           {#each shotsData as shot}
-            <ProgressLine frameno={shot.frame} yKey="cluster_id" yDomain={[0, maxCluster]} lineType="shot-line"/>
+            <ProgressLine frameno={shot.frame} xKey="start_frame" yKey="cluster_id" yDomain={[0, maxCluster]} lineType="shot-line"/>
           {/each}
         {/if}
         <ScatterSvg
           r={dotRadius}
           fill={'rgba(0, 0, 204, 0.75)'}
         />
-        <ProgressLine frameno={$currentFrame || 0} yKey="cluster_id" yDomain={[0, maxCluster]} />
+        <ProgressLine frameno={$currentFrame || 0} xKey="start_frame" yKey="cluster_id" yDomain={[0, maxCluster]} />
       </Svg>
       <Html>
         <SharedTooltip formatTitle={formatTitle} dataset={posesData} searchRadius={"10"} highlightKey={"cluster_id"}/>

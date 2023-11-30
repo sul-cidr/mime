@@ -17,7 +17,7 @@
   export let formatTitle = (d) => d;
 
   /** @type {Function} [formatValue=d => isNaN(+d) ? d : commas(d)] - A function to format the value. */
-  export let formatValue = (d) => (isNaN(+d) ? d : commas(d));
+  export let formatValue = (d) => d;
 
   /** @type {Function} [formatKey=d => titleCase(d)] - A function to format the series name. */
   export let formatKey = (d) => titleCase(d);

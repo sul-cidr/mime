@@ -2,6 +2,7 @@
   import { ProgressBar } from "@skeletonlabs/skeleton";
   import { LayerCake, Svg, Html } from "layercake";
   import { API_BASE } from "@config";
+  import { formatSeconds } from "@utils";
 
   import AxisX from "@layercake/AxisX.svelte";
   import AxisY from "@layercake/AxisY.svelte";
@@ -33,6 +34,8 @@
       facesData = data;
       facesData.forEach((face) => {
         maxCluster = Math.max(maxCluster, face["cluster_id"]);
+        face.pose_idx = face.pose_idx += 1;
+        face.time = formatSeconds(face.frame / $currentVideo.fps);
         face[xKey] = +face[xKey];
         face[yKey] = +face[yKey];
       });

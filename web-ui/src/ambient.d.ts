@@ -52,6 +52,7 @@ type FaceRecord = {
   embedding: FaceEmbedding;
   track_id: number;
   cluster_id: number;
+  time: string | undefined;
 }
 
 type FrameRecord = {
@@ -63,6 +64,7 @@ type FrameRecord = {
   movement: number | undefined;
   sim_pose: number | undefined;
   sim_move: number | undefined;
+  time: string | undefined;
 };
 
 type ShotRecord = {
@@ -81,4 +83,5 @@ type MoveletRecord = {
   hidden: boolean | undefined;
   distance?: number;
   cluster_id: number;
+  time: string | undefined;
 };
