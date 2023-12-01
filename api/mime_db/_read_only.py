@@ -55,7 +55,7 @@ async def get_pose_data_by_frame(self, video_id: UUID) -> list:
                 posefaces.facect AS "faceCt",
                 posefaces.avgscore AS "avgScore",
                 CAST(frame.is_shot_boundary AS INT) AS "isShot",
-                CASE WHEN frame.total_movement = 'NaN' THEN 0.0 ELSE ROUND(frame.total_movement::numeric, 2) END as "movement"
+                CASE WHEN frame.total_movement = 'NaN' THEN 0.0 ELSE ROUND(frame.total_movement::numeric, 2) END AS "movement"
         FROM (SELECT pose.video_id,
                     pose.frame,
                     count(pose.pose_idx) AS "posect",
