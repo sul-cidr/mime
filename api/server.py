@@ -105,6 +105,27 @@ async def get_frame_region_resized(
     )
 
 
+@mime_api.get("/pose_cluster_image/{video_name}/{cluster_id}/")
+async def get_pose_cluster_image(video_name: str, cluster_id: int, request: Request):
+    image_path = f"/app/pose_cluster_images/{video_name}/{cluster_id}.png"
+    img = iio.imread(image_path)
+    return Response(
+        content=iio.imwrite("<bytes>", img, extension=".png"),
+        media_type="image/png",
+    )
+
+
+@mime_api.get("/frame_track_pose/{video_id}/{frameno}/{track_id}")
+async def pose(video_id: UUID, frameno: int, track_id: int, request: Request):
+    pose_data = await request.app.state.db.get_pose_by_frame_and_track(
+        video_id, frameno, track_id
+    )
+    return Response(
+        content=json.dumps(pose_data, cls=MimeJSONEncoder),
+        media_type="application/json",
+    )
+
+
 @mime_api.get("/poses/{video_id}/")
 async def poses(video_id: UUID, request: Request):
     frame_data = await request.app.state.db.get_pose_data_by_frame(video_id)
@@ -135,6 +156,17 @@ async def poses_by_frame(video_id: UUID, frame: int, request: Request):
 @mime_api.get("/clustered_faces/{video_id}/")
 async def clustered_faces(video_id: UUID, request: Request):
     frame_data = await request.app.state.db.get_clustered_face_data_from_video(video_id)
+    return Response(
+        content=json.dumps(frame_data, cls=MimeJSONEncoder),
+        media_type="application/json",
+    )
+
+
+@mime_api.get("/clustered_poses/{video_id}/")
+async def clustered_poses(video_id: UUID, request: Request):
+    frame_data = await request.app.state.db.get_clustered_movelet_data_from_video(
+        video_id
+    )
     return Response(
         content=json.dumps(frame_data, cls=MimeJSONEncoder),
         media_type="application/json",

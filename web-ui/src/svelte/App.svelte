@@ -7,6 +7,7 @@
   import PoseDataExplorer from "@svelte/PoseDataExplorer.svelte";
   import FacesTimeline from "@svelte/FacesTimeline.svelte";
   import FrameViewer from "@svelte/FrameViewer.svelte";
+  import PosesTimeline from './PosesTimeline.svelte';
   import SimilarMovelets from "@svelte/SimilarMovelets.svelte";
   import SimilarPoses from "@svelte/SimilarPoses.svelte";
   import Icon from "@svelte/Icon.svelte";
@@ -65,6 +66,7 @@
       <Tab bind:group={tabSet} name="tab2" value={1} class={$currentVideo ? "opacity-100" : "opacity-50"}>Timeline</Tab>
       <Tab bind:group={tabSet} name="tab3" value={2} class={$currentVideo ? "opacity-100" : "opacity-50"}>Poses</Tab>
       <Tab bind:group={tabSet} name="tab4" value={3} class={$currentVideo ? "opacity-100" : "opacity-50"}>Faces</Tab>
+      <Tab bind:group={tabSet} name="tab5" value={4} class={$currentVideo ? "opacity-100" : "opacity-50"}>Explorer</Tab>
 
       <svelte:fragment slot="panel">
         {#if tabSet === 0}
@@ -86,7 +88,10 @@
         {:else if tabSet === 2}
           {#if $currentVideo}
             <h2>{$currentVideo.video_name}</h2>
-            <div>{@html poseplotFrame}</div>
+            <PosesTimeline videoId={$currentVideo.id} videoName={$currentVideo.video_name} />
+            {#if $currentFrame}
+              <FrameViewer />
+            {/if}
           {/if}
         {:else if tabSet === 3}
           {#if $currentVideo}
@@ -95,6 +100,11 @@
             {#if $currentFrame}
               <FrameViewer />
             {/if}
+          {/if}
+          {:else if tabSet === 4}
+          {#if $currentVideo}
+            <h2>{$currentVideo.video_name}</h2>
+            <div>{@html poseplotFrame}</div>
           {/if}
         {/if}
       </svelte:fragment>

@@ -23,12 +23,12 @@
   const updateVideoData = (): Promise<TableSource | void> => {
     return getVideos()
       .then((data) => ({
-        head: ["", "Name", "Meta", "Frames", "Poses", "Poses/Frame", "Faces", "Tracks", "Shots"],
+        head: ["", "Name", "Meta", "Length", "Poses", "Poses/Frame", "Faces", "Tracks", "Shots"],
         body: data.videos.map((video: VideoRecord) => [
           (video.video_name === $currentVideo?.video_name ? "⮕" : " "),
           video.video_name,
           `${video.width}x${video.height}@${video.fps.toFixed(2)}fps`,
-          video.frame_count,
+          new Date(video.frame_count / video.fps * 1000).toISOString().slice(11, 19),
           video.pose_ct,
           video.poses_per_frame,
           video.face_ct,

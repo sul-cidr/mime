@@ -8,17 +8,18 @@
   import AxisY from "@layercake/AxisY.svelte";
   import ProgressLine from "@layercake/ProgressLine.svelte";
   import ScatterSvg from "@layercake/ScatterSvg.svelte";
-  import SharedTooltip from "@layercake/SharedTooltip.html.svelte";
+  import PoseTooltip from "@layercake/PoseTooltip.html.svelte";
   import { currentFrame, currentVideo } from "@svelte/stores";
 
   export let videoId: string;
+  export let videoName: string;
 
-  let facesData: Array<FaceRecord> | undefined;
+  let posesData: Array<MoveletRecord> | undefined;
   let shotsData: Array<ShotRecord> | undefined;
 
   let maxCluster:number = 0;
 
-  const xKey = "frame";
+  const xKey = "start_frame"; // Should cover the full set of frames eventually...
   const yKey = "cluster_id";
 
   const dotRadius = 4;
@@ -28,16 +29,24 @@
   let xTicks: Array<number>;
   let yTicks: Array<number>;
 
+  // Unsuccessful attempt to display each cluster's "ambassador" pose image as
+  // a y-axis tick to the left of the plot.
+  const formatPoseTick = (d: number) => {
+    const poseImage = new Image();
+    poseImage.src = `${API_BASE}/pose_cluster_image/${videoName}/${d}`;
+    poseImage.classList.add("ambassador-pose");
+    return poseImage;
+  }
 
-  const updateFacesData = (data: Array<FaceRecord>) => {
+  const updatePosesData = (data: Array<MoveletRecord>) => {
     if (data) {
-      facesData = data;
-      facesData.forEach((face) => {
-        maxCluster = Math.max(maxCluster, face["cluster_id"]);
-        face.pose_idx = face.pose_idx += 1;
-        face.time = formatSeconds(face.frame / $currentVideo.fps);
-        face[xKey] = +face[xKey];
-        face[yKey] = +face[yKey];
+      posesData = data;
+      posesData.forEach((pose) => {
+        maxCluster = Math.max(maxCluster, pose["cluster_id"]);
+        pose[xKey] = +pose[xKey];
+        pose[yKey] = +pose[yKey];
+        pose.pose_idx = pose.pose_idx += 1;
+        pose.time = formatSeconds(((pose.start_frame + pose.end_frame) / 2) / $currentVideo.fps);
       });
       yTicks = [...Array(maxCluster+1).keys()];
     }
@@ -51,8 +60,8 @@
 
   const formatTitle = (d: string) => `Frame ${d}`;
 
-  async function getClusteredFacesData(videoId: string) {
-    const response = await fetch(`${API_BASE}/clustered_faces/${videoId}/`);
+  async function getClusteredPosesData(videoId: string) {
+    const response = await fetch(`${API_BASE}/clustered_poses/${videoId}/`);
     return await response.json();
   }
 
@@ -62,9 +71,9 @@
   }
 
   $: {
-    facesData = undefined;
-    getClusteredFacesData(videoId).then((data) =>
-      updateFacesData(data),
+    posesData = undefined;
+    getClusteredPosesData(videoId).then((data) =>
+      updatePosesData(data),
     );
   }
 
@@ -82,9 +91,9 @@
     );
   }
 
-</script>
-  
-{#if facesData}
+  </script>
+    
+{#if posesData}
   <div class="chart-container">
     <LayerCake
       padding={{ top: 0, right: 15, bottom: 20, left: 75 }}
@@ -93,7 +102,7 @@
       xDomain={[0, $currentVideo.frame_count]}
       yDomain={[0, maxCluster]}
       xPadding={[plotPadding, plotPadding]}
-      data={facesData}
+      data={posesData}
     >
       <Svg>
         <AxisX
@@ -108,22 +117,32 @@
         />
         {#if shotsData}
           {#each shotsData as shot}
-            <ProgressLine frameno={shot.frame} yKey="cluster_id" yDomain={[0, maxCluster]} lineType="shot-line"/>
+            <ProgressLine frameno={shot.frame} xKey="start_frame" yKey="cluster_id" yDomain={[0, maxCluster]} lineType="shot-line"/>
           {/each}
         {/if}
         <ScatterSvg
           r={dotRadius}
           fill={'rgba(0, 0, 204, 0.75)'}
         />
-        <ProgressLine frameno={$currentFrame || 0} yKey="cluster_id" yDomain={[0, maxCluster]} />
+        <ProgressLine frameno={$currentFrame || 0} xKey="start_frame" yKey="cluster_id" yDomain={[0, maxCluster]} />
       </Svg>
       <Html>
-        <SharedTooltip formatTitle={formatTitle} dataset={facesData} searchRadius={"10"} highlightKey={"cluster_id"}/>
+        <PoseTooltip formatTitle={formatTitle} dataset={posesData} searchRadius={"10"} highlightKey={"cluster_id"}/>
       </Html>
     </LayerCake>
   </div>
+  <div>
+    <ul>
+      {#each Array(maxCluster+1) as _, index (index)}
+        <li class="ambassador-box">
+          cluster {index}
+          <img src="{`${API_BASE}/pose_cluster_image/${videoName}/${index}`}" class="ambassador-pose-image">
+        </li>
+      {/each}
+    </ul>
+  </div>
 {:else}
-  Loading faces data... <ProgressBar />
+  Loading poses data... <ProgressBar />
 {/if}
 
 <style>
@@ -133,6 +152,16 @@
     padding-top: 20px;
     padding-left: 10px;
     padding-right: 10px;
+  }
+  .ambassador-box {
+    display: inline-block;
+    list-style-position: inside;
+    border: 1px solid black;
+    margin: .75em;
+    padding: 5px;
+  }
+  .ambassador-pose-image {
+    width: 100px;
   }
 </style>
   

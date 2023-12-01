@@ -119,6 +119,13 @@
     <SlideToggle name="slider-label" bind:checked={showFrame} size="sm">
       Show Frame
     </SlideToggle>
+    <div>
+      <button
+        type="button"
+        class="btn btn-sm variant-filled"
+        on:click={() => ($currentFrame = null)}>X</button
+      >
+    </div>
   </header>
 
   <div class="flex gap-4 p-4 bg-surface-100-800-token">

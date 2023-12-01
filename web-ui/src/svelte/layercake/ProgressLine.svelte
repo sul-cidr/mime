@@ -7,6 +7,7 @@
 
   export let frameno = 0;
 
+  export let xKey = "frame";
   export let yKey = "value";
   export let yDomain = [0, 1];
   export let lineType = "progress-line";
@@ -14,7 +15,7 @@
   const { data, xGet, yGet } = getContext('LayerCake');
 
   $: path = (frameno) => {
-    return 'M' + $xGet({'frame': frameno}) + ',' + $yGet({[yKey]: yDomain[0]}) + ' v-' + ($yGet({[yKey]: yDomain[0]}) - $yGet({[yKey]: yDomain[1]}));
+    return 'M' + $xGet({[xKey]: frameno}) + ',' + $yGet({[yKey]: yDomain[0]}) + ' v-' + ($yGet({[yKey]: yDomain[0]}) - $yGet({[yKey]: yDomain[1]}));
   };
 </script>
 

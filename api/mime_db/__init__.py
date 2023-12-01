@@ -38,6 +38,7 @@ class MimeDb:
         annotate_pose,
         assign_face_clusters,
         assign_face_clusters_by_track,
+        assign_movelet_cluster,
         clear_poses,
         load_openpifpaf_predictions,
     )
@@ -45,6 +46,7 @@ class MimeDb:
     from mime_db._read_only import (
         get_available_videos,
         get_clustered_face_data_from_video,
+        get_clustered_movelet_data_from_video,
         get_frame_data,
         get_frame_data_range,
         get_frame_faces,
@@ -52,6 +54,7 @@ class MimeDb:
         get_movelet_from_pose,
         get_nearest_movelets,
         get_nearest_poses,
+        get_pose_by_frame_and_track,
         get_pose_data_by_frame,
         get_pose_data_from_video,
         get_poses_with_faces,

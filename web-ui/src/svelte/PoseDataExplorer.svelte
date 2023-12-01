@@ -2,9 +2,11 @@
   import { ProgressBar } from "@skeletonlabs/skeleton";
   import Icon from "@svelte/Icon.svelte";
   import { API_BASE } from "@config";
+  import { formatSeconds } from "@utils";
 
   import PosesByFrameChart from "@svelte/PosesByFrameChart.svelte";
   import PoseDataFilters from "@/src/svelte/PoseDataFilters.svelte";
+  import { currentFrame, currentVideo } from "@svelte/stores";
 
   export let videoId: string;
   let data: Array<FrameRecord> | undefined;
@@ -17,8 +19,15 @@
     return await response.json();
   }
 
+  const updatePoseData = (_data: Array<FrameRecord>) => {
+    data = filteredData = _data;
+    filteredData.forEach((frame) => {
+      frame.time = formatSeconds(frame.frame / $currentVideo.fps);
+    });
+  }
+
   $videoId: {
-    getPoseData(videoId).then((_data) => (data = filteredData = _data));
+    getPoseData(videoId).then((_data) => updatePoseData(_data));
   }
 </script>
 

@@ -20,7 +20,7 @@
   const formatTickX = (d: unknown) => d;
   const formatTickY = (d: unknown) => d;
 
-  $seriesNames = Object.keys(data[0]!).filter((d) => d !== "frame");
+  $seriesNames = Object.keys(data[0]!).filter((d) => !["frame", "time"].includes(d));
 
   let hiddenSeries: Array<string> = [];
 

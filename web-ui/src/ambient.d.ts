@@ -20,6 +20,7 @@ type VideoRecord = {
   poses_per_frame: number;
   face_ct: number;
   track_ct: number;
+  shot_ct: number;
 };
 
 type PoseRecord = {
@@ -51,6 +52,7 @@ type FaceRecord = {
   embedding: FaceEmbedding;
   track_id: number;
   cluster_id: number;
+  time: string | undefined;
 }
 
 type FrameRecord = {
@@ -62,6 +64,7 @@ type FrameRecord = {
   movement: number | undefined;
   sim_pose: number | undefined;
   sim_move: number | undefined;
+  time: string | undefined;
 };
 
 type ShotRecord = {
@@ -79,4 +82,6 @@ type MoveletRecord = {
   norm: CocoSkeletonNoConfidence;
   hidden: boolean | undefined;
   distance?: number;
+  cluster_id: number;
+  time: string | undefined;
 };
