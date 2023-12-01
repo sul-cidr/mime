@@ -8,7 +8,7 @@
   import AxisY from "@layercake/AxisY.svelte";
   import ProgressLine from "@layercake/ProgressLine.svelte";
   import ScatterSvg from "@layercake/ScatterSvg.svelte";
-  import SharedTooltip from "@layercake/SharedTooltip.html.svelte";
+  import PoseTooltip from "@layercake/PoseTooltip.html.svelte";
   import { currentFrame, currentVideo } from "@svelte/stores";
 
   export let videoId: string;
@@ -50,7 +50,6 @@
       });
       yTicks = [...Array(maxCluster+1).keys()];
     }
-    console.log("maxCluster after updatePosesData()", maxCluster);
   }
 
   const updateShotsData = (data: Array<ShotRecord>) => {
@@ -128,7 +127,7 @@
         <ProgressLine frameno={$currentFrame || 0} xKey="start_frame" yKey="cluster_id" yDomain={[0, maxCluster]} />
       </Svg>
       <Html>
-        <SharedTooltip formatTitle={formatTitle} dataset={posesData} searchRadius={"10"} highlightKey={"cluster_id"}/>
+        <PoseTooltip formatTitle={formatTitle} dataset={posesData} searchRadius={"10"} highlightKey={"cluster_id"}/>
       </Html>
     </LayerCake>
   </div>
@@ -156,7 +155,7 @@
   }
   .ambassador-box {
     display: inline-block;
-    list-style-position:inside;
+    list-style-position: inside;
     border: 1px solid black;
     margin: .75em;
     padding: 5px;

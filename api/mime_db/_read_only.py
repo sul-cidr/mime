@@ -96,7 +96,7 @@ async def get_clustered_face_data_from_video(self, video_id: UUID) -> list:
 
 async def get_clustered_movelet_data_from_video(self, video_id: UUID) -> list:
     return await self._pool.fetch(
-        "SELECT start_frame, end_frame, cluster_id, pose_idx FROM movelet WHERE video_id = $1 AND cluster_id IS NOT NULL ORDER BY start_frame ASC;",
+        "SELECT start_frame, end_frame, cluster_id, track_id, pose_idx FROM movelet WHERE video_id = $1 AND cluster_id IS NOT NULL ORDER BY start_frame ASC;",
         video_id,
     )
 
@@ -155,6 +155,15 @@ async def get_poses_with_faces(self, video_id: UUID) -> list:
     return await self._pool.fetch(
         "SELECT pose.video_id as video_id, pose.frame as frame, pose.pose_idx as pose_idx, pose.track_id as track_id, face.bbox as face_bbox, face.confidence as face_confidence, face.embedding as face_embedding FROM pose, face WHERE pose.video_id = $1 AND face.video_id = $1 AND pose.frame = face.frame AND pose.pose_idx = face.pose_idx ORDER BY frame ASC;",
         video_id,
+    )
+
+
+async def get_pose_by_frame_and_track(self, video_id: UUID, frameno: int, track_id: int):
+    return await self._pool.fetch(
+        "SELECT * FROM pose WHERE video_id = $1 AND frame = $2 AND track_id = $3;",
+        video_id,
+        frameno,
+        track_id,
     )
 
 
