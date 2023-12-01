@@ -9,10 +9,9 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+from mime_db import MimeDb
 from rich.logging import RichHandler
 from sklearn.metrics.pairwise import nan_euclidean_distances
-
-from mime_db import MimeDb
 
 TICK_INTERVAL = 0.1666667  # 1/6 of a second
 
@@ -211,28 +210,35 @@ async def main() -> None:
             & (tracks_tick_df["tick_end_frame"] >= frame)
         ].copy()
         if len(active_ticks_df) == 0:
-            continue
-        active_ticks_df["tick_frames_duration"] = (
-            active_ticks_df["tick_end_frame"] - active_ticks_df["tick_start_frame"]
-        )
-        # XXX Not sure why it's necessary to do it this way. This should work:
-        # active_ticks_df["motion_per_frame"] = np.where(
-        #     active_ticks_df["tick_frames_duration"] <= 0,
-        #     active_ticks_df["movement"] / active_ticks_df["tick_frames_duration"],
-        #     0,
-        # )
-        # (according to my feeble brain) but it doesn't.
+            cumulative_movement_per_frame[frame] = 0.0
+        else:
+            active_ticks_df["tick_frames_duration"] = (
+                active_ticks_df["tick_end_frame"] - active_ticks_df["tick_start_frame"]
+            )
+            # XXX Not sure why it's necessary to do it this way. This should work:
+            # active_ticks_df["motion_per_frame"] = np.where(
+            #     active_ticks_df["tick_frames_duration"] <= 0,
+            #     active_ticks_df["movement"] / active_ticks_df["tick_frames_duration"],
+            #     0,
+            # )
+            # (according to my feeble brain) but it doesn't.
 
-        active_ticks_df["motion_per_frame"] = np.where(
-            active_ticks_df["tick_frames_duration"] <= 0, 0, active_ticks_df["movement"]
-        ) / np.where(
-            active_ticks_df["tick_frames_duration"] <= 0,
-            1,
-            active_ticks_df["tick_frames_duration"],
-        )
-        movement = active_ticks_df["motion_per_frame"].sum()
-        max_movement = max(max_movement, movement)
-        cumulative_movement_per_frame[frame] = active_ticks_df["motion_per_frame"].sum()
+            active_ticks_df["motion_per_frame"] = np.where(
+                active_ticks_df["tick_frames_duration"] <= 0,
+                0,
+                active_ticks_df["movement"],
+            ) / np.where(
+                active_ticks_df["tick_frames_duration"] <= 0,
+                1,
+                active_ticks_df["tick_frames_duration"],
+            )
+            movement = active_ticks_df["motion_per_frame"].sum()
+
+            if np.isnan(movement):
+                cumulative_movement_per_frame[frame] = 0.0
+            else:
+                max_movement = max(max_movement, movement)
+                cumulative_movement_per_frame[frame] = movement
 
     logging.info("Adding cumulative movement per frame to DB.")
 
