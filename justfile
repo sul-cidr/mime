@@ -21,6 +21,10 @@ default:
 @lint-fix:
   docker compose exec api ruff check --fix .
 
+# Build a production bundle of the front-end code for faster UI
+@build-prod-ui:
+  docker compose exec web-ui sh -c 'pnpm $MODULES_DIR/.bin/astro build'
+
 # Video file and pose detection output file are in $VIDEO_SRC_FOLDER; the latter is [VIDEO_FILE_NAME].openpifpaf.json
 @add-video path:
   docker compose exec api sh -c "LOG_LEVEL=$LOG_LEVEL /app/load_video.py --video-path \"\$VIDEO_SRC_FOLDER/$1\""
