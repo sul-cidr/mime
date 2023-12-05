@@ -126,3 +126,43 @@ async def initialize_db(conn, drop=False) -> None:
         CREATE UNIQUE INDEX ON video_meta (id);
         """
     )
+
+    await conn.execute(
+        """
+        CREATE MATERIALIZED VIEW if not exists video_frame_meta as
+        SELECT  pose_faces.video_id,
+                pose_faces.frame,
+                pose_faces.pose_ct,
+                pose_faces.track_ct,
+                pose_faces.face_ct,
+                pose_faces.avg_score,
+                CAST(frame.is_shot_boundary AS INT) AS is_shot,
+                CASE
+                  WHEN frame.total_movement = 'NaN'
+                  THEN 0.0
+                  ELSE ROUND(frame.total_movement::numeric, 2)
+                END AS "movement"
+        FROM (
+            SELECT pose.video_id,
+                   pose.frame,
+                   count(pose.pose_idx) AS pose_ct,
+                   count(NULLIF(pose.track_id,0)) AS track_ct,
+                   count(face.pose_idx) AS face_ct,
+                   ROUND(AVG(pose.score)::numeric, 2) AS avg_score
+            FROM pose
+            LEFT JOIN face ON
+                pose.video_id = face.video_id AND
+                pose.frame = face.frame AND
+                pose.pose_idx = face.pose_idx
+            GROUP BY pose.video_id, pose.frame
+            ORDER BY pose.frame
+        ) AS pose_faces
+        LEFT JOIN frame ON
+            pose_faces.video_id = frame.video_id AND
+            pose_faces.frame = frame.frame
+        ORDER BY pose_faces.frame
+        WITH DATA;
+
+        CREATE INDEX ON video_frame_meta (video_id);
+        """
+    )

@@ -21,25 +21,15 @@ async def get_video_by_name(self, video_name: str) -> asyncpg.Record:
 async def get_pose_data_by_frame(self, video_id: UUID) -> list:
     return await self._pool.fetch(
         """
-        SELECT posefaces.frame,
-                posefaces.posect AS "poseCt",
-                posefaces.trackct AS "trackCt",
-                posefaces.facect AS "faceCt",
-                posefaces.avgscore AS "avgScore",
-                CAST(frame.is_shot_boundary AS INT) AS "isShot",
-                CASE WHEN frame.total_movement = 'NaN' THEN 0.0 ELSE ROUND(frame.total_movement::numeric, 2) END AS "movement"
-        FROM (SELECT pose.video_id,
-                    pose.frame,
-                    count(pose.pose_idx) AS "posect",
-                    count(NULLIF(pose.track_id,0)) AS "trackct",
-                    count(face.pose_idx) AS "facect",
-                    ROUND(AVG(pose.score)::numeric, 2) AS "avgscore"
-            FROM pose LEFT JOIN face ON pose.video_id = face.video_id AND pose.frame = face.frame AND pose.pose_idx = face.pose_idx
-            WHERE pose.video_id = $1
-            GROUP BY pose.video_id, pose.frame
-            ORDER BY pose.frame) AS posefaces
-        LEFT JOIN frame ON posefaces.video_id = frame.video_id AND posefaces.frame = frame.frame
-        ORDER BY posefaces.frame
+        SELECT frame,
+               pose_ct AS "poseCt",
+               track_ct AS "trackCt",
+               face_ct AS "faceCt",
+               avg_score AS "avgScore",
+               is_shot AS "isShot",
+               movement
+           FROM video_frame_meta
+           WHERE video_id = $1;
         """,
         video_id,
     )
