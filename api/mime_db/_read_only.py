@@ -5,35 +5,7 @@ import numpy as np
 
 
 async def get_available_videos(self) -> list:
-    videos = await self._pool.fetch(
-        """
-        SELECT video.*, pose_ct, track_ct, shot_ct, poses_per_frame, face_ct
-        FROM video
-          LEFT JOIN (
-            SELECT video.id, COUNT(*) AS face_ct
-            FROM video
-              INNER JOIN face ON video.id = face.video_id
-            GROUP BY video.id
-          ) AS f ON video.id = f.id
-          LEFT JOIN (
-            SELECT video.id, COUNT(*) filter (where frame.is_shot_boundary) as shot_ct
-            FROM video
-              INNER JOIN frame ON video.id = frame.video_id
-            GROUP BY video.id
-          ) as s on video.id = s.id
-          LEFT JOIN (
-            SELECT video.id,
-                   COUNT(*) AS pose_ct,
-                   COUNT(DISTINCT pose.track_id) AS track_ct,
-                   TRUNC(COUNT(*)::decimal / video.frame_count, 2) AS poses_per_frame
-            FROM video
-              INNER JOIN pose ON video.id = pose.video_id
-              GROUP BY video.id
-            ) AS p ON video.id = p.id
-        ORDER BY video_name;
-        """
-    )
-    return videos
+    return await self._pool.fetch("""SELECT * FROM video_meta;""")
 
 
 async def get_video_by_id(self, video_id: UUID) -> asyncpg.Record:

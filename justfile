@@ -25,8 +25,12 @@ default:
 @build-prod-ui:
   docker compose exec web-ui sh -c 'pnpm $MODULES_DIR/.bin/astro build'
 
+# Refresh PostgreSQL materialized views
+@refresh-db-views:
+  docker compose exec db sh -c 'psql -U mime -c "REFRESH MATERIALIZED VIEW CONCURRENTLY video_meta;"'
+
 # Video file and pose detection output file are in $VIDEO_SRC_FOLDER; the latter is [VIDEO_FILE_NAME].openpifpaf.json
-@add-video path:
+@add-video path: && refresh-db-views
   docker compose exec api sh -c "LOG_LEVEL=$LOG_LEVEL /app/load_video.py --video-path \"\$VIDEO_SRC_FOLDER/$1\""
 
 # Video file is in $VIDEO_SRC_FOLDER; detected shots file will be [VIDEO_FILE_NAME].shots.TransNetV2.pkl
@@ -34,7 +38,7 @@ default:
   docker compose exec api sh -c "LOG_LEVEL=$LOG_LEVEL /app/detect_shots_offline.py --video-path \"\$VIDEO_SRC_FOLDER/$1\""
 
 # Load detected shot boundary data; input file is in $VIDEO_SRC_FOLDER with extension .shots.TransNetV2.pkl
-@add-shots path:
+@add-shots path: && refresh-db-views
   docker compose exec api sh -c "LOG_LEVEL=$LOG_LEVEL /app/load_shot_boundaries.py --video-path \"\$VIDEO_SRC_FOLDER/$1\""
 
 # Video file is in $VIDEO_SRC_FOLDER; detected faces file will be [VIDEO_FILE_NAME].faces.ArcFace.jsonl
@@ -42,11 +46,11 @@ default:
   docker compose exec api sh -c "LOG_LEVEL=$LOG_LEVEL /app/detect_faces_offline.py --video-path \"\$VIDEO_SRC_FOLDER/$1\""
 
 # Provide path to video file relative to $VIDEO_SRC_FOLDER
-@add-tracks path:
+@add-tracks path: && refresh-db-views
   docker compose exec api sh -c "LOG_LEVEL=$LOG_LEVEL /app/track_video.py --video-path \"\$VIDEO_SRC_FOLDER/$1\""
 
 # Provide path to video file relative to $VIDEO_SRC_FOLDER
-@add-motion path:
+@add-motion path: && refresh-db-views
   docker compose exec api sh -c "LOG_LEVEL=$LOG_LEVEL /app/track_video_motion.py --video-path \"\$VIDEO_SRC_FOLDER/$1\""
 
 # @add-faces path:
@@ -66,11 +70,11 @@ default:
 #   docker compose exec api sh -c "LOG_LEVEL=$LOG_LEVEL /app/cluster_pose_faces.py --video-path \"\$VIDEO_SRC_FOLDER/$1\""
 
 # Provide path to video file relative to $VIDEO_SRC_FOLDER
-@cluster-faces path n_clusters:
+@cluster-faces path n_clusters: && refresh-db-views
   docker compose exec api sh -c "LOG_LEVEL=$LOG_LEVEL /app/cluster_video_faces.py --video-name \"\$VIDEO_SRC_FOLDER/$1\" --n_clusters $2"
 
 # Provide path to video file relative to $VIDEO_SRC_FOLDER
-@cluster-poses path n_clusters:
+@cluster-poses path n_clusters: && refresh-db-views
   docker compose exec api sh -c "LOG_LEVEL=$LOG_LEVEL /app/cluster_video_poses.py --video-name \"\$VIDEO_SRC_FOLDER/$1\" --n_clusters $2"
 
 # Provide path to video file relative to $VIDEO_SRC_FOLDER
