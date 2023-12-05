@@ -14,10 +14,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import umap
-from lib.pose_drawing import *
-from mime_db import MimeDb
 from rich.logging import RichHandler
 from sklearn.cluster import KMeans
+
+from lib.pose_drawing import *
+from mime_db import MimeDb
 
 # from PIL import Image
 
