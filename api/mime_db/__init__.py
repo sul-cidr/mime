@@ -38,7 +38,7 @@ class MimeDb:
         annotate_pose,
         assign_face_clusters,
         assign_face_clusters_by_track,
-        assign_movelet_cluster,
+        assign_movelet_clusters,
         clear_poses,
         load_openpifpaf_predictions,
     )

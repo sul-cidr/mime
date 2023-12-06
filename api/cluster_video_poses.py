@@ -169,21 +169,24 @@ async def main() -> None:
     # tracks_per_cluster = []
     # poses_per_track_per_cluster = []
 
+    movelet_clusters = []
     for cluster_id in range(max(labels) + 1):
         # logging.info("Poses in cluster", cluster_id, labels.count(cluster_id))
 
         cluster_track_poses = {}
         for movelet_id in cluster_to_poses[cluster_id]:
             this_movelet = frozen_movelets.iloc[movelet_id]
-            logging.info(
+            logging.debug(
                 f"assigning cluster {cluster_id} to movelet in frames {this_movelet['start_frame']} to {this_movelet['end_frame']}, pose {this_movelet['pose_idx']}"
             )
-            await db.assign_movelet_cluster(
-                video_id,
-                this_movelet["start_frame"],
-                this_movelet["end_frame"],
-                this_movelet["pose_idx"],
-                cluster_id,
+            movelet_clusters.append(
+                (
+                    video_id,
+                    this_movelet["start_frame"],
+                    this_movelet["end_frame"],
+                    this_movelet["pose_idx"],
+                    cluster_id,
+                )
             )
 
             movelet_track = this_movelet["track_id"]
@@ -192,6 +195,8 @@ async def main() -> None:
             #     cluster_track_poses[movelet_track] = 1 # Include non-clustered poses?
             # else:
             #     cluster_track_poses[movelet_track] += 1
+
+    await db.assign_movelet_clusters(movelet_clusters)
 
     # Get the full pose data for each representative movelet from a track in a cluster,
     # to be used to display armatures

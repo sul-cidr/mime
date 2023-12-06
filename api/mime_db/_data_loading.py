@@ -255,26 +255,30 @@ async def assign_face_clusters_by_track(self, video_id, cluster_id, track_id) ->
         )
 
 
-async def assign_movelet_cluster(
-    self, video_id, start_frame, end_frame, pose_idx, cluster_id
-) -> None:
+async def assign_movelet_clusters(self, movelet_clusters) -> None:
     async with self._pool.acquire() as conn:
         await conn.execute(
-            "ALTER TABLE movelet ADD COLUMN IF NOT EXISTS cluster_id INTEGER DEFAULT NULL;"
-        )
-        await conn.execute(
             """
-                UPDATE movelet
-                SET cluster_id = $1
-                WHERE video_id = $2 AND pose_idx = $3 AND start_frame = $4 AND end_frame = $5
-                ;
-            """,
-            cluster_id,
-            video_id,
-            pose_idx,
-            start_frame,
-            end_frame,
+            ALTER TABLE movelet
+                ADD COLUMN IF NOT EXISTS cluster_id INTEGER DEFAULT NULL;
+            """
         )
+
+        # updates = [(account_id, new_address, additional_protocol) from <data_source>]
+
+        await conn.executemany(
+            """
+            UPDATE movelet
+            SET cluster_id = $5
+            WHERE video_id = $1 AND
+                  pose_idx = $2 AND
+                  start_frame = $3 AND
+                  end_frame = $4;
+            """,
+            movelet_clusters,
+        )
+
+        return
 
 
 async def annotate_pose(
