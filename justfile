@@ -31,7 +31,7 @@ default:
 
 # Refresh PostgreSQL materialized views
 @refresh-db-views:
-  docker compose exec db sh -c 'psql -U mime -c "REFRESH MATERIALIZED VIEW CONCURRENTLY video_meta;"'
+  docker compose exec db sh -c 'psql -U mime -c "REFRESH MATERIALIZED VIEW CONCURRENTLY video_meta; REFRESH MATERIALIZED VIEW video_frame_meta;"'
 
 # Video file and pose detection output file are in $VIDEO_SRC_FOLDER; the latter is [VIDEO_FILE_NAME].openpifpaf.json
 @add-video path: && refresh-db-views
