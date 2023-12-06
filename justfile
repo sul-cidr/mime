@@ -25,6 +25,10 @@ default:
 @build-prod-ui:
   docker compose exec web-ui sh -c 'pnpm $MODULES_DIR/.bin/astro build'
 
+# Drop and rebuild the database (obviously use with caution!)
+@drop-and-rebuild-db:
+  docker compose exec api python -c 'import asyncio;from mime_db import MimeDb;asyncio.run(MimeDb.create(drop=True))'
+
 # Refresh PostgreSQL materialized views
 @refresh-db-views:
   docker compose exec db sh -c 'psql -U mime -c "REFRESH MATERIALIZED VIEW CONCURRENTLY video_meta;"'
