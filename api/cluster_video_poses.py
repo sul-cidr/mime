@@ -71,8 +71,6 @@ async def main() -> None:
     video_name = video_name.name
     video_id = await db.get_video_id(video_name)
 
-    print(video_id)
-
     video_movelets = await db.get_movelet_data_from_video(video_id)
     movelets_df = pd.DataFrame.from_records(
         video_movelets, columns=video_movelets[0].keys()
@@ -81,21 +79,26 @@ async def main() -> None:
     # video_poses = await db.get_pose_data_from_video(video_id)
     # poses_df = pd.DataFrame.from_records(video_poses, columns=video_poses[0].keys())
 
-    print("TOTAL MOVELETS:", len(movelets_df))
-    print("NON-MOTION MOVELETS:", len(movelets_df[movelets_df["movement"].isna()]))
-    print("MOVELETS WITH STILL MOTION:", len(movelets_df[movelets_df["movement"] == 0]))
-    print(
-        "MOVELETS WITH MOVEMENT < 10px/sec:",
+    logging.info("TOTAL MOVELETS: %d", len(movelets_df))
+    logging.info(
+        "NON-MOTION MOVELETS: %d", len(movelets_df[movelets_df["movement"].isna()])
+    )
+    logging.info(
+        "MOVELETS WITH STILL MOTION: %d", len(movelets_df[movelets_df["movement"] == 0])
+    )
+    logging.info(
+        "MOVELETS WITH MOVEMENT < 10px/sec: %d",
         len(
             movelets_df[(movelets_df["movement"] >= 0) & (movelets_df["movement"] < 10)]
         ),
     )
 
-    print(
-        "MEAN MOVEMENT PER MOVELET (norm px/sec):", np.nanmean(movelets_df["movement"])
+    logging.info(
+        "MEAN MOVEMENT PER MOVELET (norm px/sec): %d",
+        np.nanmean(movelets_df["movement"]),
     )
-    print(
-        "MEDIAN MOVEMENT PER MOVELET (norm px/sec):",
+    logging.info(
+        "MEDIAN MOVEMENT PER MOVELET (norm px/sec): %d",
         np.nanmedian(movelets_df["movement"]),
     )
 
@@ -109,8 +112,8 @@ async def main() -> None:
     # plt.xlabel("Movement (normalized pixels/sec)")
     # plt.ylabel("# Movelets")
     top_bin = n[1:].argmax()
-    # print('most frequent bin: (' + str(bins[top_bin]) + ',' + str(bins[top_bin+1]) + ')')
-    # print('mode: '+ str((bins[top_bin] + bins[top_bin+1])/2))
+    # logging.info('most frequent bin: (' + str(bins[top_bin]) + ',' + str(bins[top_bin+1]) + ')')
+    # logging.info('mode: '+ str((bins[top_bin] + bins[top_bin+1])/2))
     movement_mode = (bins[top_bin] + bins[top_bin + 1]) / 2
 
     frozen_movelets = movelets_df[
@@ -141,7 +144,8 @@ async def main() -> None:
             assigned_poses += labels.count(cluster_id)
 
     logging.info(
-        f"assigned {assigned_poses} track poses out of {len(labels)}, {round(assigned_poses/len(labels),4)}"
+        f"assigned {assigned_poses} track poses out of {len(labels)}, "
+        f"{round(assigned_poses/len(labels),4)}"
     )
 
     cluster_to_poses = {}
@@ -166,7 +170,7 @@ async def main() -> None:
     # poses_per_track_per_cluster = []
 
     for cluster_id in range(max(labels) + 1):
-        # print("Poses in cluster", cluster_id, labels.count(cluster_id))
+        # logging.info("Poses in cluster", cluster_id, labels.count(cluster_id))
 
         cluster_track_poses = {}
         for movelet_id in cluster_to_poses[cluster_id]:
@@ -196,7 +200,7 @@ async def main() -> None:
     for i in filtered_movelet_indices:
         filtered_movelet_counts[i] = filtered_movelet_counts.get(i, 0) + 1
 
-    print("Filtered movelets:", len(set(filtered_movelet_indices)))
+    logging.info("Filtered movelets: %d", len(set(filtered_movelet_indices)))
     filtered_movelets = frozen_movelets.iloc[list(set(filtered_movelet_indices))]
     filtered_movelets.reset_index(inplace=True)
     filtered_poses = filtered_movelets["norm"].tolist()
@@ -215,7 +219,9 @@ async def main() -> None:
         # fig, ax = plt.subplots()
         # fig.set_size_inches(UPSCALE * 100 / fig.dpi, UPSCALE * 100 / fig.dpi)
         # fig.canvas.draw()
-        print("CLUSTER:", cluster_id, "POSES:", len(cluster_to_poses[cluster_id]))
+        logging.info(
+            f"CLUSTER: {cluster_id}, POSES: {len(cluster_to_poses[cluster_id])}"
+        )
         for pose_index in cluster_to_poses[cluster_id]:
             cl_pose = frozen_poses[pose_index]
             cl_pose[cl_pose == -1] = np.nan
