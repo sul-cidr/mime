@@ -166,15 +166,23 @@ async def add_video_faces(self, video_id: UUID | None, faces_data) -> None:
 async def add_pose_faces(self, faces_data) -> None:
     data = [tuple(face) for face in faces_data]
 
-    await self._pool.executemany(
-        """
-        INSERT INTO face (
-            video_id, frame, pose_idx, bbox, confidence, landmarks, embedding, track_id)
-            VALUES($1, $2, $3, $4, $5, $6, $7, $8)
-        ;
-        """,
-        data,
-    )
+    async with self._pool.acquire() as conn:
+        await conn.execute(
+            """
+            ALTER TABLE face ADD COLUMN IF NOT EXISTS track_id INTEGER DEFAULT NULL
+            ;
+            """
+        )
+
+        await conn.executemany(
+            """
+            INSERT INTO face (
+                video_id, frame, pose_idx, bbox, confidence, landmarks, embedding, track_id)
+                VALUES($1, $2, $3, $4, $5, $6, $7, $8)
+            ;
+            """,
+            data,
+        )
 
     logging.info(f"Loaded {len(faces_data)} matched faces!")
 
