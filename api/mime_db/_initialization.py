@@ -93,3 +93,76 @@ async def initialize_db(conn, drop=False) -> None:
         ;
         """
     )
+
+    await conn.execute(
+        """
+        CREATE MATERIALIZED VIEW IF NOT EXISTS video_meta AS
+            SELECT video.*, pose_ct, track_ct, shot_ct, poses_per_frame, face_ct
+            FROM video
+            LEFT JOIN (
+                SELECT video.id, COUNT(*) AS face_ct
+                FROM video
+                INNER JOIN face ON video.id = face.video_id
+                GROUP BY video.id
+            ) AS f ON video.id = f.id
+            LEFT JOIN (
+                SELECT video.id, COUNT(*) filter (where frame.is_shot_boundary) as shot_ct
+                FROM video
+                INNER JOIN frame ON video.id = frame.video_id
+                GROUP BY video.id
+            ) as s on video.id = s.id
+            LEFT JOIN (
+                SELECT video.id,
+                    COUNT(*) AS pose_ct,
+                    COUNT(DISTINCT pose.track_id) AS track_ct,
+                    TRUNC(COUNT(*)::decimal / video.frame_count, 2) AS poses_per_frame
+                FROM video
+                INNER JOIN pose ON video.id = pose.video_id
+                GROUP BY video.id
+                ) AS p ON video.id = p.id
+            ORDER BY video_name
+        WITH DATA;
+
+        CREATE UNIQUE INDEX ON video_meta (id);
+        """
+    )
+
+    await conn.execute(
+        """
+        CREATE MATERIALIZED VIEW if not exists video_frame_meta as
+        SELECT  pose_faces.video_id,
+                pose_faces.frame,
+                pose_faces.pose_ct,
+                pose_faces.track_ct,
+                pose_faces.face_ct,
+                pose_faces.avg_score,
+                CAST(frame.is_shot_boundary AS INT) AS is_shot,
+                CASE
+                  WHEN frame.total_movement = 'NaN'
+                  THEN 0.0
+                  ELSE ROUND(frame.total_movement::numeric, 2)
+                END AS "movement"
+        FROM (
+            SELECT pose.video_id,
+                   pose.frame,
+                   count(pose.pose_idx) AS pose_ct,
+                   count(NULLIF(pose.track_id,0)) AS track_ct,
+                   count(face.pose_idx) AS face_ct,
+                   ROUND(AVG(pose.score)::numeric, 2) AS avg_score
+            FROM pose
+            LEFT JOIN face ON
+                pose.video_id = face.video_id AND
+                pose.frame = face.frame AND
+                pose.pose_idx = face.pose_idx
+            GROUP BY pose.video_id, pose.frame
+            ORDER BY pose.frame
+        ) AS pose_faces
+        LEFT JOIN frame ON
+            pose_faces.video_id = frame.video_id AND
+            pose_faces.frame = frame.frame
+        ORDER BY pose_faces.frame
+        WITH DATA;
+
+        CREATE INDEX ON video_frame_meta (video_id);
+        """
+    )

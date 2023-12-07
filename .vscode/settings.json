@@ -7,13 +7,11 @@
   "[python]": {
     "editor.codeActionsOnSave": {
       "source.organizeImports": true
-    }
+    },
+    "editor.defaultFormatter": "charliermarsh.ruff"
   },
   "ruff.lint.args": ["--config=api/pyproject.toml"],
-  "python.formatting.provider": "black",
-  "python.linting.enabled": true,
   "ruff.interpreter": ["api/.venv/bin/python"],
-
   "cSpell.words": [
     "bbox",
     "executemany",

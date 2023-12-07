@@ -3,7 +3,7 @@ line-length = 89
 target-version = ['py310']
 
 [tool.ruff]
-extend-exclude = ["notebooks", "lib/yolox"]
+extend-exclude = ["notebooks", "lib/yolox", "lib/transnetv2"]
 ignore = []
 line-length = 89
 select = ["B","C","E","F","T","W","B9","I"]

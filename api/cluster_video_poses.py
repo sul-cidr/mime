@@ -14,10 +14,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import umap
-from lib.pose_drawing import *
-from mime_db import MimeDb
 from rich.logging import RichHandler
 from sklearn.cluster import KMeans
+
+from lib.pose_drawing import *
+from mime_db import MimeDb
 
 # from PIL import Image
 
@@ -70,8 +71,6 @@ async def main() -> None:
     video_name = video_name.name
     video_id = await db.get_video_id(video_name)
 
-    print(video_id)
-
     video_movelets = await db.get_movelet_data_from_video(video_id)
     movelets_df = pd.DataFrame.from_records(
         video_movelets, columns=video_movelets[0].keys()
@@ -80,21 +79,26 @@ async def main() -> None:
     # video_poses = await db.get_pose_data_from_video(video_id)
     # poses_df = pd.DataFrame.from_records(video_poses, columns=video_poses[0].keys())
 
-    print("TOTAL MOVELETS:", len(movelets_df))
-    print("NON-MOTION MOVELETS:", len(movelets_df[movelets_df["movement"].isna()]))
-    print("MOVELETS WITH STILL MOTION:", len(movelets_df[movelets_df["movement"] == 0]))
-    print(
-        "MOVELETS WITH MOVEMENT < 10px/sec:",
+    logging.info("TOTAL MOVELETS: %d", len(movelets_df))
+    logging.info(
+        "NON-MOTION MOVELETS: %d", len(movelets_df[movelets_df["movement"].isna()])
+    )
+    logging.info(
+        "MOVELETS WITH STILL MOTION: %d", len(movelets_df[movelets_df["movement"] == 0])
+    )
+    logging.info(
+        "MOVELETS WITH MOVEMENT < 10px/sec: %d",
         len(
             movelets_df[(movelets_df["movement"] >= 0) & (movelets_df["movement"] < 10)]
         ),
     )
 
-    print(
-        "MEAN MOVEMENT PER MOVELET (norm px/sec):", np.nanmean(movelets_df["movement"])
+    logging.info(
+        "MEAN MOVEMENT PER MOVELET (norm px/sec): %d",
+        np.nanmean(movelets_df["movement"]),
     )
-    print(
-        "MEDIAN MOVEMENT PER MOVELET (norm px/sec):",
+    logging.info(
+        "MEDIAN MOVEMENT PER MOVELET (norm px/sec): %d",
         np.nanmedian(movelets_df["movement"]),
     )
 
@@ -108,8 +112,8 @@ async def main() -> None:
     # plt.xlabel("Movement (normalized pixels/sec)")
     # plt.ylabel("# Movelets")
     top_bin = n[1:].argmax()
-    # print('most frequent bin: (' + str(bins[top_bin]) + ',' + str(bins[top_bin+1]) + ')')
-    # print('mode: '+ str((bins[top_bin] + bins[top_bin+1])/2))
+    # logging.info('most frequent bin: (' + str(bins[top_bin]) + ',' + str(bins[top_bin+1]) + ')')
+    # logging.info('mode: '+ str((bins[top_bin] + bins[top_bin+1])/2))
     movement_mode = (bins[top_bin] + bins[top_bin + 1]) / 2
 
     frozen_movelets = movelets_df[
@@ -140,7 +144,8 @@ async def main() -> None:
             assigned_poses += labels.count(cluster_id)
 
     logging.info(
-        f"assigned {assigned_poses} track poses out of {len(labels)}, {round(assigned_poses/len(labels),4)}"
+        f"assigned {assigned_poses} track poses out of {len(labels)}, "
+        f"{round(assigned_poses/len(labels),4)}"
     )
 
     cluster_to_poses = {}
@@ -164,21 +169,24 @@ async def main() -> None:
     # tracks_per_cluster = []
     # poses_per_track_per_cluster = []
 
+    movelet_clusters = []
     for cluster_id in range(max(labels) + 1):
-        # print("Poses in cluster", cluster_id, labels.count(cluster_id))
+        # logging.info("Poses in cluster", cluster_id, labels.count(cluster_id))
 
         cluster_track_poses = {}
         for movelet_id in cluster_to_poses[cluster_id]:
             this_movelet = frozen_movelets.iloc[movelet_id]
-            logging.info(
+            logging.debug(
                 f"assigning cluster {cluster_id} to movelet in frames {this_movelet['start_frame']} to {this_movelet['end_frame']}, pose {this_movelet['pose_idx']}"
             )
-            await db.assign_movelet_cluster(
-                video_id,
-                this_movelet["start_frame"],
-                this_movelet["end_frame"],
-                this_movelet["pose_idx"],
-                cluster_id,
+            movelet_clusters.append(
+                (
+                    video_id,
+                    this_movelet["start_frame"],
+                    this_movelet["end_frame"],
+                    this_movelet["pose_idx"],
+                    cluster_id,
+                )
             )
 
             movelet_track = this_movelet["track_id"]
@@ -188,6 +196,8 @@ async def main() -> None:
             # else:
             #     cluster_track_poses[movelet_track] += 1
 
+    await db.assign_movelet_clusters(movelet_clusters)
+
     # Get the full pose data for each representative movelet from a track in a cluster,
     # to be used to display armatures
 
@@ -195,7 +205,7 @@ async def main() -> None:
     for i in filtered_movelet_indices:
         filtered_movelet_counts[i] = filtered_movelet_counts.get(i, 0) + 1
 
-    print("Filtered movelets:", len(set(filtered_movelet_indices)))
+    logging.info("Filtered movelets: %d", len(set(filtered_movelet_indices)))
     filtered_movelets = frozen_movelets.iloc[list(set(filtered_movelet_indices))]
     filtered_movelets.reset_index(inplace=True)
     filtered_poses = filtered_movelets["norm"].tolist()
@@ -214,7 +224,9 @@ async def main() -> None:
         # fig, ax = plt.subplots()
         # fig.set_size_inches(UPSCALE * 100 / fig.dpi, UPSCALE * 100 / fig.dpi)
         # fig.canvas.draw()
-        print("CLUSTER:", cluster_id, "POSES:", len(cluster_to_poses[cluster_id]))
+        logging.info(
+            f"CLUSTER: {cluster_id}, POSES: {len(cluster_to_poses[cluster_id])}"
+        )
         for pose_index in cluster_to_poses[cluster_id]:
             cl_pose = frozen_poses[pose_index]
             cl_pose[cl_pose == -1] = np.nan

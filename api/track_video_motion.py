@@ -9,9 +9,10 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from mime_db import MimeDb
 from rich.logging import RichHandler
 from sklearn.metrics.pairwise import nan_euclidean_distances
+
+from mime_db import MimeDb
 
 TICK_INTERVAL = 0.1666667  # 1/6 of a second
 
