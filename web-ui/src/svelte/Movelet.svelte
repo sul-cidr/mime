@@ -10,10 +10,13 @@
 
 <LayerCake>
   <Canvas zIndex={1}>
-    <Pose poseData={moveletData.norm} normalizedPose={true} opacity={.5} />
+    <Pose poseData={moveletData.norm} normalizedPose={true} opacity={0.5} />
   </Canvas>
   <Canvas zIndex={2}>
-    <Pose poseData={moveletData.prev_norm} normalizedPose={true} opacity={.3} />
+    <Pose
+      poseData={moveletData.prev_norm}
+      normalizedPose={true}
+      opacity={0.3}
+    />
   </Canvas>
 </LayerCake>
-  

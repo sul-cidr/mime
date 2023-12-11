@@ -16,7 +16,7 @@
   let facesData: Array<FaceRecord> | undefined;
   let shotsData: Array<ShotRecord> | undefined;
 
-  let maxCluster:number = 0;
+  let maxCluster: number = 0;
 
   const xKey = "frame";
   const yKey = "cluster_id";
@@ -24,10 +24,14 @@
   const dotRadius = 4;
   const plotPadding = 2;
 
-  const formatTickXAsTime = (d: number) => { return new Date(d / $currentVideo.fps * 1000).toISOString().slice(12,19).replace(/^0:/,""); }
+  const formatTickXAsTime = (d: number) => {
+    return new Date((d / $currentVideo.fps) * 1000)
+      .toISOString()
+      .slice(12, 19)
+      .replace(/^0:/, "");
+  };
   let xTicks: Array<number>;
   let yTicks: Array<number>;
-
 
   const updateFacesData = (data: Array<FaceRecord>) => {
     if (data) {
@@ -39,15 +43,15 @@
         face[xKey] = +face[xKey];
         face[yKey] = +face[yKey];
       });
-      yTicks = [...Array(maxCluster+1).keys()];
+      yTicks = [...Array(maxCluster + 1).keys()];
     }
-  }
+  };
 
   const updateShotsData = (data: Array<ShotRecord>) => {
     if (data) {
       shotsData = data;
     }
-  }
+  };
 
   const formatTitle = (d: string) => `Frame ${d}`;
 
@@ -63,16 +67,12 @@
 
   $: {
     facesData = undefined;
-    getClusteredFacesData(videoId).then((data) =>
-      updateFacesData(data),
-    );
+    getClusteredFacesData(videoId).then((data) => updateFacesData(data));
   }
 
   $: {
     shotsData = undefined;
-    getShotBoundaries(videoId).then((data) =>
-      updateShotsData(data),
-    );
+    getShotBoundaries(videoId).then((data) => updateShotsData(data));
   }
 
   $: {
@@ -81,9 +81,8 @@
       (_, i) => i * 10000,
     );
   }
-
 </script>
-  
+
 {#if facesData}
   <div class="chart-container">
     <LayerCake
@@ -103,22 +102,31 @@
           snapTicks={true}
           tickMarks={true}
         />
-        <AxisY
-          ticks={yTicks}
-        />
+        <AxisY ticks={yTicks} />
         {#if shotsData}
           {#each shotsData as shot}
-            <ProgressLine frameno={shot.frame} yKey="cluster_id" yDomain={[0, maxCluster]} lineType="shot-line"/>
+            <ProgressLine
+              frameno={shot.frame}
+              yKey="cluster_id"
+              yDomain={[0, maxCluster]}
+              lineType="shot-line"
+            />
           {/each}
         {/if}
-        <ScatterSvg
-          r={dotRadius}
-          fill={'rgba(0, 0, 204, 0.75)'}
+        <ScatterSvg r={dotRadius} fill={"rgba(0, 0, 204, 0.75)"} />
+        <ProgressLine
+          frameno={$currentFrame || 0}
+          yKey="cluster_id"
+          yDomain={[0, maxCluster]}
         />
-        <ProgressLine frameno={$currentFrame || 0} yKey="cluster_id" yDomain={[0, maxCluster]} />
       </Svg>
       <Html>
-        <SharedTooltip formatTitle={formatTitle} dataset={facesData} searchRadius={"10"} highlightKey={"cluster_id"}/>
+        <SharedTooltip
+          {formatTitle}
+          dataset={facesData}
+          searchRadius={"10"}
+          highlightKey={"cluster_id"}
+        />
       </Html>
     </LayerCake>
   </div>
@@ -135,4 +143,3 @@
     padding-right: 10px;
   }
 </style>
-  

@@ -49,7 +49,13 @@
   // Face coords are right_eye, left_eye, nose, mouth_right, mouth_left
   // Pose will already draw face landmark connectors, so if there's
   // additional face detection data, just draw dots on the points
-  const FACE_COLORS = ["lime", "limegreen", "chartreuse", "lawngreen", "springgreen"]
+  const FACE_COLORS = [
+    "lime",
+    "limegreen",
+    "chartreuse",
+    "lawngreen",
+    "springgreen",
+  ];
 
   export let poseData: CocoSkeletonWithConfidence | CocoSkeletonNoConfidence;
   export let faceData: FaceLandmarks = null;
@@ -72,7 +78,7 @@
 
   const segmentArray = (arr: Array<number>, l = 3) => {
     if (arr == null) {
-      return null
+      return null;
     }
     const _arr = [...arr];
     return [...Array(Math.ceil(arr.length / l))].map((_) => _arr.splice(0, l));
@@ -134,13 +140,20 @@
         const dotRadius = scaleFactor > 0.8 ? 3 : 2;
         facePoints?.forEach(([centerX, centerY], i) => {
           $ctx.beginPath();
-          $ctx.arc(centerX! * normalizationFactor * scaleFactor, centerY! * normalizationFactor * scaleFactor, dotRadius * scaleFactor, 0, 2 * Math.PI, false);
+          $ctx.arc(
+            centerX! * normalizationFactor * scaleFactor,
+            centerY! * normalizationFactor * scaleFactor,
+            dotRadius * scaleFactor,
+            0,
+            2 * Math.PI,
+            false,
+          );
           $ctx.fillStyle = FACE_COLORS[i]!;
           $ctx.fill();
           $ctx.lineWidth = dotRadius;
           $ctx.strokeStyle = FACE_COLORS[i]!;
           $ctx.stroke();
-        })
+        });
       }
     }
   }

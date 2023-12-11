@@ -3,7 +3,15 @@
   import { ProgressBar, Table } from "@skeletonlabs/skeleton";
   import type { TableSource } from "@skeletonlabs/skeleton";
 
-  import { videoTableData, currentVideo, similarPoseFrames, similarMoveletFrames, currentPose, currentMovelet, currentMoveletPose } from "@svelte/stores";
+  import {
+    videoTableData,
+    currentVideo,
+    similarPoseFrames,
+    similarMoveletFrames,
+    currentPose,
+    currentMovelet,
+    currentMoveletPose,
+  } from "@svelte/stores";
 
   import { API_BASE } from "@config";
 
@@ -12,7 +20,6 @@
   let videoTableSource: TableSource | void;
 
   async function getVideos() {
-
     if ($videoTableData) return $videoTableData;
 
     const response = await (await fetch(`${API_BASE}/videos/`)).json();
@@ -23,12 +30,24 @@
   const updateVideoData = (): Promise<TableSource | void> => {
     return getVideos()
       .then((data) => ({
-        head: ["", "Name", "Meta", "Length", "Poses", "Poses/Frame", "Faces", "Tracks", "Shots"],
+        head: [
+          "",
+          "Name",
+          "Meta",
+          "Length",
+          "Poses",
+          "Poses/Frame",
+          "Faces",
+          "Tracks",
+          "Shots",
+        ],
         body: data.videos.map((video: VideoRecord) => [
-          (video.video_name === $currentVideo?.video_name ? "⮕" : " "),
+          video.video_name === $currentVideo?.video_name ? "⮕" : " ",
           video.video_name,
           `${video.width}x${video.height}@${video.fps.toFixed(2)}fps`,
-          new Date(video.frame_count / video.fps * 1000).toISOString().slice(11, 19),
+          new Date((video.frame_count / video.fps) * 1000)
+            .toISOString()
+            .slice(11, 19),
           video.pose_ct,
           video.poses_per_frame,
           video.face_ct,
@@ -40,25 +59,28 @@
         // foot: [...],
       }))
       .catch((error) => error);
-    };
+  };
 
   const highlightVideoRow = (video: VideoRecord) => {
     if (video === undefined || document === undefined) return;
 
-    const allTrs = document.querySelectorAll('tr');
-    allTrs.forEach((tr) => { tr.classList.remove("table-row-checked");
-                             const unselectedTd = tr.querySelector('td[tabindex="0"]');
-                             if (unselectedTd) unselectedTd.textContent = " ";  
-                           });
-    const allTds = document.querySelectorAll('td');
-    const selectedTd = Array.from(allTds).find(td => td.textContent === video.video_name);
+    const allTrs = document.querySelectorAll("tr");
+    allTrs.forEach((tr) => {
+      tr.classList.remove("table-row-checked");
+      const unselectedTd = tr.querySelector('td[tabindex="0"]');
+      if (unselectedTd) unselectedTd.textContent = " ";
+    });
+    const allTds = document.querySelectorAll("td");
+    const selectedTd = Array.from(allTds).find(
+      (td) => td.textContent === video.video_name,
+    );
     const selectedTr = selectedTd?.parentElement;
     selectedTr?.classList.add("table-row-checked");
     const bulletTd = selectedTr?.querySelector('td[tabindex="0"]');
     if (bulletTd) {
       bulletTd.textContent = "⮕";
     }
-  }
+  };
 
   const selectVideoHandler = ({ detail: video }: { detail: VideoRecord }) => {
     $currentVideo = video;
@@ -75,7 +97,6 @@
   });
 
   $: highlightVideoRow($currentVideo);
-
 </script>
 
 {#if videoTableSource !== undefined && !(videoTableSource instanceof Error)}

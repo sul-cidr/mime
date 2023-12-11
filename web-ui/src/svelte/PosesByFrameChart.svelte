@@ -10,17 +10,42 @@
   import ProgressLine from "@layercake/ProgressLine.svelte";
   import SharedTooltip from "@layercake/SharedTooltip.html.svelte";
 
-  import { currentFrame, currentVideo, currentPose, currentMovelet, seriesNames, similarMoveletFrames, similarPoseFrames } from "@svelte/stores";
+  import {
+    currentFrame,
+    currentVideo,
+    currentPose,
+    currentMovelet,
+    seriesNames,
+    similarMoveletFrames,
+    similarPoseFrames,
+  } from "@svelte/stores";
 
   export let data: Array<FrameRecord>;
 
-  const seriesColors = ["#0fba81", "#4f46e5", "lime", "magenta", "black", "gray", "orange", "#f9e07688", "#FFA50088", "brown"];
-  const formatTickXAsTime = (d: number) => { return new Date(d / $currentVideo.fps * 1000).toISOString().slice(12,19).replace(/^0:/,"");
-  }
+  const seriesColors = [
+    "#0fba81",
+    "#4f46e5",
+    "lime",
+    "magenta",
+    "black",
+    "gray",
+    "orange",
+    "#f9e07688",
+    "#FFA50088",
+    "brown",
+  ];
+  const formatTickXAsTime = (d: number) => {
+    return new Date((d / $currentVideo.fps) * 1000)
+      .toISOString()
+      .slice(12, 19)
+      .replace(/^0:/, "");
+  };
   const formatTickX = (d: unknown) => d;
   const formatTickY = (d: unknown) => d;
 
-  $seriesNames = Object.keys(data[0]!).filter((d) => !["frame", "time"].includes(d));
+  $seriesNames = Object.keys(data[0]!).filter(
+    (d) => !["frame", "time"].includes(d),
+  );
 
   let hiddenSeries: Array<string> = [];
 
@@ -32,18 +57,18 @@
 
   let brushFaded = true;
 
-  let maxValue:number = 0;
+  let maxValue: number = 0;
 
   // This is a pretty silly way to get a bar that always extends to the top
   // of the chart, but short of implementing multiple Y axes for the MultiLine
   // component, it may be the best option -- assuming we want to add such
   // maxed-out lines to the chart, which is debatable, although it's a fairly
   // effective way of indicating where similar poses occur on the timeline.
-  const getMaxValue = (data:Array<FrameRecord>) => {
+  const getMaxValue = (data: Array<FrameRecord>) => {
     let maxSoFar = 0;
     for (const item of data) {
       for (const [key, value] of Object.entries(item)) {
-        if (!hiddenSeries.concat(['frame']).includes(key)) {
+        if (!hiddenSeries.concat(["frame"]).includes(key)) {
           if (value !== undefined && +value > maxSoFar) {
             maxSoFar = +value;
           }
@@ -51,25 +76,39 @@
       }
     }
     return maxSoFar;
-  }
+  };
 
   const fillEmptyFrames = (
     data: Array<FrameRecord>,
-    similarPoseFrames: {[frameno: number]: number},
-    similarMoveletFrames: {[frameno: number]: number},
+    similarPoseFrames: { [frameno: number]: number },
+    similarMoveletFrames: { [frameno: number]: number },
     startFrame = 1,
     endFrame = $currentVideo.frame_count,
   ): Array<FrameRecord> => {
     // fill with zero values for unrepresented frames
-    const framesInRange = data.filter(
-      (frame: FrameRecord) =>
-        frame.frame >= startFrame && frame.frame <= endFrame,
-    ).sort((aFrame: FrameRecord, bFrame: FrameRecord) => aFrame.frame <= bFrame.frame ? -1 : 1);
+    const framesInRange = data
+      .filter(
+        (frame: FrameRecord) =>
+          frame.frame >= startFrame && frame.frame <= endFrame,
+      )
+      .sort((aFrame: FrameRecord, bFrame: FrameRecord) =>
+        aFrame.frame <= bFrame.frame ? -1 : 1,
+      );
     const timeSeries = [];
     let i = startFrame;
     framesInRange.forEach((frame: FrameRecord) => {
       while (i < frame.frame) {
-        timeSeries.push({ frame: i, avgScore: 0, poseCt: 0, faceCt: 0, trackCt: 0, isShot: 0, movement: 0, sim_pose: 0, sim_move: 0 });
+        timeSeries.push({
+          frame: i,
+          avgScore: 0,
+          poseCt: 0,
+          faceCt: 0,
+          trackCt: 0,
+          isShot: 0,
+          movement: 0,
+          sim_pose: 0,
+          sim_move: 0,
+        });
         i++;
       }
       let frameWithSimilarMatches = frame;
@@ -77,13 +116,25 @@
       // in the tooltips for frames with matching poses. Either the tooltip
       // code should be customized to hide these, or we shouldn't use this
       // method at all for highlighting matching frames.
-      frameWithSimilarMatches['sim_pose'] = (i in similarPoseFrames) ? maxValue : 0;
-      frameWithSimilarMatches['sim_move'] = (i in similarMoveletFrames) ? maxValue : 0;
+      frameWithSimilarMatches["sim_pose"] =
+        i in similarPoseFrames ? maxValue : 0;
+      frameWithSimilarMatches["sim_move"] =
+        i in similarMoveletFrames ? maxValue : 0;
       timeSeries.push(frameWithSimilarMatches);
       i++;
     });
     while (i < endFrame) {
-      timeSeries.push({ frame: i, avgScore: 0, poseCt: 0, faceCt: 0, trackCt: 0, isShot: 0, movement: 0, sim_pose: 0, sim_move: 0 });
+      timeSeries.push({
+        frame: i,
+        avgScore: 0,
+        poseCt: 0,
+        faceCt: 0,
+        trackCt: 0,
+        isShot: 0,
+        movement: 0,
+        sim_pose: 0,
+        sim_move: 0,
+      });
       i++;
     }
     return timeSeries;
@@ -92,27 +143,43 @@
   const formatTitle = (d: string) => `Frame ${d}`;
 
   $: if ($currentPose) {
-    if (Object.keys($similarPoseFrames).length && !$seriesNames.includes("sim_pose")) {
+    if (
+      Object.keys($similarPoseFrames).length &&
+      !$seriesNames.includes("sim_pose")
+    ) {
       $seriesNames.push("sim_pose");
-    } else if (!Object.keys($similarPoseFrames).length && $seriesNames.includes("sim_pose")) {
+    } else if (
+      !Object.keys($similarPoseFrames).length &&
+      $seriesNames.includes("sim_pose")
+    ) {
       $seriesNames.splice($seriesNames.indexOf("sim_pose"), 1);
     }
   }
 
   $: if ($currentMovelet) {
-    if (Object.keys($similarMoveletFrames).length && !$seriesNames.includes("sim_move")) {
+    if (
+      Object.keys($similarMoveletFrames).length &&
+      !$seriesNames.includes("sim_move")
+    ) {
       $seriesNames.push("sim_move");
-    } else if (!Object.keys($similarMoveletFrames).length && $seriesNames.includes("sim_move")) {
+    } else if (
+      !Object.keys($similarMoveletFrames).length &&
+      $seriesNames.includes("sim_move")
+    ) {
       $seriesNames.splice($seriesNames.indexOf("sim_move", 1));
     }
   }
 
   $: {
     if (maxValue != 0) {
-      groupedData = groupLonger(fillEmptyFrames(data, $similarPoseFrames, $similarMoveletFrames), $seriesNames, {
-        groupTo: "series",
-        valueTo: "value",
-      });
+      groupedData = groupLonger(
+        fillEmptyFrames(data, $similarPoseFrames, $similarMoveletFrames),
+        $seriesNames,
+        {
+          groupTo: "series",
+          valueTo: "value",
+        },
+      );
       xTicks = Array.from(
         { length: Math.ceil($currentVideo.frame_count / 10000) },
         (_, i) => i * 10000,
@@ -132,7 +199,13 @@
       );
       if (startFrame !== endFrame) {
         groupedBrushedData = groupLonger(
-          fillEmptyFrames(data, $similarPoseFrames, $similarMoveletFrames, startFrame, endFrame),
+          fillEmptyFrames(
+            data,
+            $similarPoseFrames,
+            $similarMoveletFrames,
+            startFrame,
+            endFrame,
+          ),
           $seriesNames,
           {
             groupTo: "series",
@@ -171,7 +244,11 @@
     </Svg>
 
     <Html>
-      <SharedTooltip {formatTitle} dataset={data} hiddenKeys={["sim_pose", "sim_move"]} />
+      <SharedTooltip
+        {formatTitle}
+        dataset={data}
+        hiddenKeys={["sim_pose", "sim_move"]}
+      />
       <Key align="end" bind:hiddenSeries />
     </Html>
   </LayerCake>
