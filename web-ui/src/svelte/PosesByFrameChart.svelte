@@ -62,6 +62,8 @@
 
   let maxValue: number = 0;
 
+  let framesArray: Array<FrameRecord>;
+
   // This is a pretty silly way to get a bar that always extends to the top
   // of the chart, but short of implementing multiple Y axes for the MultiLine
   // component, it may be the best option -- assuming we want to add such
@@ -175,49 +177,31 @@
 
   $: maxValue = getMaxValue(data);
 
+  $: framesArray = fillEmptyFrames(
+    data,
+    $similarPoseFrames,
+    $similarMoveletFrames,
+  );
+
   $: {
-    if (maxValue != 0) {
-      groupedData = groupLonger(
-        fillEmptyFrames(data, $similarPoseFrames, $similarMoveletFrames),
-        $seriesNames,
-        {
-          groupTo: "series",
-          valueTo: "value",
-        },
-      );
-      xTicks = Array.from(
-        { length: Math.ceil($currentVideo.frame_count / 10000) },
-        (_, i) => i * 10000,
-      );
-    }
+    groupedData = groupLonger(framesArray, $seriesNames, {
+      groupTo: "series",
+      valueTo: "value",
+    });
+    xTicks = Array.from(
+      { length: Math.ceil($currentVideo.frame_count / 10000) },
+      (_, i) => i * 10000,
+    );
   }
 
   $: {
-    if (maxValue != 0) {
-      const startFrame = Math.max(
-        1,
-        Math.ceil($currentVideo.frame_count * (brushMin || 0)),
-      );
-      const endFrame = Math.min(
-        $currentVideo.frame_count,
-        Math.ceil($currentVideo.frame_count * (brushMax || 1)),
-      );
-      if (startFrame !== endFrame) {
-        groupedBrushedData = groupLonger(
-          fillEmptyFrames(
-            data,
-            $similarPoseFrames,
-            $similarMoveletFrames,
-            startFrame,
-            endFrame,
-          ),
-          $seriesNames,
-          {
-            groupTo: "series",
-            valueTo: "value",
-          },
-        );
-      }
+    const startFrame = Math.ceil($currentVideo.frame_count * (brushMin || 0));
+    const endFrame = Math.ceil($currentVideo.frame_count * (brushMax || 1));
+    if (startFrame !== endFrame) {
+      groupedBrushedData = groupedData.map((o) => ({
+        ...o,
+        values: o.values.slice(startFrame, endFrame),
+      }));
     }
   }
 </script>
