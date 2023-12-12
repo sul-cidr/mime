@@ -1,3 +1,5 @@
+<svelte:options immutable={true} />
+
 <script lang="ts">
   import { LayerCake, Svg, Html, groupLonger, flatten } from "layercake";
   import { scaleOrdinal } from "d3-scale";
@@ -52,7 +54,8 @@
   let groupedData: Array<Object>;
   let xTicks: Array<number>;
 
-  let brushExtents: Array<number | null> = [null, null];
+  let brushMin: number;
+  let brushMax: number;
   let groupedBrushedData: Array<Object>;
 
   let brushFaded = true;
@@ -170,6 +173,8 @@
     }
   }
 
+  $: maxValue = getMaxValue(data);
+
   $: {
     if (maxValue != 0) {
       groupedData = groupLonger(
@@ -191,11 +196,11 @@
     if (maxValue != 0) {
       const startFrame = Math.max(
         1,
-        Math.ceil($currentVideo.frame_count * (brushExtents[0] || 0)),
+        Math.ceil($currentVideo.frame_count * (brushMin || 0)),
       );
       const endFrame = Math.min(
         $currentVideo.frame_count,
-        Math.ceil($currentVideo.frame_count * (brushExtents[1] || 1)),
+        Math.ceil($currentVideo.frame_count * (brushMax || 1)),
       );
       if (startFrame !== endFrame) {
         groupedBrushedData = groupLonger(
@@ -214,7 +219,6 @@
         );
       }
     }
-    maxValue = getMaxValue(data);
   }
 </script>
 
@@ -283,7 +287,7 @@
       <ProgressLine frameno={$currentFrame || 0} />
     </Svg>
     <Html>
-      <Brush bind:min={brushExtents[0]} bind:max={brushExtents[1]} />
+      <Brush bind:min={brushMin} bind:max={brushMax} />
     </Html>
   </LayerCake>
 </div>
