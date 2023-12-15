@@ -46,12 +46,12 @@
   const w2 = w / 2;
 
   let showFrame = true;
-  
+
   /* --------------------------------------------
    * Convert results object into a list of key->values,
    * sorting by highest value if doSort is set.
    */
-  function resultArray(result, doSort=false) {
+  function resultArray(result, doSort = false) {
     if (Object.keys(result).length === 0) return [];
     let rows = Object.keys(result)
       .filter((d) => d !== $config.x)
@@ -72,7 +72,10 @@
    * If a highlight key is specified, get its value
    */
   function getHighlightValue(result) {
-    if ((Object.keys(result).length > 0) && (Object.keys(result).includes(highlightKey)))
+    if (
+      Object.keys(result).length > 0 &&
+      Object.keys(result).includes(highlightKey)
+    )
       return result[highlightKey];
     return null;
   }
@@ -88,13 +91,12 @@
     const responseJson = await response.json();
     return responseJson[0];
   }
-    
 </script>
-  
+
 <QuadTree
   dataset={dataset || $data}
-  searchRadius={searchRadius}
-  y = {(highlightKey ? undefined : "x")}
+  {searchRadius}
+  y={highlightKey ? undefined : "x"}
   let:x
   let:y
   let:visible
@@ -110,47 +112,58 @@
       style="
         width:{w}px;
         display: {visible ? 'flex' : 'none'};
-        top:{$yScale(highlightKeyValue === null ? foundArray[0].value : highlightKeyValue) + offset}px;
+        top:{$yScale(
+        highlightKeyValue === null ? foundArray[0].value : highlightKeyValue,
+      ) + offset}px;
         left:{Math.min(Math.max(w2, x), $width - w2)}px;"
     >
-        <div class="tooltip-data">
-          <div class="title">{formatTitle(found[$config.x])}</div>
-          {#each foundArray as row}
-            {#if !hiddenKeys.includes(row.key)}
-              <div class="row">
-                <span class="key">{formatKey(row.key)}:</span>
-                {formatValue(row.value)}
-              </div>
-            {/if}
-          {/each}
-        </div>
-        <div class="tooltip-image aspect-[5/6] py-[30px] px-[10px]">
-          {#await poseFromMatch(found)}
-            <p>Pose data loading...</p>
-          {:then mouseoverPose}
-              <LayerCake>
-                <Html zIndex={0}>
-                  <img class="object-contain h-full w-full"
-                    src={`${API_BASE}/frame/resize/${mouseoverPose.video_id}/${mouseoverPose.frame}/${getExtent(mouseoverPose.keypoints).join(",")}|${getNormDims(mouseoverPose.norm).join(",")}`}
-                    alt={`Frame ${mouseoverPose.frame}, Pose: ${mouseoverPose.pose_idx + 1}`}
-                  />
-                </Html>
-                <Canvas zIndex={1}>
-                  <Pose poseData={mouseoverPose.norm} normalizedPose={true} />
-                </Canvas>
-              </LayerCake>
-          {/await}
-        </div>
+      <div class="tooltip-data">
+        <div class="title">{formatTitle(found[$config.x])}</div>
+        {#each foundArray as row}
+          {#if !hiddenKeys.includes(row.key)}
+            <div class="row">
+              <span class="key">{formatKey(row.key)}:</span>
+              {formatValue(row.value)}
+            </div>
+          {/if}
+        {/each}
+      </div>
+      <div class="tooltip-image aspect-[5/6] py-[30px] px-[10px]">
+        {#await poseFromMatch(found)}
+          <p>Pose data loading...</p>
+        {:then mouseoverPose}
+          <LayerCake>
+            <Html zIndex={0}>
+              <img
+                class="object-contain h-full w-full"
+                src={`${API_BASE}/frame/resize/${mouseoverPose.video_id}/${
+                  mouseoverPose.frame
+                }/${getExtent(mouseoverPose.keypoints).join(",")}|${getNormDims(
+                  mouseoverPose.norm,
+                ).join(",")}`}
+                alt={`Frame ${mouseoverPose.frame}, Pose: ${
+                  mouseoverPose.pose_idx + 1
+                }`}
+              />
+            </Html>
+            <Canvas zIndex={1}>
+              <Pose poseData={mouseoverPose.norm} normalizedPose={true} />
+            </Canvas>
+          </LayerCake>
+        {/await}
+      </div>
     </div>
     {#if searchRadius !== undefined && highlightKey !== undefined}
       <div
         class="circle"
-        style="top:{$yScale(highlightKeyValue)}px;left:{x}px;display: { visible ? 'block' : 'none' };"
+        style="top:{$yScale(highlightKeyValue)}px;left:{x}px;display: {visible
+          ? 'block'
+          : 'none'};"
       ></div>
     {/if}
   {/if}
 </QuadTree>
-  
+
 <style>
   .svelte-tooltip {
     position: absolute;
@@ -175,7 +188,9 @@
   }
   .svelte-tooltip,
   .line {
-    transition: left 250ms ease-out, top 250ms ease-out;
+    transition:
+      left 250ms ease-out,
+      top 250ms ease-out;
   }
   .title {
     font-weight: bold;
@@ -186,7 +201,7 @@
   .circle {
     position: absolute;
     border-radius: 50%;
-    background-color: rgba(171,0, 214);
+    background-color: rgba(171, 0, 214);
     transform: translate(-50%, -50%);
     pointer-events: none;
     width: 10px;
@@ -199,6 +214,4 @@
   .tooltip-image {
     width: 60%;
   }
-
 </style>
-  

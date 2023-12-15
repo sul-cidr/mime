@@ -33,7 +33,7 @@ type PoseRecord = {
   track_id: number | null;
   norm: CocoSkeletonNoConfidence;
   face_bbox: FixedLengthArray<number, 4> | undefined; // copied from FaceRecord
-  face_landmarks: FaceLandmarks | undefined;          // if match is found
+  face_landmarks: FaceLandmarks | undefined; // if match is found
   hidden: boolean | undefined;
   distance?: number;
 };
@@ -53,7 +53,7 @@ type FaceRecord = {
   track_id: number;
   cluster_id: number;
   time: string | undefined;
-}
+};
 
 type FrameRecord = {
   frame: number;

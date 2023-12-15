@@ -1,5 +1,10 @@
 <script lang="ts">
-  import { Paginator, RadioGroup, RadioItem, SlideToggle } from "@skeletonlabs/skeleton";
+  import {
+    Paginator,
+    RadioGroup,
+    RadioItem,
+    SlideToggle,
+  } from "@skeletonlabs/skeleton";
   import { LayerCake, Canvas, Html } from "layercake";
   import Pose from "@svelte/Pose.svelte";
   import { formatSeconds } from "@utils";
@@ -14,21 +19,21 @@
 
   const simStep = 5;
   let simPager = {
-	  offset: 0,
-	  limit: simStep,
-	  size: 50,
-    amounts: [simStep]
+    offset: 0,
+    limit: simStep,
+    size: 50,
+    amounts: [simStep],
   };
 
-  const resetPoses = () => $similarPoseFrames = {};
+  const resetPoses = () => ($similarPoseFrames = {});
 
   const updatePoseData = (data: Array<PoseRecord>) => {
     poses = data;
     $similarPoseFrames = {};
     poses.forEach((pose) => {
-      $similarPoseFrames[pose['frame']] = 1;
+      $similarPoseFrames[pose["frame"]] = 1;
     });
-    simPager.size=poses.length
+    simPager.size = poses.length;
   };
 
   async function getPoseData(
@@ -77,7 +82,15 @@
       <SlideToggle name="slider-label" bind:checked={showFrame} size="sm">
         Show Image
       </SlideToggle>
-      <span><strong><button class="btn-sm variant-filled" type="button" on:click={resetPoses}>X</button></strong></span>
+      <span
+        ><strong
+          ><button
+            class="btn-sm variant-filled"
+            type="button"
+            on:click={resetPoses}>X</button
+          ></strong
+        ></span
+      >
     </div>
     {#if poses}
       <div class="flex gap-4">
@@ -87,14 +100,21 @@
           </header>
           <div class="w-full aspect-[5/6] frame-display py-[30px] px-[10px]">
             <LayerCake>
-            {#if showFrame}
-              <Html zIndex={0}>
-                <img class="object-contain h-full w-full"
-                src={`${API_BASE}/frame/resize/${$currentPose.video_id}/${$currentPose.frame}/${getExtent($currentPose.keypoints).join(",")}|${getNormDims($currentPose.norm).join(",")}`}
-                alt={`Frame ${$currentPose.frame}, Pose: ${$currentPose.pose_idx + 1}`}
-                />
-              </Html>
-            {/if}
+              {#if showFrame}
+                <Html zIndex={0}>
+                  <img
+                    class="object-contain h-full w-full"
+                    src={`${API_BASE}/frame/resize/${$currentPose.video_id}/${
+                      $currentPose.frame
+                    }/${getExtent($currentPose.keypoints).join(
+                      ",",
+                    )}|${getNormDims($currentPose.norm).join(",")}`}
+                    alt={`Frame ${$currentPose.frame}, Pose: ${
+                      $currentPose.pose_idx + 1
+                    }`}
+                  />
+                </Html>
+              {/if}
               <Canvas zIndex={1}>
                 <Pose poseData={$currentPose.norm} normalizedPose={true} />
               </Canvas>
@@ -112,18 +132,25 @@
         <span class="divider-vertical !border-l-8 !border-double" />
 
         {#each poses as pose, p}
-          {#if p >= (simPager.offset * simPager.limit) && p < (simPager.offset * simPager.limit) + simPager.limit}
+          {#if p >= simPager.offset * simPager.limit && p < simPager.offset * simPager.limit + simPager.limit}
             <div class="card drop-shadow-lg">
               <header class="p-2">
                 Frame {pose.frame}, Pose: {pose.pose_idx + 1}
               </header>
-              <div class="w-full aspect-[5/6] frame-display py-[30px] px-[10px]">
+              <div
+                class="w-full aspect-[5/6] frame-display py-[30px] px-[10px]"
+              >
                 <LayerCake>
                   {#if showFrame}
                     <Html zIndex={0}>
-                      <img class="object-contain h-full w-full"
-                      src={`${API_BASE}/frame/resize/${pose.video_id}/${pose.frame}/${getExtent(pose.keypoints).join(",")}|${getNormDims(pose.norm).join(",")}`}
-                      alt={`Frame ${pose.frame}, Pose: ${pose.pose_idx + 1}`}
+                      <img
+                        class="object-contain h-full w-full"
+                        src={`${API_BASE}/frame/resize/${pose.video_id}/${
+                          pose.frame
+                        }/${getExtent(pose.keypoints).join(",")}|${getNormDims(
+                          pose.norm,
+                        ).join(",")}`}
+                        alt={`Frame ${pose.frame}, Pose: ${pose.pose_idx + 1}`}
                       />
                     </Html>
                   {/if}
@@ -142,11 +169,12 @@
           {/if}
         {/each}
       </div>
-      <div class="hide-paginator-label flex items-baseline"><span>Similar poses</span>
+      <div class="hide-paginator-label flex items-baseline">
+        <span>Similar poses</span>
         <Paginator
           bind:settings={simPager}
-          showFirstLastButtons="{false}"
-          showPreviousNextButtons="{true}"
+          showFirstLastButtons={false}
+          showPreviousNextButtons={true}
           amountText="Poses"
         />
       </div>

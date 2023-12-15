@@ -13,7 +13,6 @@
   export let displayWidthPx = 640;
 
   const scaleFactor = displayWidthPx / frameWidth;
-
 </script>
 
 <div>
@@ -35,7 +34,11 @@
         {#each poses as poseData}
           {#if !poseData.hidden}
             <Canvas zIndex={1}>
-              <Pose poseData={poseData.keypoints} faceData={poseData.face_landmarks} {scaleFactor} />
+              <Pose
+                poseData={poseData.keypoints}
+                faceData={poseData.face_landmarks}
+                {scaleFactor}
+              />
             </Canvas>
           {/if}
         {/each}

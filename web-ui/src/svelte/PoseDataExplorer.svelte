@@ -24,7 +24,7 @@
     filteredData.forEach((frame) => {
       frame.time = formatSeconds(frame.frame / $currentVideo.fps);
     });
-  }
+  };
 
   $videoId: {
     getPoseData(videoId).then((_data) => updatePoseData(_data));

@@ -8,8 +8,8 @@ body {
 }
 
 :root {
-  --theme-font-family-base: '', sans-serif;
-  --theme-font-family-heading: '', sans-serif;
+  --theme-font-family-base: "", sans-serif;
+  --theme-font-family-heading: "", sans-serif;
 }
 
 div.hide-paginator-label label.paginator-label {

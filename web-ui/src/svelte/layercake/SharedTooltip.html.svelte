@@ -44,7 +44,7 @@
    * Convert results object into a list of key->values,
    * sorting by highest value if doSort is set.
    */
-   function resultArray(result, doSort=false) {
+  function resultArray(result, doSort = false) {
     if (Object.keys(result).length === 0) return [];
     let rows = Object.keys(result)
       .filter((d) => d !== $config.x)
@@ -64,19 +64,20 @@
   /* --------------------------------------------
    * If a highlight key is specified, get its value
    */
-   function getHighlightValue(result) {
-    if ((Object.keys(result).length > 0) && (Object.keys(result).includes(highlightKey)))
+  function getHighlightValue(result) {
+    if (
+      Object.keys(result).length > 0 &&
+      Object.keys(result).includes(highlightKey)
+    )
       return result[highlightKey];
     return null;
   }
-
-
 </script>
 
 <QuadTree
   dataset={dataset || $data}
-  searchRadius={searchRadius}
-  y = {(highlightKey ? undefined : "x")}
+  {searchRadius}
+  y={highlightKey ? undefined : "x"}
   let:x
   let:y
   let:visible
@@ -92,7 +93,9 @@
       style="
         width:{w}px;
         display: {visible ? 'block' : 'none'};
-        top:{$yScale(highlightKeyValue === null ? foundArray[0].value : highlightKeyValue) + offset}px;
+        top:{$yScale(
+        highlightKeyValue === null ? foundArray[0].value : highlightKeyValue,
+      ) + offset}px;
         left:{Math.min(Math.max(w2, x), $width - w2)}px;"
     >
       <div class="title">{formatTitle(found[$config.x])}</div>
@@ -108,7 +111,9 @@
     {#if searchRadius !== undefined && highlightKey !== undefined}
       <div
         class="circle"
-        style="top:{$yScale(highlightKeyValue)}px;left:{x}px;display: { visible ? 'block' : 'none' };"
+        style="top:{$yScale(highlightKeyValue)}px;left:{x}px;display: {visible
+          ? 'block'
+          : 'none'};"
       ></div>
     {/if}
   {/if}
@@ -136,7 +141,9 @@
   }
   .tooltip,
   .line {
-    transition: left 250ms ease-out, top 250ms ease-out;
+    transition:
+      left 250ms ease-out,
+      top 250ms ease-out;
   }
   .title {
     font-weight: bold;
@@ -147,7 +154,7 @@
   .circle {
     position: absolute;
     border-radius: 50%;
-    background-color: rgba(171,0, 214);
+    background-color: rgba(171, 0, 214);
     transform: translate(-50%, -50%);
     pointer-events: none;
     width: 10px;

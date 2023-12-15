@@ -1,5 +1,10 @@
 <script lang="ts">
-  import { currentVideo, currentFrame, currentPose, currentMoveletPose } from "@svelte/stores";
+  import {
+    currentVideo,
+    currentFrame,
+    currentPose,
+    currentMoveletPose,
+  } from "@svelte/stores";
   import { formatSeconds } from "@utils";
   import Icon from "@svelte/Icon.svelte";
 
@@ -7,7 +12,6 @@
   export let trackCt: number;
   export let faceCt: number;
   export let hoveredPoseIdx: number | undefined;
-
 </script>
 
 <div class="card variant-ghost-secondary p-4 w-full">
@@ -34,7 +38,10 @@
         on:mouseover={() => (hoveredPoseIdx = i)}
         on:mouseout={() => (hoveredPoseIdx = undefined)}
       >
-        Pose #{i + 1} | Confidence: {pose.score} {#if pose.track_id !== null} | Track {pose.track_id} {/if }
+        Pose #{i + 1} | Confidence: {pose.score}
+        {#if pose.track_id !== null}
+          | Track {pose.track_id}
+        {/if}
         <div class="flex align-stretch gap-2">
           <button
             class="button px-2 variant-filled"
