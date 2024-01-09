@@ -57,6 +57,23 @@ async def initialize_db(conn, drop=False) -> None:
 
     await conn.execute(
         """
+        CREATE TABLE IF NOT EXISTS pose4dh (
+            video_id uuid NOT NULL REFERENCES video(id) ON DELETE CASCADE,
+            frame INTEGER NOT NULL,
+            pose_idx INTEGER NOT NULL,
+            keypoints vector(90) NOT NULL,
+            bbox FLOAT[4] NOT NULL,
+            score FLOAT NOT NULL,
+            category INTEGER,
+            track_id INTEGER DEFAULT NULL,
+            PRIMARY KEY(video_id, frame, pose_idx)
+        )
+        ;
+        """
+    )
+
+    await conn.execute(
+        """
         CREATE TABLE IF NOT EXISTS face (
             video_id uuid NOT NULL REFERENCES video(id) ON DELETE CASCADE,
             frame INTEGER NOT NULL,

@@ -1,10 +1,23 @@
+import copy
 import json
 import logging
 from pathlib import Path
 from typing import Callable
 from uuid import UUID
 
+import joblib
 import numpy as np
+
+phalp_to_coco = [[0], [16], [15], [18], [17], [5, 34], [2, 33], [6, 35], [3, 32], [7, 36], [4, 31], [28], [27], [13, 29], [10, 26], [14, 30], [11, 25]]
+
+def merge_phalp_coords(all_coords, phalp_to_merge):
+    new_coords = []
+    for to_merge in phalp_to_merge:
+        x_avg = sum([all_coords[i][0] for i in to_merge]) / len(to_merge)
+        y_avg = sum([all_coords[i][1] for i in to_merge]) / len(to_merge)
+        new_coords.append([x_avg, y_avg, 1.0]) # Add a bogus confidence value because the other code expects it
+        
+    return np.array(new_coords)
 
 
 async def add_video(self, video_name: str, video_metadata: dict) -> UUID:
@@ -31,6 +44,10 @@ async def add_video(self, video_name: str, video_metadata: dict) -> UUID:
 
 async def clear_poses(self, video_id: UUID) -> None:
     await self._pool.execute("DELETE FROM pose WHERE video_id = $1;", video_id)
+
+
+async def clear_4dh_poses(self, video_id: UUID) -> None:
+    await self._pool.execute("DELETE FROM pose4dh WHERE video_id = $1;", video_id)
 
 
 async def load_openpifpaf_predictions(
@@ -74,6 +91,67 @@ async def load_openpifpaf_predictions(
         INSERT INTO pose (
             video_id, frame, pose_idx, keypoints, bbox, score, category)
             VALUES($1, $2, $3, $4, $5, $6, $7)
+        ;
+        """,
+        data,
+    )
+
+    logging.info(f"Loaded {len(poses)} predictions!")
+
+
+async def load_4dh_predictions(
+    self, video_id: UUID, pkl_path: Path, clear=True
+) -> None:
+    frames = {}
+
+    if clear:
+        logging.debug(f"Clearing poses for video {video_id}")
+        await self.clear_4dh_poses(video_id)
+
+    logging.info(f"Importing data from '{pkl_path}'...")
+
+    frames = joblib.load(pkl_path)
+
+    logging.info(f"Loading data for {len(frames)} frames from '{pkl_path}'...")
+
+    poses = []
+    for frame_path, frame in frames.items():
+
+        if not len(frame["2d_joints"]):
+            continue
+
+        for pose_idx, pose in enumerate(frame["2d_joints"]):
+
+            img_height, img_width = frame["size"][pose_idx]
+            img_size = max(img_width, img_height)
+            joints_2d = copy.deepcopy(pose)
+            joints_2d = joints_2d.reshape(-1, 2)
+            joints_2d *= img_size
+            joints_2d[:,1] -= (max(img_width, img_height) - min(img_width, img_height)) / 2
+
+            coco_joints = merge_phalp_coords(joints_2d, phalp_to_coco).flatten()
+
+            poses.append(
+                {
+                    "video_id": video_id,
+                    "frame": frame["time"],
+                    "pose_idx": pose_idx,
+                    #"keypoints": joints_2d.flatten(),
+                    "keypoints": coco_joints,
+                    "bbox": np.array(frame["bbox"][pose_idx]),
+                    "score": frame["conf"][pose_idx],
+                    "category": frame["class_name"][pose_idx],
+                    "track_id": frame["tid"][pose_idx],
+                }
+            )
+
+    data = [tuple(pose.values()) for pose in poses]
+
+    await self._pool.executemany(
+        """
+        INSERT INTO pose (
+            video_id, frame, pose_idx, keypoints, bbox, score, category, track_id)
+            VALUES($1, $2, $3, $4, $5, $6, $7, $8)
         ;
         """,
         data,
@@ -296,13 +374,14 @@ async def annotate_pose(
     video_id: UUID | None,
     annotation_func: Callable,
     reindex=True,
+    pose_tbl = "pose",
 ) -> None:
     async with self._pool.acquire() as conn:
         await conn.execute(
-            f"ALTER TABLE pose ADD COLUMN IF NOT EXISTS {column} {col_type};"
+            f"ALTER TABLE {pose_tbl} ADD COLUMN IF NOT EXISTS {column} {col_type};"
         )
 
-        poses = await conn.fetch("SELECT * FROM pose WHERE video_id = $1;", video_id)
+        poses = await conn.fetch(f"SELECT * FROM {pose_tbl} WHERE video_id = $1;", video_id)
         async with conn.transaction():
             for i, pose in enumerate(poses):
                 if i % (len(poses) // 10) == 0:
@@ -313,7 +392,7 @@ async def annotate_pose(
                 annotation_value = annotation_func(pose)
                 await conn.execute(
                     f"""
-                    UPDATE pose
+                    UPDATE {pose_tbl}
                     SET {column} = $1
                     WHERE video_id = $2 AND frame = $3 AND pose_idx = $4
                     ;
@@ -328,7 +407,7 @@ async def annotate_pose(
             logging.info("Creating approximate index for cosine distance...")
             await conn.execute(
                 f"""
-                CREATE INDEX ON pose
+                CREATE INDEX ON {pose_tbl}
                 USING ivfflat ({column} vector_cosine_ops)
                 ;
                 """,
