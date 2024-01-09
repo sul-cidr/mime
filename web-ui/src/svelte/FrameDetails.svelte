@@ -38,7 +38,7 @@
         on:mouseover={() => (hoveredPoseIdx = i)}
         on:mouseout={() => (hoveredPoseIdx = undefined)}
       >
-        Pose #{i + 1} | Confidence: {pose.score}
+        Pose #{i + 1} | Confidence: {pose.score.toFixed(3)}
         {#if pose.track_id !== null}
           | Track {pose.track_id}
         {/if}
