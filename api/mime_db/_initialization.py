@@ -183,3 +183,10 @@ async def initialize_db(conn, drop=False) -> None:
         CREATE INDEX ON video_frame_meta (video_id);
         """
     )
+
+# XXX Maybe shouldn't call this file _initialization if this will be here
+async def remove_video(self, video_id) -> None:
+    async with self._pool.acquire() as conn:
+        logging.warn("Removing database entries associated with video")
+        await conn.execute("DELETE FROM video WHERE id=$1", video_id)
+
