@@ -41,9 +41,9 @@ def get_video_metadata(video_file):
     }
 
 
-def normalize_pose_data(pose):
+def normalize_pose_data(pose, key='keypoints'):
     normalized_coords = pose_normalization.extract_trustworthy_coords(
-        pose_normalization.shift_normalize_rescale_pose_coords(pose)
+        pose_normalization.shift_normalize_rescale_pose_coords(pose, key)
     )
     return normalized_coords
 
@@ -102,8 +102,16 @@ async def main() -> None:
         "norm",
         "vector(34)",
         video_id,
-        lambda pose: tuple(np.nan_to_num(normalize_pose_data(pose), nan=-1).tolist()),
+        lambda pose: tuple(np.nan_to_num(normalize_pose_data(pose, "keypoints"), nan=-1).tolist()),
     )
+
+    await db.annotate_pose(
+        "norm4dh",
+        "vector(90)",
+        video_id,
+        lambda pose: tuple(np.nan_to_num(normalize_pose_data(pose, "keypoints4dh"), nan=-1).tolist()),
+    )
+
 
     # This is for when we want to merge the full 45-point PHALP set into a set of
     # normalized COCO points

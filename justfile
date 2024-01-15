@@ -37,6 +37,10 @@ default:
 @add-video path: && refresh-db-views
   docker compose exec api sh -c "LOG_LEVEL=$LOG_LEVEL /app/load_video.py --video-path \"\$VIDEO_SRC_FOLDER/$1\""
 
+# Remove a video by name and all associated records in other tables linked via its UUID
+@remove-video path: && refresh-db-views
+  docker compose exec api sh -c "LOG_LEVEL=$LOG_LEVEL /app/remove_video.py --video-path \"\$VIDEO_SRC_FOLDER/$1\""
+
 @add-video-4dh path: && refresh-db-views
   docker compose exec api sh -c "LOG_LEVEL=$LOG_LEVEL /app/load_video_4dh.py --video-path \"\$VIDEO_SRC_FOLDER/$1\""
 

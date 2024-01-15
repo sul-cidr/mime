@@ -131,13 +131,15 @@ async def load_4dh_predictions(
 
             coco_joints = merge_phalp_coords(joints_2d, phalp_to_coco).flatten()
 
+            all_phalp_keypoints = [[coord[0], coord[1], 1.0] for coord in joints_2d]
+
             poses.append(
                 {
                     "video_id": video_id,
                     "frame": frame["time"],
                     "pose_idx": pose_idx,
-                    #"keypoints": joints_2d.flatten(),
                     "keypoints": coco_joints,
+                    "keypoints4dh": all_phalp_keypoints,
                     "bbox": np.array(frame["bbox"][pose_idx]),
                     "score": frame["conf"][pose_idx],
                     "category": frame["class_name"][pose_idx],
@@ -150,8 +152,8 @@ async def load_4dh_predictions(
     await self._pool.executemany(
         """
         INSERT INTO pose (
-            video_id, frame, pose_idx, keypoints, bbox, score, category, track_id)
-            VALUES($1, $2, $3, $4, $5, $6, $7, $8)
+            video_id, frame, pose_idx, keypoints, keypoints4dh, bbox, score, category, track_id)
+            VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9)
         ;
         """,
         data,
