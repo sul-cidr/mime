@@ -6,6 +6,7 @@
 
   import { API_BASE } from "@config";
   import {
+    currentFrame,
     currentMovelet,
     currentMoveletPose,
     currentVideo,
@@ -39,6 +40,8 @@
   const updateCurrentMovelet = (data: MoveletRecord) => {
     $currentMovelet = data;
   };
+
+  const goToFrame = (e: any) => ($currentFrame = e.originalTarget.value);
 
   async function getMoveletData(
     videoId: number,
@@ -157,8 +160,17 @@
                       movelet.start_frame / $currentVideo.fps,
                     )}
                   </li>
-                  <li>Distance: {movelet.distance?.toFixed(2)}</li>
+                  <li>Distance: {movelet.distance?.toFixed(4)}</li>
                 </ul>
+                <span
+                ><strong
+                  ><button
+                    class="btn-sm variant-filled"
+                    type="button"
+                    value={movelet.start_frame}
+                    on:click={goToFrame}>Go to frame {movelet.start_frame}</button
+                  ></strong
+                ></span>
               </footer>
             </div>
           {/if}

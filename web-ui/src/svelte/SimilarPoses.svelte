@@ -11,7 +11,7 @@
   import { getExtent, getNormDims } from "../lib/poseutils";
 
   import { API_BASE } from "@config";
-  import { currentPose, currentVideo, similarPoseFrames } from "@svelte/stores";
+  import { currentFrame, currentPose, currentVideo, similarPoseFrames } from "@svelte/stores";
 
   let showFrame: boolean = false;
   export let similarityMetric = "cosine";
@@ -26,6 +26,8 @@
   };
 
   const resetPoses = () => ($similarPoseFrames = {});
+
+  const goToFrame = (e: any) => ($currentFrame = e.originalTarget.value);
 
   const updatePoseData = (data: Array<PoseRecord>) => {
     poses = data;
@@ -116,7 +118,7 @@
                 </Html>
               {/if}
               <Canvas zIndex={1}>
-                <Pose poseData={$currentPose.norm} normalizedPose={true} />
+                <Pose poseData={$currentPose.norm} pose4dhData={$currentPose.norm4dh} normalizedPose={true} />
               </Canvas>
             </LayerCake>
           </div>
@@ -155,7 +157,7 @@
                     </Html>
                   {/if}
                   <Canvas zIndex={1}>
-                    <Pose poseData={pose.norm} normalizedPose={true} />
+                    <Pose poseData={pose.norm} pose4dhData={$currentPose.norm4dh} normalizedPose={true} />
                   </Canvas>
                 </LayerCake>
               </div>
@@ -164,6 +166,15 @@
                   <li>Time: {formatSeconds(pose.frame / $currentVideo.fps)}</li>
                   <li>Distance: {pose.distance?.toFixed(2)}</li>
                 </ul>
+                <span
+                ><strong
+                  ><button
+                    class="btn-sm variant-filled"
+                    type="button"
+                    value={pose.frame}
+                    on:click={goToFrame}>Go to frame {pose.frame}</button
+                  ></strong
+                ></span>
               </footer>
             </div>
           {/if}

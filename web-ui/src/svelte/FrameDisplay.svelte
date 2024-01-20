@@ -36,6 +36,7 @@
             <Canvas zIndex={1}>
               <Pose
                 poseData={poseData.keypoints}
+                pose4dhData={poseData.keypoints4dh}
                 faceData={poseData.face_landmarks}
                 {scaleFactor}
               />
