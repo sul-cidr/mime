@@ -8,8 +8,9 @@ import logging
 import os
 from pathlib import Path
 
-from mime_db import MimeDb
 from rich.logging import RichHandler
+
+from mime_db import MimeDb
 
 
 async def main() -> None:

@@ -56,7 +56,7 @@ default:
 @detect-faces path:
   docker compose exec api sh -c "LOG_LEVEL=$LOG_LEVEL /app/detect_faces_offline.py --video-path \"\$VIDEO_SRC_FOLDER/$1\""
 
-# Provide path to video file relative to $VIDEO_SRC_FOLDER
+# Provide path to video file relative to $VIDEO_SRC_FOLDER; DO NOT RUN with 4DH data
 @add-tracks path: && refresh-db-views
   docker compose exec api sh -c "LOG_LEVEL=$LOG_LEVEL /app/track_video.py --video-path \"\$VIDEO_SRC_FOLDER/$1\""
 

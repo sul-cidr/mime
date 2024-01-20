@@ -30,6 +30,13 @@ async def main() -> None:
     )
 
     parser.add_argument(
+        "--phalp",
+        action="store_true",
+        default=False,
+        help="Use 4D-Humans pose coordinates, if available",
+    )
+
+    parser.add_argument(
         "--drop",
         action="store_true",
         default=False,
@@ -85,7 +92,13 @@ async def main() -> None:
         data_mean = np.nanmean(norms_with_nans, axis=0)
         return [data_mean] * len(norms)
 
-    tracks_df["tick_norm"] = tracks_df.groupby(["track_id", "tick"])["norm"].transform(
+    pose_data_field = "norm"
+    total_coords = 34
+    if args.phalp:
+        pose_data_field = "norm4dh"
+        total_coords = 90
+
+    tracks_df["tick_norm"] = tracks_df.groupby(["track_id", "tick"])[pose_data_field].transform(
         avg_norm_data
     )
 
@@ -121,14 +134,14 @@ async def main() -> None:
     ].shift(1)
 
     tracks_tick_df["prev_tick_norm"] = tracks_tick_df["prev_tick_norm"].apply(
-        lambda x: [np.nan] * 34 if isinstance(x, float) else x
+        lambda x: [np.nan] * total_coords if isinstance(x, float) else x
     )
 
     def compute_motion_vector(timediff, last_norm, norm):
         if np.isnan(timediff) or timediff == 0 or isinstance(last_norm, float):
-            return [np.nan] * 34
+            return [np.nan] * total_coords
         normdiff = []
-        for i in range(0, 34, 2):
+        for i in range(0, total_coords, 2):
             last_x = last_norm[i]
             last_y = last_norm[i + 1]
             this_x = norm[i]

@@ -9,7 +9,7 @@ async def initialize_db(conn, drop=False) -> None:
         await conn.execute("DROP TABLE IF EXISTS movelet CASCADE;")
         await conn.execute("DROP TABLE IF EXISTS face CASCADE;")
         await conn.execute("DROP TABLE IF EXISTS frame CASCADE;")
-        await conn.execute("DROP TABLE IF EXISTS pose4dh CASCADE;")       
+        await conn.execute("DROP TABLE IF EXISTS pose4dh CASCADE;")
 
     await conn.execute(
         """
@@ -48,7 +48,7 @@ async def initialize_db(conn, drop=False) -> None:
             frame INTEGER NOT NULL,
             pose_idx INTEGER NOT NULL,
             keypoints vector(51) NOT NULL,
-            keypoints4dh vector(157) DEFAULT NULL,
+            keypoints4dh vector(135) DEFAULT NULL,
             bbox FLOAT[4] NOT NULL,
             score FLOAT NOT NULL,
             category INTEGER,

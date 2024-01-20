@@ -16,7 +16,7 @@ def merge_phalp_coords(all_coords, phalp_to_merge):
         x_avg = sum([all_coords[i][0] for i in to_merge]) / len(to_merge)
         y_avg = sum([all_coords[i][1] for i in to_merge]) / len(to_merge)
         new_coords.append([x_avg, y_avg, 1.0]) # Add a bogus confidence value because the other code expects it
-        
+
     return np.array(new_coords)
 
 
@@ -115,15 +115,28 @@ async def load_4dh_predictions(
     logging.info(f"Loading data for {len(frames)} frames from '{pkl_path}'...")
 
     poses = []
-    for frame_path, frame in frames.items():
+    for _, frame in frames.items():
 
         if not len(frame["2d_joints"]):
             continue
 
-        for pose_idx, pose in enumerate(frame["2d_joints"]):
+        # XXX TODO we only want the pose data about the tracked poses in each frame;
+        # the raw output also contains data about previously tracked poses ("ghosts")
+        # that we really don't want to include. Unfortunately the 2d and 3d joints data
+        # as well as the conf values and includes these "ghosts", so need to filter those
+        # entries out. This can be done by only using the indices of the "tracked_ids"
+        # in the larger "tid" list to get the joints and conf data.
+
+        for tracked_id in frame["tracked_ids"]:
+            if tracked_id in frame["tid"]:
+                pose_idx = frame["tid"].index(tracked_id)
+            else:
+                logging.info(f"Frame {frame['time']+1}: couldn't find tracked ID {tracked_id} in list of full IDs {frame['tid']}")
+                continue
 
             img_height, img_width = frame["size"][pose_idx]
             img_size = max(img_width, img_height)
+            pose = frame["2d_joints"][pose_idx]
             joints_2d = copy.deepcopy(pose)
             joints_2d = joints_2d.reshape(-1, 2)
             joints_2d *= img_size
@@ -131,19 +144,19 @@ async def load_4dh_predictions(
 
             coco_joints = merge_phalp_coords(joints_2d, phalp_to_coco).flatten()
 
-            all_phalp_keypoints = [[coord[0], coord[1], 1.0] for coord in joints_2d]
+            all_phalp_keypoints = np.array([[coord[0], coord[1], 1.0] for coord in joints_2d]).flatten()
 
             poses.append(
                 {
                     "video_id": video_id,
-                    "frame": frame["time"],
+                    "frame": frame["time"] + 1,
                     "pose_idx": pose_idx,
                     "keypoints": coco_joints,
                     "keypoints4dh": all_phalp_keypoints,
                     "bbox": np.array(frame["bbox"][pose_idx]),
                     "score": frame["conf"][pose_idx],
                     "category": frame["class_name"][pose_idx],
-                    "track_id": frame["tid"][pose_idx],
+                    "track_id": tracked_id,
                 }
             )
 
