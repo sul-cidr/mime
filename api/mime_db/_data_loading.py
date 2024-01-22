@@ -365,16 +365,14 @@ async def assign_movelet_clusters(self, movelet_clusters) -> None:
             """
         )
 
-        # updates = [(account_id, new_address, additional_protocol) from <data_source>]
-
         await conn.executemany(
             """
             UPDATE movelet
             SET cluster_id = $5
             WHERE video_id = $1 AND
-                  pose_idx = $2 AND
-                  start_frame = $3 AND
-                  end_frame = $4;
+                  pose_idx = $4 AND
+                  start_frame = $2 AND
+                  end_frame = $3;
             """,
             movelet_clusters,
         )
