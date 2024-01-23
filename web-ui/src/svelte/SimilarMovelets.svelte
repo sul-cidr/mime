@@ -50,7 +50,7 @@
     similarityMetric: string,
   ) {
     const response = await fetch(
-      `${API_BASE}/movelets/similar/${similarityMetric}/${videoId}/${frame}/${trackIdx}`,
+      `${API_BASE}/movelets/similar/${similarityMetric}/${videoId}/${frame}/${trackIdx}/`,
     );
     return await response.json();
   }

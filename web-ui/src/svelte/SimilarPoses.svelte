@@ -45,7 +45,8 @@
     similarityMetric: string,
   ) {
     const response = await fetch(
-      `${API_BASE}/poses/similar/${similarityMetric}/${videoId}/${frame}/${poseIdx}`,
+      `${API_BASE}/poses/similar/${similarityMetric}/${videoId}/${frame}/${poseIdx}/`,
+
     );
     return await response.json();
   }
