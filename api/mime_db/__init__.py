@@ -39,7 +39,6 @@ class MimeDb:
         assign_face_clusters,
         assign_face_clusters_by_track,
         assign_movelet_clusters,
-        clear_4dh_poses,
         clear_poses,
         load_4dh_predictions,
         load_openpifpaf_predictions,

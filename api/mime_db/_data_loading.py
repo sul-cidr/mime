@@ -46,10 +46,6 @@ async def clear_poses(self, video_id: UUID) -> None:
     await self._pool.execute("DELETE FROM pose WHERE video_id = $1;", video_id)
 
 
-# async def clear_4dh_poses(self, video_id: UUID) -> None:
-#     await self._pool.execute("DELETE FROM pose4dh WHERE video_id = $1;", video_id)
-
-
 async def load_openpifpaf_predictions(
     self, video_id: UUID, json_path: Path, clear=True
 ) -> None:
