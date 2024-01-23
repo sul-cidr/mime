@@ -167,16 +167,22 @@ async def main() -> None:
 
     logging.info(f"{max(labels)} clusters found")
 
+    face_clusters = []
     for i, cluster_id in enumerate(labels):
         if cluster_id == -1:
             continue
 
-        logging.info(
-            f"assigning cluster {cluster_id} to track {int(rep_pf_df.iloc[i]['track_id'])}"
-        )
-        await db.assign_face_clusters_by_track(
-            video_id, cluster_id, int(rep_pf_df.iloc[i]["track_id"])
-        )
+        # logging.info(
+        #     f"assigning cluster {cluster_id} to track {int(rep_pf_df.iloc[i]['track_id'])}"
+        # )
+
+        face_clusters.append([video_id, cluster_id, int(rep_pf_df.iloc[i]["track_id"])])
+
+    logging.info(f"Assigning {len(face_clusters)} total face clusters by track in the DB")
+
+    await db.assign_face_clusters_by_track(
+        face_clusters
+    )
 
     for cluster_id in range(-1, max(labels) + 1):
         if cluster_id != -1:

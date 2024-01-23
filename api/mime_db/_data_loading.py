@@ -338,22 +338,22 @@ async def assign_face_clusters(self, video_id, cluster_id, faces_data) -> None:
                 )
 
 
-async def assign_face_clusters_by_track(self, video_id, cluster_id, track_id) -> None:
+async def assign_face_clusters_by_track(self, face_clusters) -> None:
     async with self._pool.acquire() as conn:
         await conn.execute(
             "ALTER TABLE face ADD COLUMN IF NOT EXISTS cluster_id INTEGER DEFAULT NULL;"
         )
-        await conn.execute(
+        await conn.executemany(
             """
                 UPDATE face
-                SET cluster_id = $1
-                WHERE video_id = $2 AND track_id = $3
+                SET cluster_id = $2
+                WHERE video_id = $1 AND track_id = $3
                 ;
             """,
-            cluster_id,
-            video_id,
-            track_id,
+            face_clusters,
         )
+
+        return
 
 
 async def assign_movelet_clusters(self, movelet_clusters) -> None:
