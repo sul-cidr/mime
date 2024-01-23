@@ -59,22 +59,22 @@ async def initialize_db(conn, drop=False) -> None:
         """
     )
 
-    # await conn.execute(
-    #     """
-    #     CREATE TABLE IF NOT EXISTS pose4dh (
-    #         video_id uuid NOT NULL REFERENCES video(id) ON DELETE CASCADE,
-    #         frame INTEGER NOT NULL,
-    #         pose_idx INTEGER NOT NULL,
-    #         keypoints vector(90) NOT NULL,
-    #         bbox FLOAT[4] NOT NULL,
-    #         score FLOAT NOT NULL,
-    #         category INTEGER,
-    #         track_id INTEGER DEFAULT NULL,
-    #         PRIMARY KEY(video_id, frame, pose_idx)
-    #     )
-    #     ;
-    #     """
-    # )
+    await conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS pose4dh (
+            video_id uuid NOT NULL REFERENCES video(id) ON DELETE CASCADE,
+            frame INTEGER NOT NULL,
+            pose_idx INTEGER NOT NULL,
+            keypoints vector(90) NOT NULL,
+            bbox FLOAT[4] NOT NULL,
+            score FLOAT NOT NULL,
+            category INTEGER,
+            track_id INTEGER DEFAULT NULL,
+            PRIMARY KEY(video_id, frame, pose_idx)
+        )
+        ;
+        """
+    )
 
     await conn.execute(
         """
@@ -188,9 +188,9 @@ async def initialize_db(conn, drop=False) -> None:
         """
     )
 
+
 # XXX Maybe shouldn't call this file _initialization if this will be here
 async def remove_video(self, video_id) -> None:
     async with self._pool.acquire() as conn:
         logging.warn("Removing database entries associated with video")
         await conn.execute("DELETE FROM video WHERE id=$1", video_id)
-
