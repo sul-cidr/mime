@@ -9,12 +9,11 @@ from pathlib import Path
 
 # import imageio.v3 as iio
 import numpy as np
+import pacmap
 import pandas as pd
-import umap
+from mime_db import MimeDb
 from rich.logging import RichHandler
 from sklearn.cluster import KMeans
-
-from mime_db import MimeDb
 
 # from PIL import Image
 
@@ -145,12 +144,14 @@ async def main() -> None:
     #     random_state=42,
     # ).fit_transform(X)
 
-    clusterable_embedding = umap.UMAP(
-        n_neighbors=10,
-        min_dist=0.0,
-        n_components=2,
-        random_state=42,
-    ).fit_transform(X)
+    # clusterable_embedding = umap.UMAP(
+    #     n_neighbors=10,
+    #     min_dist=0.0,
+    #     n_components=2,
+    #     random_state=42,
+    # ).fit_transform(X)
+
+    clusterable_embedding = pacmap.PaCMAP(n_components=2, n_neighbors=None, MN_ratio=0.5, FP_ratio=2.0).fit_transform(X, init="pca")
 
     logging.info("fitting clustered model")
 

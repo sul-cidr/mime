@@ -12,8 +12,8 @@ from pathlib import Path
 # import imageio.v3 as iio
 import matplotlib.pyplot as plt
 import numpy as np
+import pacmap
 import pandas as pd
-import umap
 from rich.logging import RichHandler
 from sklearn.cluster import KMeans
 
@@ -121,12 +121,14 @@ async def main() -> None:
     ].reset_index()
     frozen_poses = frozen_movelets["norm"].tolist()
 
-    clusterable_embedding = umap.UMAP(
-        n_neighbors=10,
-        min_dist=1.0,
-        n_components=2,
-        random_state=42,
-    ).fit_transform(frozen_poses)
+    clusterable_embedding = pacmap.PaCMAP(n_components=2, n_neighbors=None, MN_ratio=0.5, FP_ratio=2.0).fit_transform(frozen_poses, init="pca")
+
+    # clusterable_embedding = umap.UMAP(
+    #     n_neighbors=10,
+    #     min_dist=1.0,
+    #     n_components=2,
+    #     random_state=42,
+    # ).fit_transform(frozen_poses)
 
     logging.info("fitting clustered model")
 
