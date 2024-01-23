@@ -46,8 +46,8 @@ async def clear_poses(self, video_id: UUID) -> None:
     await self._pool.execute("DELETE FROM pose WHERE video_id = $1;", video_id)
 
 
-async def clear_4dh_poses(self, video_id: UUID) -> None:
-    await self._pool.execute("DELETE FROM pose4dh WHERE video_id = $1;", video_id)
+# async def clear_4dh_poses(self, video_id: UUID) -> None:
+#     await self._pool.execute("DELETE FROM pose4dh WHERE video_id = $1;", video_id)
 
 
 async def load_openpifpaf_predictions(
@@ -106,7 +106,7 @@ async def load_4dh_predictions(
 
     if clear:
         logging.debug(f"Clearing poses for video {video_id}")
-        await self.clear_4dh_poses(video_id)
+        await self.clear_poses(video_id)
 
     logging.info(f"Importing data from '{pkl_path}'...")
 
