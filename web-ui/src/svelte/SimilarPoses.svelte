@@ -111,7 +111,7 @@
                       $currentPose.frame
                     }/${getExtent($currentPose.keypoints).join(
                       ",",
-                    )}|${getNormDims($currentPose.norm).join(",")}`}
+                    )}|${getNormDims($currentPose.norm).join(",")}/`}
                     alt={`Frame ${$currentPose.frame}, Pose: ${
                       $currentPose.pose_idx + 1
                     }`}
@@ -152,7 +152,7 @@
                           pose.frame
                         }/${getExtent(pose.keypoints).join(",")}|${getNormDims(
                           pose.norm,
-                        ).join(",")}`}
+                        ).join(",")}/`}
                         alt={`Frame ${pose.frame}, Pose: ${pose.pose_idx + 1}`}
                       />
                     </Html>

@@ -145,8 +145,7 @@
           {#if m >= simPager.offset * simPager.limit && m < simPager.offset * simPager.limit + simPager.limit}
             <div class="card drop-shadow-lg">
               <header class="p-2">
-                Frames {movelet.start_frame} - {movelet.end_frame}, Track: {movelet.track_id +
-                  1}
+                Frames {movelet.start_frame} - {movelet.end_frame}, Track: {movelet.track_id}
               </header>
               <div
                 class="w-full aspect-[5/6] frame-display py-[30px] px-[10px]"
