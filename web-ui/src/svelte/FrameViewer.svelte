@@ -13,6 +13,7 @@
   let showFrame: boolean = true;
   let playInterval: number | undefined;
   let hoveredPoseIdx: number | undefined;
+  let shot: number | 0;
 
   const updatePoseData = (data: Array<PoseRecord>) => {
     if (data) {
@@ -21,6 +22,7 @@
       if (data.length) {
         data.forEach((pr: PoseRecord) => {
           if (pr.track_id !== null) trackCount += 1;
+          shot = pr.shot;
         });
       }
       trackCt = trackCount;
@@ -135,6 +137,7 @@
         {trackCt}
         {faceCt}
         bind:hoveredPoseIdx
+        {shot}
       />
     {:else}
       Loading pose data... <ProgressBar />

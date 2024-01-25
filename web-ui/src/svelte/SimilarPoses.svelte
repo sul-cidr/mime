@@ -14,6 +14,7 @@
   import { currentFrame, currentPose, currentVideo, similarPoseFrames } from "@svelte/stores";
 
   let showFrame: boolean = false;
+  let avoidShotInResults: boolean = false;
   export let similarityMetric = "cosine";
   let poses: Array<PoseRecord>;
 
@@ -43,8 +44,15 @@
     frame: number,
     poseIdx: number,
     similarityMetric: string,
+    shot: string,
+    avoidShot: boolean,
   ) {
-    const response = await fetch(
+    const response = avoidShot ?
+    await fetch(
+      `${API_BASE}/poses/similar/${similarityMetric}/${videoId}/${frame}/${poseIdx}/${shot}/`,
+    )
+    :
+    await fetch(
       `${API_BASE}/poses/similar/${similarityMetric}/${videoId}/${frame}/${poseIdx}/`,
 
     );
@@ -56,6 +64,8 @@
     $currentPose.frame,
     $currentPose.pose_idx,
     similarityMetric,
+    $currentPose.shot,
+    avoidShotInResults,
   ).then((data) => updatePoseData(data));
 </script>
 
@@ -63,26 +73,28 @@
   <section
     class="variant-ghost-secondary px-4 pt-4 pb-8 flex flex-col gap-4 items-center"
   >
-    <div class="p-1 inline-flex items-center space-x-1 rounded-token">
-      <span><strong>Poses similarity:</strong></span>
-      <RadioGroup>
-        <RadioItem
-          bind:group={similarityMetric}
-          name="similarity-metric"
-          value="cosine">Cosine</RadioItem
-        >
-        <RadioItem
-          bind:group={similarityMetric}
-          name="similarity-metric"
-          value="euclidean">Euclidean</RadioItem
-        >
-        <RadioItem
-          bind:group={similarityMetric}
-          name="similarity-metric"
-          value="innerproduct">Inner Product</RadioItem
-        >
-      </RadioGroup>
-      <SlideToggle name="slider-label" bind:checked={showFrame} size="sm">
+    <div class="p-1 inline-flex items-center rounded-token space-x-10">
+      <div class="flex items-center space-x-1">
+        <span><strong>Poses similarity:</strong></span>
+        <RadioGroup>
+          <RadioItem
+            bind:group={similarityMetric}
+            name="similarity-metric"
+            value="cosine">Cosine</RadioItem
+          >
+          <RadioItem
+            bind:group={similarityMetric}
+            name="similarity-metric"
+            value="euclidean">Euclidean</RadioItem
+          >
+          <RadioItem
+            bind:group={similarityMetric}
+            name="similarity-metric"
+            value="innerproduct">Inner Product</RadioItem
+          >
+        </RadioGroup>
+      </div>
+      <SlideToggle name="show-frame-toggle" bind:checked={showFrame} size="sm">
         Show Image
       </SlideToggle>
       <span
@@ -165,7 +177,7 @@
               <footer class="p-2">
                 <ul>
                   <li>Time: {formatSeconds(pose.frame / $currentVideo.fps)}</li>
-                  <li>Distance: {pose.distance?.toFixed(2)}</li>
+                  <li>Distance: {pose.distance?.toFixed(5)}</li>
                 </ul>
                 <span
                 ><strong
@@ -181,14 +193,19 @@
           {/if}
         {/each}
       </div>
-      <div class="hide-paginator-label flex items-baseline">
-        <span>Similar poses</span>
-        <Paginator
-          bind:settings={simPager}
-          showFirstLastButtons={false}
-          showPreviousNextButtons={true}
-          amountText="Poses"
-        />
+      <div class="flex items-center space-x-5">
+        <SlideToggle name="avoid-shot-toggle" bind:checked={avoidShotInResults} size="sm">
+          Exclude current shot
+        </SlideToggle>
+        <div class="hide-paginator-label flex items-center">
+          <span>Similar poses</span>
+          <Paginator
+            bind:settings={simPager}
+            showFirstLastButtons={false}
+            showPreviousNextButtons={true}
+            amountText="Poses"
+          />
+        </div>
       </div>
     {/if}
   </section>
