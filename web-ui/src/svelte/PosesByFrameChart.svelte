@@ -22,7 +22,7 @@
     similarPoseFrames,
   } from "@svelte/stores";
 
-  export let data: Array<FrameRecord>;
+  export let timelineData: Array<FrameRecord>;
 
   const seriesColors = [
     "#0fba81",
@@ -45,7 +45,7 @@
   const formatTickX = (d: unknown) => d;
   const formatTickY = (d: unknown) => d;
 
-  $seriesNames = Object.keys(data[0]!).filter(
+  $seriesNames = Object.keys(timelineData[0]!).filter(
     (d) => !["frame", "time"].includes(d),
   );
 
@@ -64,16 +64,30 @@
 
   let framesArray: Array<FrameRecord>;
 
+  /* Series whose values are always normalized between 0 and 1 in the DB (e.g.,
+   * movement and avg pose confidence score) can be scaled to between 0 and the
+   * maximum of the integer-valued entries on the timeline (usually just pose
+   * count, face count or track count).
+   * XXX BUT if the module hot-reloads, the scaling is run twice due to Svelte
+   * weirdness, and the values are artificially inflated (though still clamped
+   * to the max integer value from the DB). Hopefully this won't happen on the
+   * deployed production version.
+   */ 
+  const seriesToFit = ["movement", "avgScore"]; // always normalize between 0 and maxValue
+  let normalizedSeriesAlreadyScaled = false;
+
+  const scaleToFit = (thisValue: number) => Math.min(maxValue, thisValue * maxValue);
+
   // This is a pretty silly way to get a bar that always extends to the top
   // of the chart, but short of implementing multiple Y axes for the MultiLine
   // component, it may be the best option -- assuming we want to add such
   // maxed-out lines to the chart, which is debatable, although it's a fairly
   // effective way of indicating where similar poses occur on the timeline.
-  const getMaxValue = (data: Array<FrameRecord>) => {
+  const getMaxValue = (timelineData: Array<FrameRecord>) => {
     let maxSoFar = 0;
-    for (const item of data) {
+    for (const item of timelineData) {
       for (const [key, value] of Object.entries(item)) {
-        if (!hiddenSeries.concat(["frame"]).includes(key)) {
+        if ((!hiddenSeries.concat(["frame"]).includes(key)) && (!seriesToFit.includes(key))) {
           if (value !== undefined && +value > maxSoFar) {
             maxSoFar = +value;
           }
@@ -116,16 +130,21 @@
         });
         i++;
       }
-      let frameWithSimilarMatches = frame;
+      let thisFrame = frame;
       // XXX Using maxValue in this way leads to nonsensical "Similar:" values
       // in the tooltips for frames with matching poses. Either the tooltip
       // code should be customized to hide these, or we shouldn't use this
       // method at all for highlighting matching frames.
-      frameWithSimilarMatches["sim_pose"] =
+      thisFrame["sim_pose"] =
         i in similarPoseFrames ? maxValue : 0;
-      frameWithSimilarMatches["sim_move"] =
+      thisFrame["sim_move"] =
         i in similarMoveletFrames ? maxValue : 0;
-      timeSeries.push(frameWithSimilarMatches);
+      if (!normalizedSeriesAlreadyScaled) {
+        seriesToFit.forEach((series: string) => {
+          thisFrame[series] = scaleToFit(frame[series]);
+        });
+      }
+      timeSeries.push(thisFrame);
       i++;
     });
     while (i < endFrame) {
@@ -138,10 +157,11 @@
         isShot: 0,
         movement: 0,
         sim_pose: 0,
-        sim_move: 0,
+        sim_move: 0
       });
       i++;
     }
+    normalizedSeriesAlreadyScaled = true;
     return timeSeries;
   };
 
@@ -175,10 +195,12 @@
     }
   }
 
-  $: maxValue = getMaxValue(data);
+  const bob = 1;
+
+  $: maxValue = getMaxValue(timelineData);
 
   $: framesArray = fillEmptyFrames(
-    data,
+    timelineData,
     $similarPoseFrames,
     $similarMoveletFrames,
   );
@@ -234,8 +256,8 @@
     <Html>
       <SharedTooltip
         {formatTitle}
-        dataset={data}
-        hiddenKeys={["sim_pose", "sim_move"]}
+        dataset={timelineData}
+        hiddenKeys={["sim_pose", "sim_move", "isShot", "avgScore", "movement"]}
       />
       <Key align="end" bind:hiddenSeries />
     </Html>

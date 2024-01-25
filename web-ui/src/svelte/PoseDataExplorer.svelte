@@ -26,7 +26,7 @@
     });
   };
 
-  $videoId: {
+  $: {
     getPoseData(videoId).then((_data) => updatePoseData(_data));
   }
 </script>
@@ -54,7 +54,7 @@
       <PoseDataFilters {data} bind:filteredData />
     </div>
   </div>
-  <PosesByFrameChart data={filteredData} />
+  <PosesByFrameChart timelineData={filteredData} />
 {:else}
   Loading pose data... <ProgressBar />
 {/if}
