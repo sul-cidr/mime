@@ -92,7 +92,7 @@ async def get_pose_annotations(self, column: str, video_id: UUID) -> list[np.nda
 
 async def get_frame_data(self, video_id: UUID, frame: int) -> list:
     return await self._pool.fetch(
-        "SELECT * FROM pose WHERE video_id = $1 AND frame = $2;", video_id, frame
+        "SELECT pose.*, frame.shot FROM pose, frame WHERE pose.video_id = $1 AND pose.frame = $2 AND frame.video_id = $1 AND frame.frame = $2;", video_id, frame
     )
 
 
@@ -137,7 +137,7 @@ async def get_track_frames(self, video_id: UUID) -> list:
 
 
 async def get_nearest_poses(
-    self, video_id: UUID, frame: int, pose_idx: int, metric="cosine", limit=500
+    self, video_id: UUID, frame: int, pose_idx: int, metric="cosine", avoid_shot=-1, limit=500
 ) -> list:
     sub_query = """
         SELECT norm
@@ -153,14 +153,14 @@ async def get_nearest_poses(
 
     return await self._pool.fetch(
         f"""
-        SELECT *, {distance} AS distance FROM pose
-        WHERE video_id = $1 AND NOT (frame = $2 AND pose_idx = $3)
-        ORDER BY distance
-        LIMIT $4;
+        SELECT pose.*, {distance} AS distance, frame.shot as shot FROM pose, frame
+        WHERE pose.video_id = $1 AND frame.video_id = $1 AND pose.frame = frame.frame AND NOT ((pose.frame = $2 AND pose.pose_idx = $3) OR (frame.shot = $4)) ORDER BY distance
+        LIMIT $5;
         """,
         video_id,
         frame,
         pose_idx,
+        avoid_shot,
         limit,
     )
 

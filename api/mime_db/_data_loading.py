@@ -177,8 +177,8 @@ async def add_shot_boundaries(self, video_id: UUID | None, frames_data) -> None:
     await self._pool.executemany(
         """
         INSERT INTO frame (
-            video_id, frame, local_shot_prob, global_shot_prob, is_shot_boundary)
-            VALUES($1, $2, $3, $4, $5)
+            video_id, frame, local_shot_prob, global_shot_prob, is_shot_boundary, shot)
+            VALUES($1, $2, $3, $4, $5, $6)
         ;
         """,
         data,

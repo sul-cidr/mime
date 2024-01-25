@@ -73,13 +73,22 @@ async def main() -> None:
         f"Loading shot boundary probabilities for {len(all_frames_probs)} frames"
     )
 
+    shot_number = 0
+
     for i, frame_prob in enumerate(all_frames_probs):
+
+        is_shot_boundary = False
+        if frame_prob > SHOT_DETECT_THRESHOLD:
+            is_shot_boundary = True
+            shot_number += 1
+
         frames_to_load.append(
             [
                 i,
                 single_frame_probs[i],
                 frame_prob,
-                bool(frame_prob > SHOT_DETECT_THRESHOLD),
+                is_shot_boundary,
+                shot_number
             ]
         )
         if len(frames_to_load) >= BATCH_SIZE or i == len(all_frames_probs) - 1:

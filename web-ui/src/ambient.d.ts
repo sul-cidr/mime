@@ -40,6 +40,7 @@ type PoseRecord = {
   norm4dh: SmplSkeletonNoConfidence;
   hidden: boolean | undefined;
   distance?: number;
+  shot: number | 0;
 };
 
 interface MoveletPoseRecord extends PoseRecord {
@@ -69,11 +70,13 @@ type FrameRecord = {
   sim_pose: number | undefined;
   sim_move: number | undefined;
   time: string | undefined;
+  shot: number | 0;
 };
 
 type ShotRecord = {
   frame: number;
   isShot: number | undefined;
+  shot: number | 0;
 };
 
 type MoveletRecord = {
