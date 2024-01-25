@@ -217,6 +217,19 @@ async def get_nearest_poses(
     )
 
 
+@mime_api.get("/poses/similar/{metric}/{video_id}/{frame}/{pose_idx}/{shot}/")
+async def get_nearest_poses_othershot(
+    metric: str, video_id: UUID, frame: int, pose_idx: int, shot: int, request: Request
+):
+    frame_data = await request.app.state.db.get_nearest_poses(
+        video_id, frame, pose_idx, metric, avoid_shot=shot
+    )
+    return Response(
+        content=json.dumps(frame_data, cls=MimeJSONEncoder),
+        media_type="application/json",
+    )
+
+
 @mime_api.get("/movelets/pose/{video_id}/{frame}/{track_id}/")
 async def get_movelet_from_pose(
     video_id: UUID, frame: int, track_id: int, request: Request
