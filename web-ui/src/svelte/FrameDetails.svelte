@@ -12,6 +12,7 @@
   export let trackCt: number;
   export let faceCt: number;
   export let hoveredPoseIdx: number | undefined;
+  export let shot: number | 0;
 </script>
 
 <div class="card variant-ghost-secondary p-4 w-full">
@@ -27,6 +28,8 @@
     <dd>{faceCt}</dd>
     <dt>Time:</dt>
     <dd>{formatSeconds(($currentFrame || 0) / $currentVideo.fps)}</dd>
+    <dt>Shot:</dt>
+    <dd>{shot}</dd>
   </dl>
 
   <ul>
