@@ -7,6 +7,8 @@ async def initialize_db(conn, drop=False) -> None:
         await conn.execute("DROP TABLE IF EXISTS video CASCADE;")
         await conn.execute("DROP TABLE IF EXISTS pose CASCADE;")
         await conn.execute("DROP TABLE IF EXISTS movelet CASCADE;")
+        await conn.execute("DROP TABLE IF EXISTS face CASCADE;")
+        await conn.execute("DROP TABLE IF EXISTS frame CASCADE;")
 
     await conn.execute(
         """
@@ -45,6 +47,7 @@ async def initialize_db(conn, drop=False) -> None:
             frame INTEGER NOT NULL,
             pose_idx INTEGER NOT NULL,
             keypoints vector(51) NOT NULL,
+            keypoints4dh vector(135) DEFAULT NULL,
             bbox FLOAT[4] NOT NULL,
             score FLOAT NOT NULL,
             category INTEGER,
@@ -54,6 +57,7 @@ async def initialize_db(conn, drop=False) -> None:
         ;
         """
     )
+
 
     await conn.execute(
         """
@@ -166,3 +170,10 @@ async def initialize_db(conn, drop=False) -> None:
         CREATE INDEX ON video_frame_meta (video_id);
         """
     )
+
+
+# XXX Maybe shouldn't call this file _initialization if this will be here
+async def remove_video(self, video_id) -> None:
+    async with self._pool.acquire() as conn:
+        logging.warn("Removing database entries associated with video")
+        await conn.execute("DELETE FROM video WHERE id=$1", video_id)

@@ -46,6 +46,8 @@
     "goldenrod",
   ];
 
+  const SMPL_COLOR = "white";
+
   // Face coords are right_eye, left_eye, nose, mouth_right, mouth_left
   // Pose will already draw face landmark connectors, so if there's
   // additional face detection data, just draw dots on the points
@@ -58,6 +60,7 @@
   ];
 
   export let poseData: CocoSkeletonWithConfidence | CocoSkeletonNoConfidence;
+  export let pose4dhData: SmplSkeletonWithConfidence | SmplSkeletonNoConfidence = null;
   export let faceData: FaceLandmarks = null;
   export let scaleFactor = 1;
   export let normalizedPose = false;
@@ -85,6 +88,8 @@
   };
 
   $: segments = segmentArray(poseData, poseData.length / 17);
+
+  $: smplPoints = segmentArray(pose4dhData, pose4dhData?.length / 45);
 
   $: facePoints = segmentArray(faceData, 2);
 
@@ -135,6 +140,27 @@
         );
         $ctx.stroke();
       });
+
+      if (pose4dhData) {
+        const dotRadius = scaleFactor > 0.8 ? 2 : 4;
+        smplPoints?.forEach(([centerX, centerY], i) => {
+          $ctx.beginPath();
+          $ctx.arc(
+            centerX! * normalizationFactor * scaleFactor,
+            centerY! * normalizationFactor * scaleFactor,
+            dotRadius * scaleFactor,
+            0,
+            2 * Math.PI,
+            false,
+          );
+          $ctx.globalAlpha = .8;
+          $ctx.fillStyle = SMPL_COLOR!;
+          $ctx.fill();
+          //$ctx.lineWidth = dotRadius;
+          //$ctx.strokeStyle = SMPL_COLOR!;
+          //$ctx.stroke();
+        });
+      }
 
       if (faceData) {
         const dotRadius = scaleFactor > 0.8 ? 3 : 2;

@@ -150,7 +150,7 @@
         <li class="ambassador-box">
           cluster {index}
           <img
-            src={`${API_BASE}/pose_cluster_image/${videoName}/${index}`}
+            src={`${API_BASE}/pose_cluster_image/${videoName}/${index}/`}
             class="ambassador-pose-image"
           />
         </li>

@@ -6,6 +6,8 @@ type FixedLengthArray<
 
 type CocoSkeletonWithConfidence = FixedLengthArray<number, 51>;
 type CocoSkeletonNoConfidence = FixedLengthArray<number, 34>;
+type SmplSkeletonWithConfidence = FixedLengthArray<number, 135>;
+type SmplSkeletonNoConfidence = FixedLengthArray<number, 90>;
 type FaceLandmarks = FixedLengthArray<number, 10>;
 type FaceEmbedding = FixedLengthArray<number, 4096>;
 
@@ -34,6 +36,8 @@ type PoseRecord = {
   norm: CocoSkeletonNoConfidence;
   face_bbox: FixedLengthArray<number, 4> | undefined; // copied from FaceRecord
   face_landmarks: FaceLandmarks | undefined; // if match is found
+  keypoints4dh: SmplSkeletonWithConfidence;
+  norm4dh: SmplSkeletonNoConfidence;
   hidden: boolean | undefined;
   distance?: number;
 };

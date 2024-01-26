@@ -4,22 +4,22 @@ import numpy as np
 POSE_MAX_DIM = 100
 
 
-def unflatten_pose_data(prediction):
+def unflatten_pose_data(prediction, key='keypoints'):
     """
     Convert an Open PifPaf pose prediction (a 1D 51-element list) into a 17-element
     list (not a NumPy array) of [x_coord, y_coord, confidence] triples.
     """
-    return np.array_split(prediction["keypoints"], len(prediction["keypoints"]) / 3)
+    return np.array_split(prediction[key], len(prediction[key]) / 3)
 
 
-def extract_trustworthy_coords(prediction):
+def extract_trustworthy_coords(prediction, key='keypoints'):
     """
     Convert an Open PifPaf pose prediction from a 1D vector of coordinates and confidence
     values to a 17x2 NumPy array containing only the armature coordinates, with
     coordinate values set to NaN,NaN for any coordinate with a confidence value of 0.
     Returns the 17x2 array and a separate list of the original confidence values.
     """
-    unflattened_pose = unflatten_pose_data(prediction)
+    unflattened_pose = unflatten_pose_data(prediction, key)
     trustworthy_coords = np.array(
         [
             [coords[0], coords[1]] if coords[2] != 0 else [np.NaN, np.NaN]
@@ -30,9 +30,9 @@ def extract_trustworthy_coords(prediction):
     return trustworthy_coords
 
 
-def get_pose_extent(prediction):
+def get_pose_extent(prediction, key='keypoints'):
     """Get the min and max x and y coordinates of an Open PifPaf pose prediction"""
-    pose_coords = unflatten_pose_data(prediction)
+    pose_coords = unflatten_pose_data(prediction, key)
     min_x = np.NaN
     min_y = np.NaN
     max_x = np.NaN
@@ -49,14 +49,14 @@ def get_pose_extent(prediction):
     return [min_x, min_y, max_x, max_y]
 
 
-def shift_pose_to_origin(prediction):
+def shift_pose_to_origin(prediction, key):
     """
     Shift the keypoint coordinates of an Open PifPaf pose prediction so that the
     min x and y coordinates of its extent are at the 0,0 origin.
     NOTE: This only returns the modified 'keypoints' portion of the prediction.
     """
-    pose_coords = unflatten_pose_data(prediction)
-    min_x, min_y, max_x, max_y = get_pose_extent(prediction)
+    pose_coords = unflatten_pose_data(prediction, key)
+    min_x, min_y, max_x, max_y = get_pose_extent(prediction, key)
 
     for i, coords in enumerate(pose_coords):
         # Coordinates with confidence values of 0 are not modified; these should not
@@ -69,7 +69,7 @@ def shift_pose_to_origin(prediction):
     return {"keypoints": np.concatenate(pose_coords, axis=None)}
 
 
-def rescale_pose_coords(prediction):
+def rescale_pose_coords(prediction, key='keypoints'):
     """
     Rescale the coordinates of an OpenPifPaf pose prediction so that the extent
     of the pose's long axis is equal to the global POSE_MAX_DIM setting. The
@@ -77,8 +77,8 @@ def rescale_pose_coords(prediction):
     shifted so that the short axis is centered within the POSE_MAX_DIM extent.
     NOTE: This only returns the modified 'keypoints' portion of the prediction.
     """
-    pose_coords = unflatten_pose_data(prediction)
-    min_x, min_y, max_x, max_y = get_pose_extent(prediction)
+    pose_coords = unflatten_pose_data(prediction, key)
+    min_x, min_y, max_x, max_y = get_pose_extent(prediction, key)
 
     scale_factor = POSE_MAX_DIM / np.max([max_x, max_y])
 
@@ -107,11 +107,11 @@ def rescale_pose_coords(prediction):
     return {"keypoints": np.concatenate(pose_coords, axis=None)}
 
 
-def shift_normalize_rescale_pose_coords(prediction):
+def shift_normalize_rescale_pose_coords(prediction, key='keypoints'):
     """
     Convenience function to shift an Open PifPaf pose prediction so that its minimal
     corner is at the origin, then rescale so that it fits into a
     POSE_MAX_DIM * POSE_MAX_DIM extent.
     NOTE: This only returns the modified 'keypoints' portion of the prediction.
     """
-    return rescale_pose_coords(shift_pose_to_origin(prediction))
+    return rescale_pose_coords(shift_pose_to_origin(prediction, key))

@@ -6,6 +6,7 @@
 
   import { API_BASE } from "@config";
   import {
+    currentFrame,
     currentMovelet,
     currentMoveletPose,
     currentVideo,
@@ -40,6 +41,8 @@
     $currentMovelet = data;
   };
 
+  const goToFrame = (e: any) => ($currentFrame = e.originalTarget.value);
+
   async function getMoveletData(
     videoId: number,
     frame: number,
@@ -47,7 +50,7 @@
     similarityMetric: string,
   ) {
     const response = await fetch(
-      `${API_BASE}/movelets/similar/${similarityMetric}/${videoId}/${frame}/${trackIdx}`,
+      `${API_BASE}/movelets/similar/${similarityMetric}/${videoId}/${frame}/${trackIdx}/`,
     );
     return await response.json();
   }
@@ -142,8 +145,7 @@
           {#if m >= simPager.offset * simPager.limit && m < simPager.offset * simPager.limit + simPager.limit}
             <div class="card drop-shadow-lg">
               <header class="p-2">
-                Frames {movelet.start_frame} - {movelet.end_frame}, Track: {movelet.track_id +
-                  1}
+                Frames {movelet.start_frame} - {movelet.end_frame}, Track: {movelet.track_id}
               </header>
               <div
                 class="w-full aspect-[5/6] frame-display py-[30px] px-[10px]"
@@ -157,8 +159,17 @@
                       movelet.start_frame / $currentVideo.fps,
                     )}
                   </li>
-                  <li>Distance: {movelet.distance?.toFixed(2)}</li>
+                  <li>Distance: {movelet.distance?.toFixed(4)}</li>
                 </ul>
+                <span
+                ><strong
+                  ><button
+                    class="btn-sm variant-filled"
+                    type="button"
+                    value={movelet.start_frame}
+                    on:click={goToFrame}>Go to frame {movelet.start_frame}</button
+                  ></strong
+                ></span>
               </footer>
             </div>
           {/if}

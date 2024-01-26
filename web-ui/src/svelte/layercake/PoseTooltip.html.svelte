@@ -140,7 +140,7 @@
                   mouseoverPose.frame
                 }/${getExtent(mouseoverPose.keypoints).join(",")}|${getNormDims(
                   mouseoverPose.norm,
-                ).join(",")}`}
+                ).join(",")}/`}
                 alt={`Frame ${mouseoverPose.frame}, Pose: ${
                   mouseoverPose.pose_idx + 1
                 }`}

@@ -12,8 +12,8 @@ from pathlib import Path
 # import imageio.v3 as iio
 import matplotlib.pyplot as plt
 import numpy as np
+import pacmap
 import pandas as pd
-import umap
 from rich.logging import RichHandler
 from sklearn.cluster import KMeans
 
@@ -81,7 +81,7 @@ async def main() -> None:
 
     logging.info("TOTAL MOVELETS: %d", len(movelets_df))
     logging.info(
-        "NON-MOTION MOVELETS: %d", len(movelets_df[movelets_df["movement"].isna()])
+        "NULL MOTION MOVELETS: %d", len(movelets_df[movelets_df["movement"].isna()])
     )
     logging.info(
         "MOVELETS WITH STILL MOTION: %d", len(movelets_df[movelets_df["movement"] == 0])
@@ -121,12 +121,14 @@ async def main() -> None:
     ].reset_index()
     frozen_poses = frozen_movelets["norm"].tolist()
 
-    clusterable_embedding = umap.UMAP(
-        n_neighbors=10,
-        min_dist=1.0,
-        n_components=2,
-        random_state=42,
-    ).fit_transform(frozen_poses)
+    clusterable_embedding = pacmap.PaCMAP(n_components=2, n_neighbors=None, MN_ratio=0.5, FP_ratio=2.0).fit_transform(frozen_poses, init="pca")
+
+    # clusterable_embedding = umap.UMAP(
+    #     n_neighbors=10,
+    #     min_dist=1.0,
+    #     n_components=2,
+    #     random_state=42,
+    # ).fit_transform(frozen_poses)
 
     logging.info("fitting clustered model")
 
@@ -171,7 +173,7 @@ async def main() -> None:
 
     movelet_clusters = []
     for cluster_id in range(max(labels) + 1):
-        # logging.info("Poses in cluster", cluster_id, labels.count(cluster_id))
+        logging.info(f"Poses in cluster {cluster_id}: {labels.count(cluster_id)}")
 
         cluster_track_poses = {}
         for movelet_id in cluster_to_poses[cluster_id]:
@@ -195,6 +197,8 @@ async def main() -> None:
             #     cluster_track_poses[movelet_track] = 1 # Include non-clustered poses?
             # else:
             #     cluster_track_poses[movelet_track] += 1
+
+    logging.info(f"Assigning {len(movelet_clusters)} total movelet clusters in the DB")
 
     await db.assign_movelet_clusters(movelet_clusters)
 

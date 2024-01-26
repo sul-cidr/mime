@@ -137,6 +137,12 @@
             {#if $currentFrame}
               <FrameViewer />
             {/if}
+            {#if $similarMoveletFrames && $currentMoveletPose}
+              <SimilarMovelets />
+            {/if}
+            {#if $similarPoseFrames && $currentPose}
+              <SimilarPoses />
+            {/if}
           {/if}
         {:else if tabSet === 3}
           {#if $currentVideo}
@@ -144,6 +150,12 @@
             <FacesTimeline videoId={$currentVideo.id} />
             {#if $currentFrame}
               <FrameViewer />
+            {/if}
+            {#if $similarMoveletFrames && $currentMoveletPose}
+              <SimilarMovelets />
+            {/if}
+            {#if $similarPoseFrames && $currentPose}
+              <SimilarPoses />
             {/if}
           {/if}
         {:else if tabSet === 4}

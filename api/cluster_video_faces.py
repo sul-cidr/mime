@@ -9,12 +9,11 @@ from pathlib import Path
 
 # import imageio.v3 as iio
 import numpy as np
+import pacmap
 import pandas as pd
-import umap
+from mime_db import MimeDb
 from rich.logging import RichHandler
 from sklearn.cluster import KMeans
-
-from mime_db import MimeDb
 
 # from PIL import Image
 
@@ -145,12 +144,14 @@ async def main() -> None:
     #     random_state=42,
     # ).fit_transform(X)
 
-    clusterable_embedding = umap.UMAP(
-        n_neighbors=10,
-        min_dist=0.0,
-        n_components=2,
-        random_state=42,
-    ).fit_transform(X)
+    # clusterable_embedding = umap.UMAP(
+    #     n_neighbors=10,
+    #     min_dist=0.0,
+    #     n_components=2,
+    #     random_state=42,
+    # ).fit_transform(X)
+
+    clusterable_embedding = pacmap.PaCMAP(n_components=2, n_neighbors=None, MN_ratio=0.5, FP_ratio=2.0).fit_transform(X, init="pca")
 
     logging.info("fitting clustered model")
 
@@ -166,16 +167,22 @@ async def main() -> None:
 
     logging.info(f"{max(labels)} clusters found")
 
+    face_clusters = []
     for i, cluster_id in enumerate(labels):
         if cluster_id == -1:
             continue
 
-        logging.info(
-            f"assigning cluster {cluster_id} to track {int(rep_pf_df.iloc[i]['track_id'])}"
-        )
-        await db.assign_face_clusters_by_track(
-            video_id, cluster_id, int(rep_pf_df.iloc[i]["track_id"])
-        )
+        # logging.info(
+        #     f"assigning cluster {cluster_id} to track {int(rep_pf_df.iloc[i]['track_id'])}"
+        # )
+
+        face_clusters.append([video_id, cluster_id, int(rep_pf_df.iloc[i]["track_id"])])
+
+    logging.info(f"Assigning {len(face_clusters)} total face clusters by track in the DB")
+
+    await db.assign_face_clusters_by_track(
+        face_clusters
+    )
 
     for cluster_id in range(-1, max(labels) + 1):
         if cluster_id != -1:

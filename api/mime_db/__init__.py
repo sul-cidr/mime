@@ -40,9 +40,10 @@ class MimeDb:
         assign_face_clusters_by_track,
         assign_movelet_clusters,
         clear_poses,
+        load_4dh_predictions,
         load_openpifpaf_predictions,
     )
-    from mime_db._initialization import initialize_db
+    from mime_db._initialization import initialize_db, remove_video
     from mime_db._read_only import (
         get_available_videos,
         get_clustered_face_data_from_video,

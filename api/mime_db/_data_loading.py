@@ -1,10 +1,23 @@
+import copy
 import json
 import logging
 from pathlib import Path
 from typing import Callable
 from uuid import UUID
 
+import joblib
 import numpy as np
+
+phalp_to_coco = [[0], [16], [15], [18], [17], [5, 34], [2, 33], [6, 35], [3, 32], [7, 36], [4, 31], [28], [27], [13, 29], [10, 26], [14, 30], [11, 25]]
+
+def merge_phalp_coords(all_coords, phalp_to_merge):
+    new_coords = []
+    for to_merge in phalp_to_merge:
+        x_avg = sum([all_coords[i][0] for i in to_merge]) / len(to_merge)
+        y_avg = sum([all_coords[i][1] for i in to_merge]) / len(to_merge)
+        new_coords.append([x_avg, y_avg, 1.0]) # Add a bogus confidence value because the other code expects it
+
+    return np.array(new_coords)
 
 
 async def add_video(self, video_name: str, video_metadata: dict) -> UUID:
@@ -74,6 +87,82 @@ async def load_openpifpaf_predictions(
         INSERT INTO pose (
             video_id, frame, pose_idx, keypoints, bbox, score, category)
             VALUES($1, $2, $3, $4, $5, $6, $7)
+        ;
+        """,
+        data,
+    )
+
+    logging.info(f"Loaded {len(poses)} predictions!")
+
+
+async def load_4dh_predictions(
+    self, video_id: UUID, pkl_path: Path, clear=True
+) -> None:
+    frames = {}
+
+    if clear:
+        logging.debug(f"Clearing poses for video {video_id}")
+        await self.clear_poses(video_id)
+
+    logging.info(f"Importing data from '{pkl_path}'...")
+
+    frames = joblib.load(pkl_path)
+
+    logging.info(f"Loading data for {len(frames)} frames from '{pkl_path}'...")
+
+    poses = []
+    for _, frame in frames.items():
+
+        if not len(frame["2d_joints"]):
+            continue
+
+        # XXX TODO we only want the pose data about the tracked poses in each frame;
+        # the raw output also contains data about previously tracked poses ("ghosts")
+        # that we really don't want to include. Unfortunately the 2d and 3d joints data
+        # as well as the conf values and includes these "ghosts", so need to filter those
+        # entries out. This can be done by only using the indices of the "tracked_ids"
+        # in the larger "tid" list to get the joints and conf data.
+
+        for tracked_id in frame["tracked_ids"]:
+            if tracked_id in frame["tid"]:
+                pose_idx = frame["tid"].index(tracked_id)
+            else:
+                logging.info(f"Frame {frame['time']+1}: couldn't find tracked ID {tracked_id} in list of full IDs {frame['tid']}")
+                continue
+
+            img_height, img_width = frame["size"][pose_idx]
+            img_size = max(img_width, img_height)
+            pose = frame["2d_joints"][pose_idx]
+            joints_2d = copy.deepcopy(pose)
+            joints_2d = joints_2d.reshape(-1, 2)
+            joints_2d *= img_size
+            joints_2d[:,1] -= (max(img_width, img_height) - min(img_width, img_height)) / 2
+
+            coco_joints = merge_phalp_coords(joints_2d, phalp_to_coco).flatten()
+
+            all_phalp_keypoints = np.array([[coord[0], coord[1], 1.0] for coord in joints_2d]).flatten()
+
+            poses.append(
+                {
+                    "video_id": video_id,
+                    "frame": frame["time"] + 1,
+                    "pose_idx": pose_idx,
+                    "keypoints": coco_joints,
+                    "keypoints4dh": all_phalp_keypoints,
+                    "bbox": np.array(frame["bbox"][pose_idx]),
+                    "score": frame["conf"][pose_idx],
+                    "category": frame["class_name"][pose_idx],
+                    "track_id": tracked_id,
+                }
+            )
+
+    data = [tuple(pose.values()) for pose in poses]
+
+    await self._pool.executemany(
+        """
+        INSERT INTO pose (
+            video_id, frame, pose_idx, keypoints, keypoints4dh, bbox, score, category, track_id)
+            VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9)
         ;
         """,
         data,
@@ -245,22 +334,22 @@ async def assign_face_clusters(self, video_id, cluster_id, faces_data) -> None:
                 )
 
 
-async def assign_face_clusters_by_track(self, video_id, cluster_id, track_id) -> None:
+async def assign_face_clusters_by_track(self, face_clusters) -> None:
     async with self._pool.acquire() as conn:
         await conn.execute(
             "ALTER TABLE face ADD COLUMN IF NOT EXISTS cluster_id INTEGER DEFAULT NULL;"
         )
-        await conn.execute(
+        await conn.executemany(
             """
                 UPDATE face
-                SET cluster_id = $1
-                WHERE video_id = $2 AND track_id = $3
+                SET cluster_id = $2
+                WHERE video_id = $1 AND track_id = $3
                 ;
             """,
-            cluster_id,
-            video_id,
-            track_id,
+            face_clusters,
         )
+
+        return
 
 
 async def assign_movelet_clusters(self, movelet_clusters) -> None:
@@ -272,16 +361,14 @@ async def assign_movelet_clusters(self, movelet_clusters) -> None:
             """
         )
 
-        # updates = [(account_id, new_address, additional_protocol) from <data_source>]
-
         await conn.executemany(
             """
             UPDATE movelet
             SET cluster_id = $5
             WHERE video_id = $1 AND
-                  pose_idx = $2 AND
-                  start_frame = $3 AND
-                  end_frame = $4;
+                  pose_idx = $4 AND
+                  start_frame = $2 AND
+                  end_frame = $3;
             """,
             movelet_clusters,
         )
@@ -296,13 +383,14 @@ async def annotate_pose(
     video_id: UUID | None,
     annotation_func: Callable,
     reindex=True,
+    pose_tbl = "pose",
 ) -> None:
     async with self._pool.acquire() as conn:
         await conn.execute(
-            f"ALTER TABLE pose ADD COLUMN IF NOT EXISTS {column} {col_type};"
+            f"ALTER TABLE {pose_tbl} ADD COLUMN IF NOT EXISTS {column} {col_type};"
         )
 
-        poses = await conn.fetch("SELECT * FROM pose WHERE video_id = $1;", video_id)
+        poses = await conn.fetch(f"SELECT * FROM {pose_tbl} WHERE video_id = $1;", video_id)
         async with conn.transaction():
             for i, pose in enumerate(poses):
                 if i % (len(poses) // 10) == 0:
@@ -313,7 +401,7 @@ async def annotate_pose(
                 annotation_value = annotation_func(pose)
                 await conn.execute(
                     f"""
-                    UPDATE pose
+                    UPDATE {pose_tbl}
                     SET {column} = $1
                     WHERE video_id = $2 AND frame = $3 AND pose_idx = $4
                     ;
@@ -328,7 +416,7 @@ async def annotate_pose(
             logging.info("Creating approximate index for cosine distance...")
             await conn.execute(
                 f"""
-                CREATE INDEX ON pose
+                CREATE INDEX ON {pose_tbl}
                 USING ivfflat ({column} vector_cosine_ops)
                 ;
                 """,
