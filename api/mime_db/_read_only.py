@@ -27,7 +27,8 @@ async def get_pose_data_by_frame(self, video_id: UUID) -> list:
                face_ct AS "faceCt",
                avg_score AS "avgScore",
                is_shot AS "isShot",
-               movement
+               movement,
+               pose_interest AS "interest"
            FROM video_frame_meta
            WHERE video_id = $1;
         """,

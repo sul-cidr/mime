@@ -11,10 +11,9 @@ from pathlib import Path
 import numpy as np
 import pacmap
 import pandas as pd
+from mime_db import MimeDb
 from rich.logging import RichHandler
 from sklearn.cluster import KMeans
-
-from mime_db import MimeDb
 
 # from PIL import Image
 
@@ -22,7 +21,7 @@ from mime_db import MimeDb
 # respectively, so an image upsized from smaller than 100xH px is not useful.
 WIDTH_THRESHOLD = 100  # pixels of width
 DEFAULT_CLUSTERS = 15  # Expected number of face clusters
-FACE_FEATURES = 512  # 4096 for DeepFace, 512 for ArcFace
+FACE_FEATURES = 512  # Previously used DeepFace, which has 4096
 
 
 # This averages the feature vectors of every frame of a given face/track.

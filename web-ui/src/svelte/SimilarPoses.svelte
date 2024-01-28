@@ -121,7 +121,7 @@
                     class="object-contain h-full w-full"
                     src={`${API_BASE}/frame/resize/${$currentPose.video_id}/${
                       $currentPose.frame
-                    }/${getExtent($currentPose.keypoints).join(
+                    }/${getExtent($currentPose.keypointsopp).join(
                       ",",
                     )}|${getNormDims($currentPose.norm).join(",")}/`}
                     alt={`Frame ${$currentPose.frame}, Pose: ${
@@ -141,6 +141,15 @@
                 Time: {formatSeconds($currentPose.frame / $currentVideo.fps)}
               </li>
             </ul>
+            <span
+            ><strong
+              ><button
+                class="btn-sm variant-filled"
+                type="button"
+                value={$currentPose.frame}
+                on:click={goToFrame}>Go to frame {$currentPose.frame}</button
+              ></strong
+            ></span>
           </footer>
         </div>
 
@@ -162,7 +171,7 @@
                         class="object-contain h-full w-full"
                         src={`${API_BASE}/frame/resize/${pose.video_id}/${
                           pose.frame
-                        }/${getExtent(pose.keypoints).join(",")}|${getNormDims(
+                        }/${getExtent(pose.keypointsopp).join(",")}|${getNormDims(
                           pose.norm,
                         ).join(",")}/`}
                         alt={`Frame ${pose.frame}, Pose: ${pose.pose_idx + 1}`}

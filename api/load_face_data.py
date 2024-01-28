@@ -8,12 +8,11 @@ import logging
 from pathlib import Path
 
 import jsonlines
+from mime_db import MimeDb
 from rich.logging import RichHandler
 
-from mime_db import MimeDb
-
 BATCH_SIZE = 1000  # How many faces to load into DB at one time
-
+FACE_FEATURES = 512  # Previously used DeepFace, which has 4096
 
 async def main() -> None:
     """Command-line entry-point."""
@@ -80,13 +79,13 @@ async def main() -> None:
             landmarks_vector = [
                 coord for pair in face["landmarks"].values() for coord in pair
             ]
-            # If a different face feature predictor is used that doesn't return
-            # 4096 features, this should fill in the empty values.
-            # XXX This assumes 4096 features (returned by DeepFace) is the max
-            # we'll ever see. This max extent is baked into the DB as well.
+            # Previously, we padded all embeddings to 4096 elements because we
+            # might use DeepFace, which produces that many. But the 512
+            # elements (from ArcFace) are sufficient and use less storage.
             embedding = face["embedding"]
-            if len(face["embedding"]) < 4096:
-                embedding.extend([0] * (4096 - len(face["embedding"])))
+            if len(face["embedding"]) != FACE_FEATURES:
+                logging.error(f"Only face embeddings with {FACE_FEATURES} dimensions are supported.")
+                return
 
             faces_to_add.append(
                 [

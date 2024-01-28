@@ -29,7 +29,7 @@ type PoseRecord = {
   video_id: number;
   frame: number;
   pose_idx: number;
-  keypoints: CocoSkeletonWithConfidence;
+  keypointsopp: CocoSkeletonWithConfidence;
   bbox: FixedLengthArray<number, 4>; // bbox format for PifPaf is x0, y0, width, height
   score: number;
   track_id: number | null;
@@ -67,6 +67,7 @@ type FrameRecord = {
   trackCt: number;
   isShot: number | undefined;
   movement: number | undefined;
+  interest: number | undefined;
   sim_pose: number | undefined;
   sim_move: number | undefined;
   time: string | undefined;

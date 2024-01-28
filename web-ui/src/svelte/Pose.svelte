@@ -2,7 +2,7 @@
   // The body part numberings and armature connectors for the 17-keypoint COCO pose format are defined in
   // https://github.com/openpifpaf/openpifpaf/blob/main/src/openpifpaf/plugins/coco/constants.py
   // Note that the body part numbers in the connector (skeleton) definitions begin with 1, for some reason, not 0
-  const COCO_PERSON_SKELETON = [
+  const COCO_17_SKELETON = [
     [16, 14],
     [14, 12],
     [17, 15],
@@ -22,6 +22,23 @@
     [3, 5],
     [4, 6],
     [5, 7],
+  ];
+
+  const COCO_13_SKELETON = [
+    [12, 10],
+    [10, 8],
+    [13, 11],
+    [11, 9],
+    [8, 9],
+    [2, 8],
+    [3, 9],
+    [2, 3],
+    [2, 4],
+    [3, 5],
+    [4, 6],
+    [5, 7],
+    [1, 2],
+    [1, 3],
   ];
 
   const COCO_COLORS = [
@@ -65,9 +82,17 @@
   export let scaleFactor = 1;
   export let normalizedPose = false;
   export let opacity = 1;
+
+  let total_coco_coords = 13;
+  let coco_skeleton = COCO_13_SKELETON;
+  if (poseData.length % 17 == 0) {
+    total_coco_coords = 17;
+    coco_skeleton = COCO_17_SKELETON;
+  }
+
   let segments: FixedLengthArray<
-    FixedLengthArray<number, 2> | FixedLengthArray<number, 3>,
-    17
+    FixedLengthArray<number, 2> | FixedLengthArray<number, 3>
+    //,total_coco_coords;
   >;
 
   import { getContext } from "svelte";
@@ -87,7 +112,7 @@
     return [...Array(Math.ceil(arr.length / l))].map((_) => _arr.splice(0, l));
   };
 
-  $: segments = segmentArray(poseData, poseData.length / 17);
+  $: segments = segmentArray(poseData, poseData.length / total_coco_coords);
 
   $: smplPoints = segmentArray(pose4dhData, pose4dhData?.length / 45);
 
@@ -113,9 +138,9 @@
 
       // Draw a line on the canvas for each skeleton segment.
       // If the confidence value for a given armature point is 0, skip related segments.
-      COCO_PERSON_SKELETON.forEach(([from, to], i) => {
+      coco_skeleton.forEach(([from, to], i) => {
         let fromX, fromY, toX, toY;
-        if (poseData.length === 51) {
+        if (poseData.length === total_coco_coords*3) {
           let fromConfidence, toConfidence;
           [fromX, fromY, fromConfidence] = segments[from! - 1]!;
           [toX, toY, toConfidence] = segments[to! - 1]!;

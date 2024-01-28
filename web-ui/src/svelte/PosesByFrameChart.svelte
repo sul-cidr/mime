@@ -73,7 +73,7 @@
    * to the max integer value from the DB). Hopefully this won't happen on the
    * deployed production version.
    */ 
-  const seriesToFit = ["movement", "avgScore"]; // always normalize between 0 and maxValue
+  const seriesToFit = ["movement", "avgScore", "interest"]; // always normalize between 0 and maxValue
   let normalizedSeriesAlreadyScaled = false;
 
   const scaleToFit = (thisValue: number) => Math.min(maxValue, thisValue * maxValue);
@@ -125,6 +125,7 @@
           trackCt: 0,
           isShot: 0,
           movement: 0,
+          interest: 0,
           sim_pose: 0,
           sim_move: 0,
         });
@@ -156,6 +157,7 @@
         trackCt: 0,
         isShot: 0,
         movement: 0,
+        interest: 0,
         sim_pose: 0,
         sim_move: 0
       });

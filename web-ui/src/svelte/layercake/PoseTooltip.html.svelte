@@ -138,7 +138,7 @@
                 class="object-contain h-full w-full"
                 src={`${API_BASE}/frame/resize/${mouseoverPose.video_id}/${
                   mouseoverPose.frame
-                }/${getExtent(mouseoverPose.keypoints).join(",")}|${getNormDims(
+                }/${getExtent(mouseoverPose.keypointsopp).join(",")}|${getNormDims(
                   mouseoverPose.norm,
                 ).join(",")}/`}
                 alt={`Frame ${mouseoverPose.frame}, Pose: ${

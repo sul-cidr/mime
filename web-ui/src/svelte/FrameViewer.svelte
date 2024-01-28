@@ -81,13 +81,13 @@
       <button
         type="button"
         class="btn btn-sm variant-filled"
-        on:click={() => ($currentFrame = ($currentFrame || 0) - 1)}
+        on:click={() => ($currentFrame = (Number($currentFrame) || 0) - 1)}
         >previous</button
       >
       <button
         type="button"
         class="btn btn-sm variant-filled"
-        on:click={() => ($currentFrame = ($currentFrame || 0) + 1)}>next</button
+        on:click={() => ($currentFrame = (Number($currentFrame) || 0) + 1)}>next</button
       >
       <button
         type="button"
@@ -100,7 +100,7 @@
             playInterval = undefined;
           } else {
             playInterval = setInterval(() => {
-              $currentFrame = ($currentFrame || 0) + 5;
+              $currentFrame = (Number($currentFrame) || 0) + 5;
             }, 400);
           }
         }}>{playInterval ? "stop" : "play"}</button
@@ -124,7 +124,7 @@
       <button
         type="button"
         class="btn btn-sm variant-filled"
-        on:click={() => ($currentFrame = null)}>X</button
+        on:click={() => ($currentFrame = 0)}>X</button
       >
     </div>
   </header>

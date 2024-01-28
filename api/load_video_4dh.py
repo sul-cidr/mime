@@ -9,24 +9,10 @@ import os
 from pathlib import Path
 
 import cv2
-import numpy as np
-from rich.logging import RichHandler
-
 import lib.pose_normalization as pose_normalization
+import numpy as np
 from mime_db import MimeDb
-
-phalp_to_reduced = [[0, 15, 16, 17, 18, 38, 43], [1, 37, 40], [2, 33], [3, 32], [4, 31], [5, 34], [6, 35], [7, 36], [8, 39], [9], [10, 26], [11, 24], [12], [13, 29], [14, 21], [19, 20], [21], [22, 23], [25], [27], [28], [30], [36], [41], [42], [44]]
-
-phalp_to_coco = [[0], [16], [15], [18], [17], [5, 34], [2, 33], [6, 35], [3, 32], [7, 36], [4, 31], [28], [27], [13, 29], [10, 26], [14, 30], [11, 25]]
-
-def merge_phalp_coords(all_coords, phalp_to_merge):
-    new_coords = []
-    for to_merge in phalp_to_merge:
-        x_avg = sum([all_coords[i][0] for i in to_merge]) / len(to_merge)
-        y_avg = sum([all_coords[i][1] for i in to_merge]) / len(to_merge)
-        new_coords.append([x_avg, y_avg, 1.0]) # Add a bogus confidence value because the other code expects it
-
-    return np.array(new_coords)
+from rich.logging import RichHandler
 
 
 def get_video_metadata(video_file):
@@ -101,7 +87,7 @@ async def main() -> None:
     logging.info("Normalizing pose data, and annotating db records...")
     await db.annotate_pose(
         "norm",
-        "vector(34)",
+        "vector(26)",
         video_id,
         lambda pose: tuple(np.nan_to_num(normalize_pose_data(pose, "keypoints"), nan=-1).tolist()),
     )

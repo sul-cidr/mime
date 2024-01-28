@@ -52,6 +52,10 @@ default:
 @add-shots path: && refresh-db-views
   docker compose exec api sh -c "LOG_LEVEL=$LOG_LEVEL /app/load_shot_boundaries.py --video-path \"\$VIDEO_SRC_FOLDER/$1\""
 
+# Calculate pose distances from the global mean for a video already in the DB
+@calculate-pose-interest path: && refresh-db-views
+  docker compose exec api sh -c "LOG_LEVEL=$LOG_LEVEL /app/calculate_pose_interest.py --video-name \"$1\""
+
 # Video file is in $VIDEO_SRC_FOLDER; detected faces file will be [VIDEO_FILE_NAME].faces.ArcFace.jsonl
 @detect-faces path:
   docker compose exec api sh -c "LOG_LEVEL=$LOG_LEVEL /app/detect_faces_offline.py --video-path \"\$VIDEO_SRC_FOLDER/$1\""
