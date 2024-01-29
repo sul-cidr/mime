@@ -138,18 +138,18 @@ async def get_track_frames(self, video_id: UUID) -> list:
 
 
 async def get_nearest_poses(
-    self, video_id: UUID, frame: int, pose_idx: int, metric="cosine", avoid_shot=-1, limit=500
+    self, video_id: UUID, frame: int, pose_idx: int, metric="cosine", embedding="norm", avoid_shot=-1, limit=500
 ) -> list:
-    sub_query = """
-        SELECT norm
+    sub_query = f"""
+        SELECT {embedding}
         FROM pose
         WHERE video_id = $1 AND frame = $2 AND pose_idx = $3
         """
 
     distance = {
-        "cosine": f"norm <=> ({sub_query})",
-        "euclidean": f"norm <-> ({sub_query})",
-        "innerproduct": f"norm <#> ({sub_query})",
+        "cosine": f"{embedding} <=> ({sub_query})",
+        "euclidean": f"{embedding} <-> ({sub_query})",
+        "innerproduct": f"{embedding} <#> ({sub_query})",
     }[metric]
 
     return await self._pool.fetch(

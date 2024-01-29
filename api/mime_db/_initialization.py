@@ -55,6 +55,7 @@ async def initialize_db(conn, drop=False) -> None:
             score FLOAT NOT NULL,
             category INTEGER,
             track_id INTEGER DEFAULT NULL,
+            poem_embedding vector(16) DEFAULT NULL,
             PRIMARY KEY(video_id, frame, pose_idx)
         )
         ;

@@ -12,7 +12,6 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_utils.timing import add_timing_middleware
-
 from lib.json_encoder import MimeJSONEncoder
 from mime_db import MimeDb
 
@@ -208,8 +207,12 @@ async def faces_by_frame(video_id: UUID, frame: int, request: Request):
 async def get_nearest_poses(
     metric: str, video_id: UUID, frame: int, pose_idx: int, request: Request
 ):
+    embedding = "norm"
+    if metric == "poem_embedding":
+        metric = "cosine"
+        embedding = "poem_embedding"
     frame_data = await request.app.state.db.get_nearest_poses(
-        video_id, frame, pose_idx, metric
+        video_id, frame, pose_idx, metric, embedding
     )
     return Response(
         content=json.dumps(frame_data, cls=MimeJSONEncoder),
@@ -221,8 +224,13 @@ async def get_nearest_poses(
 async def get_nearest_poses_othershot(
     metric: str, video_id: UUID, frame: int, pose_idx: int, shot: int, request: Request
 ):
+    embedding = "norm"
+    if metric == "poem_embedding":
+        metric = "cosine"
+        embedding = "poem_embedding"
+
     frame_data = await request.app.state.db.get_nearest_poses(
-        video_id, frame, pose_idx, metric, avoid_shot=shot
+        video_id, frame, pose_idx, metric, embedding, avoid_shot=shot
     )
     return Response(
         content=json.dumps(frame_data, cls=MimeJSONEncoder),

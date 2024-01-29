@@ -44,6 +44,14 @@ default:
 @add-video-4dh path: && refresh-db-views
   docker compose exec api sh -c "LOG_LEVEL=$LOG_LEVEL /app/load_video_4dh.py --video-path \"\$VIDEO_SRC_FOLDER/$1\""
 
+# Export a video's pose data into a CSV to serve as input to a Pr-VIPE (POEM) viewpoint-invariant embedding
+@make-poem-input path:
+  docker compose exec api sh -c "LOG_LEVEL=$LOG_LEVEL /app/make_poem_input.py --video-path \"\$VIDEO_SRC_FOLDER/$1\""
+
+# Import Pr-VIPE viewpoint-invariant embeddings for a video's poses from a CSV file (generated externally)
+@import-poem-embeddings path:
+  docker compose exec api sh -c "LOG_LEVEL=$LOG_LEVEL /app/apply_poem_output.py --video-name \"$1\""
+
 # Video file is in $VIDEO_SRC_FOLDER; detected shots file will be [VIDEO_FILE_NAME].shots.TransNetV2.pkl
 @detect-shots path:
   docker compose exec api sh -c "LOG_LEVEL=$LOG_LEVEL /app/detect_shots_offline.py --video-path \"\$VIDEO_SRC_FOLDER/$1\""

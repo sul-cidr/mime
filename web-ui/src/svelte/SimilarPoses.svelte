@@ -90,7 +90,7 @@
           <RadioItem
             bind:group={similarityMetric}
             name="similarity-metric"
-            value="innerproduct">Inner Product</RadioItem
+            value="poem_embedding">View Invariant</RadioItem
           >
         </RadioGroup>
       </div>

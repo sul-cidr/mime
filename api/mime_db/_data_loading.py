@@ -337,6 +337,34 @@ async def add_video_movelets(self, movelets_data, reindex=True) -> None:
             )
 
 
+async def assign_poem_embeddings(self, poem_data, reindex=True) -> None:
+    async with self._pool.acquire() as conn:
+        await conn.execute(
+            "ALTER TABLE pose ADD COLUMN IF NOT EXISTS poem_embedding vector(16) DEFAULT NULL;"
+        )
+        await conn.executemany(
+            """
+                UPDATE pose
+                SET poem_embedding = $4
+                WHERE video_id = $1 AND frame = $2 AND pose_idx = $3
+                ;
+            """,
+            poem_data,
+        )
+
+        if reindex:
+            logging.info("Creating approximate index for cosine distance of viewpoint-invariant pose embeddings...")
+            await conn.execute(
+                """
+                CREATE INDEX ON pose
+                USING ivfflat (poem_embedding vector_cosine_ops)
+                ;
+                """,
+            )
+
+        return
+
+
 async def assign_frame_interest(self, frame_interest) -> None:
     async with self._pool.acquire() as conn:
         await conn.execute(

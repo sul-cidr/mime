@@ -2,6 +2,7 @@
 .env
 mime-cache
 pose_cluster_images
+poem_files
 .DS_Store
 __pycache__/
 web-extras/pix-plot/
