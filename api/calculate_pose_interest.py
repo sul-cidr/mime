@@ -10,7 +10,7 @@ import numpy as np
 from lib.pose_drawing import *
 from mime_db import MimeDb
 from rich.logging import RichHandler
-from scipy.spatial.distance import cosine, euclidean
+from scipy.spatial.distance import cosine  # , euclidean
 
 DEFAULT_CLUSTERS = 15  # Expected number of pose clusters
 
@@ -90,7 +90,7 @@ async def main() -> None:
     normalized_frame_interest = []
 
     for frame in frame_interest:
-        normalized_frame_interest.append([video_id, frame, frame_interest[frame] / max_distance])
+        normalized_frame_interest.append([video_id, frame, round(frame_interest[frame] / max_distance, 2)])
 
     logging.info(f"DIST STATS: MEAN {np.mean(all_distances)} MEDIAN {np.median(all_distances)} STDEV {np.std(all_distances)} MAX {np.max(all_distances)} MIN {np.min(all_distances)}")
 

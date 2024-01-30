@@ -41,6 +41,7 @@ type PoseRecord = {
   hidden: boolean | undefined;
   distance?: number;
   shot: number | 0;
+  face_cluster_id: number | null;
 };
 
 interface MoveletPoseRecord extends PoseRecord {

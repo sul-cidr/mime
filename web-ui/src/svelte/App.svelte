@@ -147,7 +147,7 @@
         {:else if tabSet === 3}
           {#if $currentVideo}
             <h2>{$currentVideo.video_name}</h2>
-            <FacesTimeline videoId={$currentVideo.id} />
+            <FacesTimeline videoId={$currentVideo.id} videoName={$currentVideo.video_name}/>
             {#if $currentFrame}
               <FrameViewer />
             {/if}

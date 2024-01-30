@@ -52,7 +52,7 @@ async def get_video_shot_boundaries(self, video_id: UUID) -> list:
 
 async def get_clustered_face_data_from_video(self, video_id: UUID) -> list:
     return await self._pool.fetch(
-        "SELECT frame, cluster_id, pose_idx, track_id FROM face WHERE video_id = $1 AND cluster_id IS NOT NULL ORDER BY frame ASC;",
+        "SELECT frame, cluster_id, pose_idx, track_id, bbox FROM face WHERE video_id = $1 AND cluster_id IS NOT NULL ORDER BY frame ASC;",
         video_id,
     )
 
@@ -116,7 +116,7 @@ async def get_frame_data_range(
 
 async def get_poses_with_faces(self, video_id: UUID) -> list:
     return await self._pool.fetch(
-        "SELECT pose.video_id as video_id, pose.frame as frame, pose.pose_idx as pose_idx, pose.track_id as track_id, face.bbox as face_bbox, face.confidence as face_confidence, face.embedding as face_embedding FROM pose, face WHERE pose.video_id = $1 AND face.video_id = $1 AND pose.frame = face.frame AND pose.pose_idx = face.pose_idx ORDER BY frame ASC;",
+        "SELECT pose.video_id as video_id, pose.frame as frame, pose.pose_idx as pose_idx, pose.track_id as track_id, face.bbox as face_bbox, face.confidence as face_confidence, face.embedding as face_embedding, face.landmarks AS face_landmarks FROM pose, face WHERE pose.video_id = $1 AND face.video_id = $1 AND pose.frame = face.frame AND pose.pose_idx = face.pose_idx ORDER BY frame ASC;",
         video_id,
     )
 
@@ -124,6 +124,15 @@ async def get_poses_with_faces(self, video_id: UUID) -> list:
 async def get_pose_by_frame_and_track(self, video_id: UUID, frameno: int, track_id: int):
     return await self._pool.fetch(
         "SELECT * FROM pose WHERE video_id = $1 AND frame = $2 AND track_id = $3;",
+        video_id,
+        frameno,
+        track_id,
+    )
+
+
+async def get_face_by_frame_and_track(self, video_id: UUID, frameno: int, track_id: int):
+    return await self._pool.fetch(
+        "SELECT * FROM face WHERE video_id = $1 AND frame = $2 AND track_id = $3;",
         video_id,
         frameno,
         track_id,
@@ -154,8 +163,8 @@ async def get_nearest_poses(
 
     return await self._pool.fetch(
         f"""
-        SELECT pose.*, {distance} AS distance, frame.shot as shot FROM pose, frame
-        WHERE pose.video_id = $1 AND frame.video_id = $1 AND pose.frame = frame.frame AND NOT ((pose.frame = $2 AND pose.pose_idx = $3) OR (frame.shot = $4)) ORDER BY distance
+        SELECT pose.*, {distance} AS distance, frame.shot AS shot, face.cluster_id AS face_cluster_id FROM pose, frame, face
+        WHERE pose.video_id = $1 AND frame.video_id = $1 AND face.video_id = $1 AND face.frame=pose.frame AND face.pose_idx = pose.pose_idx AND pose.frame = frame.frame AND NOT ((pose.frame = $2 AND pose.pose_idx = $3) OR (frame.shot = $4)) ORDER BY distance
         LIMIT $5;
         """,
         video_id,

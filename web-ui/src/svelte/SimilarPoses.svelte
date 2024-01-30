@@ -32,6 +32,7 @@
 
   const updatePoseData = (data: Array<PoseRecord>) => {
     poses = data;
+    console.log(data);
     $similarPoseFrames = {};
     poses.forEach((pose) => {
       $similarPoseFrames[pose["frame"]] = 1;
@@ -140,6 +141,9 @@
               <li>
                 Time: {formatSeconds($currentPose.frame / $currentVideo.fps)}
               </li>
+              <li>
+                Face group: {$currentPose.face_cluster_id}
+              </li>
             </ul>
             <span
             ><strong
@@ -187,6 +191,9 @@
                 <ul>
                   <li>Time: {formatSeconds(pose.frame / $currentVideo.fps)}</li>
                   <li>Distance: {pose.distance?.toFixed(5)}</li>
+                  <li>
+                    Face group: {pose.face_cluster_id}
+                  </li>
                 </ul>
                 <span
                 ><strong

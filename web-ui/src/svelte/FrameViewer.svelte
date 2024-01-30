@@ -42,6 +42,7 @@
               faceCt += 1;
               poseData[pi]!.face_bbox = fr.bbox;
               poseData[pi]!.face_landmarks = fr.landmarks;
+              poseData[pi]!.face_cluster_id = fr.cluster_id;
             }
           });
         });

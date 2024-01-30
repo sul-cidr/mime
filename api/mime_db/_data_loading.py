@@ -316,8 +316,9 @@ async def add_video_movelets(self, movelets_data, reindex=True) -> None:
             prev_norm,
             norm,
             motion,
-            movement)
-            VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+            movement,
+            poem_embedding )
+            VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
         ;
         """,
         data,

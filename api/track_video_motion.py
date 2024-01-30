@@ -101,6 +101,10 @@ async def main() -> None:
         avg_norm_data
     )
 
+    tracks_df["tick_poem"] = tracks_df.groupby(["track_id", "tick"])["poem_embedding"].transform(
+        avg_norm_data
+    )
+
     # XXX It's important to know exactly when the track/motion begins, which
     # is why we take the minimum of the tick's timecodes, but this is a slight
     # mismatch with the tick norm calculations above, which will tend to settle
@@ -190,6 +194,10 @@ async def main() -> None:
         lambda x: np.nan_to_num(x, nan=-1)
     )
 
+    tracks_tick_df["tick_poem"] = tracks_tick_df["tick_poem"].apply(
+        lambda x: np.nan_to_num(x, nan=-1)
+    )
+
     movelets = tracks_tick_df[
         [
             "video_id",
@@ -204,6 +212,7 @@ async def main() -> None:
             "tick_norm",
             "movelet_vector",
             "movement",
+            "tick_poem"
         ]
     ].values
 

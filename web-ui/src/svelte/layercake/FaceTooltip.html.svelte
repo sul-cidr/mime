@@ -7,9 +7,7 @@
   import { LayerCake, Canvas, Html } from "layercake";
   import { format } from "d3-format";
   import { API_BASE } from "@config";
-  import Pose from "@svelte/Pose.svelte";
   import { currentVideo } from "@svelte/stores";
-  import { getExtent, getNormDims } from "../../lib/poseutils";
 
   import QuadTree from "./QuadTree.html.svelte";
 
@@ -82,12 +80,12 @@
   }
 
   /* --------------------------------------------
-   * Get the necessary data about a moused-over pose to draw it in the tooltip.
+   * Get the necessary data about a moused-over face to draw it in the tooltip.
    */
-  async function poseFromMatch(result) {
+  async function faceFromMatch(result) {
     if (Object.keys(result).length === 0) return null;
     const response = await fetch(
-      `${API_BASE}/frame_track_pose/${$currentVideo.id}/${result.start_frame}/${result.track_id}`,
+      `${API_BASE}/frame_track_face/${$currentVideo.id}/${result.frame}/${result.track_id}`,
     );
     const responseJson = await response.json();
     return responseJson[0];
@@ -131,26 +129,21 @@
         {/each}
       </div>
       <div class="tooltip-image aspect-[5/6] py-[30px] px-[10px]">
-        {#await poseFromMatch(found)}
-          <p>Pose data loading...</p>
-        {:then mouseoverPose}
+        {#await faceFromMatch(found)}
+          <p>Face data loading...</p>
+        {:then mouseoverFace}
           <LayerCake>
             <Html zIndex={0}>
               <img
                 class="object-contain h-full w-full"
-                src={`${API_BASE}/frame/resize/${mouseoverPose.video_id}/${
-                  mouseoverPose.frame
-                }/${getExtent(mouseoverPose.keypoints).join(",")}|${getNormDims(
-                  mouseoverPose.norm,
-                ).join(",")}/`}
-                alt={`Frame ${mouseoverPose.frame}, Pose: ${
-                  mouseoverPose.pose_idx + 1
+                src={`${API_BASE}/frame/excerpt/${mouseoverFace.video_id}/${
+                  mouseoverFace.frame
+                }/${mouseoverFace.bbox.join(",")}/`}
+                alt={`Frame ${mouseoverFace.frame}, Pose: ${
+                  mouseoverFace.pose_idx + 1
                 }`}
               />
             </Html>
-            <Canvas zIndex={1}>
-              <Pose poseData={mouseoverPose.norm} normalizedPose={true} />
-            </Canvas>
           </LayerCake>
         {/await}
       </div>

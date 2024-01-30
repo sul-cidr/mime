@@ -48,6 +48,9 @@ default:
 @make-poem-input path:
   docker compose exec api sh -c "LOG_LEVEL=$LOG_LEVEL /app/make_poem_input.py --video-path \"\$VIDEO_SRC_FOLDER/$1\""
 
+@compute-poem-embeddings path:
+  docker compose exec api sh -c "LOG_LEVEL=$LOG_LEVEL cd /app/lib && python3 -m poem.pr_vipe.infer --input_csv=/app/poem_files/$1/$1.csv --output_dir=/app/poem_files/$1/ --checkpoint_path=/app/lib/poem/checkpoints/checkpoint_Pr-VIPE_2M/model.ckpt-02013963"
+
 # Import Pr-VIPE viewpoint-invariant embeddings for a video's poses from a CSV file (generated externally)
 @import-poem-embeddings path:
   docker compose exec api sh -c "LOG_LEVEL=$LOG_LEVEL /app/apply_poem_output.py --video-name \"$1\""

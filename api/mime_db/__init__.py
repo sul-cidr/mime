@@ -42,6 +42,7 @@ class MimeDb:
     from mime_db._read_only import (get_available_videos,
                                     get_clustered_face_data_from_video,
                                     get_clustered_movelet_data_from_video,
+                                    get_face_by_frame_and_track,
                                     get_frame_data, get_frame_data_range,
                                     get_frame_faces,
                                     get_movelet_data_from_video,

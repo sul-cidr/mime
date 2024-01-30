@@ -119,7 +119,9 @@ async def main() -> None:
     frozen_movelets = movelets_df[
         (movelets_df["movement"] >= 0) & (movelets_df["movement"] < movement_mode)
     ].reset_index()
-    frozen_poses = frozen_movelets["norm"].tolist()
+    # XXX Use POEM viewpoint-invariant embedding features instead
+    frozen_poses = frozen_movelets["poem_embedding"].tolist()
+    frozen_norms = frozen_movelets["norm"].tolist()
 
     logging.info(f"TOTAL LOW-MOTION POSES: {len(frozen_poses)}")
 
@@ -234,7 +236,7 @@ async def main() -> None:
             f"CLUSTER: {cluster_id}, POSES: {len(cluster_to_poses[cluster_id])}"
         )
         for pose_index in cluster_to_poses[cluster_id]:
-            cl_pose = frozen_poses[pose_index]
+            cl_pose = frozen_norms[pose_index]
             cl_pose[cl_pose == -1] = np.nan
             cluster_poses.append(cl_pose)
         cluster_average = np.nanmean(np.array(cluster_poses), axis=0).tolist()
