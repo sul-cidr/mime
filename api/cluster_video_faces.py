@@ -24,7 +24,7 @@ WIDTH_THRESHOLD = 100  # Desired face image width in pixels
 DEFAULT_CLUSTERS = 15  # Expected number of face clusters
 FACE_FEATURES = 512  # Previously used DeepFace, which has 4096
 UPSCALE = 5
-FACE_SAMPLE_RATE = 500  # Faces to skip when creating averages
+FACE_SAMPLE_RATE = 2000  # Faces to skip when creating averages
 
 # This averages the feature vectors of every frame of a given face/track.
 # The resulting vector is of limited use, because a pose's face
