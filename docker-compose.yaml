@@ -22,6 +22,7 @@ services:
       JUPYTER_TOKEN: ${JUPYTER_PASSWORD:?}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
       VIDEO_SRC_FOLDER: /videos
+      CACHE_FOLDER: /static
 
     depends_on:
       - db

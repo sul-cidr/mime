@@ -6,16 +6,19 @@ from uuid import UUID
 
 import cv2
 import imageio.v3 as iio
+import numpy as np
 import uvicorn
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_utils.timing import add_timing_middleware
+
 from lib.json_encoder import MimeJSONEncoder
 from mime_db import MimeDb
 
 load_dotenv()
 VIDEO_SRC_FOLDER = os.getenv("VIDEO_SRC_FOLDER")
+CACHE_FOLDER = os.getenv("CACHE_FOLDER")
 
 try:
     assert VIDEO_SRC_FOLDER
@@ -39,6 +42,16 @@ mime_api.add_middleware(
 )
 
 
+async def get_frame_image(video_id: UUID, frame: int, request: Request) -> np.ndarray:
+    frame_image = Path(CACHE_FOLDER, str(video_id), "frames", f"{frame}.jpeg")
+    if frame_image.exists():
+        return iio.imread(frame_image)
+    else:
+        video = await request.app.state.db.get_video_by_id(video_id)
+        video_path = f"/videos/{video['video_name']}"
+        return iio.imread(video_path, index=frame - 1, plugin="pyav")
+
+
 @mime_api.on_event("startup")
 async def startup():
     mime_api.state.db = await MimeDb.create(drop=False)
@@ -57,11 +70,7 @@ async def videos(request: Request):
 
 @mime_api.get("/frame/{video_id}/{frame}/")
 async def get_frame(video_id: UUID, frame: int, request: Request):
-    video = await request.app.state.db.get_video_by_id(video_id)
-    video_path = f"/videos/{video['video_name']}"
-    img = iio.imread(video_path, index=frame - 1, plugin="pyav")
-    Path(f"/static/{video_id}/frames").mkdir(parents=True, exist_ok=True)
-    iio.imwrite(f"/static/{video_id}/frames/{frame}.jpeg", img, extension=".jpeg")
+    img = await get_frame_image(video_id, frame, request)
     return Response(
         content=iio.imwrite("<bytes>", img, extension=".jpeg"),
         media_type="image/jpeg",
@@ -70,10 +79,8 @@ async def get_frame(video_id: UUID, frame: int, request: Request):
 
 @mime_api.get("/frame/{video_id}/{frame}/{xywh}/")
 async def get_frame_region(video_id: UUID, frame: int, xywh: str, request: Request):
-    video = await request.app.state.db.get_video_by_id(video_id)
-    video_path = f"/videos/{video['video_name']}"
+    img = await get_frame_image(video_id, frame, request)
     x, y, w, h = [round(float(elt)) for elt in xywh.split(",")]
-    img = iio.imread(video_path, index=frame - 1, plugin="pyav")
     img_region = img[y : y + h, x : x + w]
     return Response(
         content=iio.imwrite("<bytes>", img_region, extension=".jpeg"),
@@ -85,11 +92,9 @@ async def get_frame_region(video_id: UUID, frame: int, xywh: str, request: Reque
 async def get_frame_region_resized(
     video_id: UUID, frame: int, xywh_resize: str, request: Request
 ):
-    video = await request.app.state.db.get_video_by_id(video_id)
-    video_path = f"/videos/{video['video_name']}"
+    img = await get_frame_image(video_id, frame, request)
     xywh, resize_dims = xywh_resize.split("|")
     x, y, w, h = [round(float(elt)) for elt in xywh.split(",")]
-    img = iio.imread(video_path, index=frame - 1, plugin="pyav")
     img_region = img[y : y + h, x : x + w]
     rw, rh = [round(float(elt)) for elt in resize_dims.split(",")]
     if rw is not None and rh is not None:
