@@ -108,6 +108,8 @@ async def get_frame_region_resized(
         resized_region = cv2.resize(img_region, (rw, h))
     elif rw is None and rh is not None:
         resized_region = cv2.resize(img_region, (w, rh))
+    else:
+        raise ValueError("Invalid resize dimensions specified")
     return Response(
         content=iio.imwrite("<bytes>", resized_region, extension=".jpeg"),
         media_type="image/jpeg",
@@ -124,10 +126,10 @@ async def get_pose_cluster_image(video_name: str, cluster_id: int, request: Requ
     )
 
 
-@mime_api.get("/frame_track_pose/{video_id}/{frameno}/{track_id}")
-async def pose(video_id: UUID, frameno: int, track_id: int, request: Request):
+@mime_api.get("/frame_track_pose/{video_id}/{frame}/{track_id}")
+async def pose(video_id: UUID, frame: int, track_id: int, request: Request):
     pose_data = await request.app.state.db.get_pose_by_frame_and_track(
-        video_id, frameno, track_id
+        video_id, frame, track_id
     )
     return Response(
         content=json.dumps(pose_data, cls=MimeJSONEncoder),

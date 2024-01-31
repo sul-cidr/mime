@@ -27,6 +27,7 @@
     "pgproto",
     "pyav",
     "skeletonlabs",
-    "tailwindcss"
+    "tailwindcss",
+    "xywh"
   ]
 }
