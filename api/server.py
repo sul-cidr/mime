@@ -25,6 +25,11 @@ try:
 except AssertionError:
     raise SystemExit("Error: VIDEO_SRC_FOLDER is required") from None
 
+try:
+    assert CACHE_FOLDER
+except AssertionError:
+    raise SystemExit("Error: CACHE_FOLDER is required") from None
+
 
 logging.basicConfig(level=(os.getenv("LOG_LEVEL") or "INFO").upper())
 logger = logging.getLogger(__name__)
