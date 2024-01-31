@@ -6,21 +6,29 @@ from uuid import UUID
 
 import cv2
 import imageio.v3 as iio
+import numpy as np
 import uvicorn
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_utils.timing import add_timing_middleware
+
 from lib.json_encoder import MimeJSONEncoder
 from mime_db import MimeDb
 
 load_dotenv()
 VIDEO_SRC_FOLDER = os.getenv("VIDEO_SRC_FOLDER")
+CACHE_FOLDER = os.getenv("CACHE_FOLDER")
 
 try:
     assert VIDEO_SRC_FOLDER
 except AssertionError:
     raise SystemExit("Error: VIDEO_SRC_FOLDER is required") from None
+
+try:
+    assert CACHE_FOLDER
+except AssertionError:
+    raise SystemExit("Error: CACHE_FOLDER is required") from None
 
 
 logging.basicConfig(level=(os.getenv("LOG_LEVEL") or "INFO").upper())
@@ -37,6 +45,16 @@ mime_api.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+async def get_frame_image(video_id: UUID, frame: int, request: Request) -> np.ndarray:
+    frame_image = Path(CACHE_FOLDER, str(video_id), "frames", f"{frame}.jpeg")
+    if frame_image.exists():
+        return iio.imread(frame_image)
+    else:
+        video = await request.app.state.db.get_video_by_id(video_id)
+        video_path = f"/videos/{video['video_name']}"
+        return iio.imread(video_path, index=frame - 1, plugin="pyav")
 
 
 @mime_api.on_event("startup")
@@ -57,11 +75,7 @@ async def videos(request: Request):
 
 @mime_api.get("/frame/{video_id}/{frame}/")
 async def get_frame(video_id: UUID, frame: int, request: Request):
-    video = await request.app.state.db.get_video_by_id(video_id)
-    video_path = f"/videos/{video['video_name']}"
-    img = iio.imread(video_path, index=frame - 1, plugin="pyav")
-    Path(f"/static/{video_id}/frames").mkdir(parents=True, exist_ok=True)
-    iio.imwrite(f"/static/{video_id}/frames/{frame}.jpeg", img, extension=".jpeg")
+    img = await get_frame_image(video_id, frame, request)
     return Response(
         content=iio.imwrite("<bytes>", img, extension=".jpeg"),
         media_type="image/jpeg",
@@ -70,10 +84,8 @@ async def get_frame(video_id: UUID, frame: int, request: Request):
 
 @mime_api.get("/frame/{video_id}/{frame}/{xywh}/")
 async def get_frame_region(video_id: UUID, frame: int, xywh: str, request: Request):
-    video = await request.app.state.db.get_video_by_id(video_id)
-    video_path = f"/videos/{video['video_name']}"
+    img = await get_frame_image(video_id, frame, request)
     x, y, w, h = [round(float(elt)) for elt in xywh.split(",")]
-    img = iio.imread(video_path, index=frame - 1, plugin="pyav")
     img_region = img[y : y + h, x : x + w]
     return Response(
         content=iio.imwrite("<bytes>", img_region, extension=".jpeg"),
@@ -85,11 +97,9 @@ async def get_frame_region(video_id: UUID, frame: int, xywh: str, request: Reque
 async def get_frame_region_resized(
     video_id: UUID, frame: int, xywh_resize: str, request: Request
 ):
-    video = await request.app.state.db.get_video_by_id(video_id)
-    video_path = f"/videos/{video['video_name']}"
+    img = await get_frame_image(video_id, frame, request)
     xywh, resize_dims = xywh_resize.split("|")
     x, y, w, h = [round(float(elt)) for elt in xywh.split(",")]
-    img = iio.imread(video_path, index=frame - 1, plugin="pyav")
     img_region = img[y : y + h, x : x + w]
     rw, rh = [round(float(elt)) for elt in resize_dims.split(",")]
     if rw is not None and rh is not None:
@@ -98,6 +108,8 @@ async def get_frame_region_resized(
         resized_region = cv2.resize(img_region, (rw, h))
     elif rw is None and rh is not None:
         resized_region = cv2.resize(img_region, (w, rh))
+    else:
+        raise ValueError("Invalid resize dimensions specified")
     return Response(
         content=iio.imwrite("<bytes>", resized_region, extension=".jpeg"),
         media_type="image/jpeg",
@@ -114,10 +126,10 @@ async def get_pose_cluster_image(video_name: str, cluster_id: int, request: Requ
     )
 
 
-@mime_api.get("/frame_track_pose/{video_id}/{frameno}/{track_id}")
-async def pose(video_id: UUID, frameno: int, track_id: int, request: Request):
+@mime_api.get("/frame_track_pose/{video_id}/{frame}/{track_id}")
+async def pose(video_id: UUID, frame: int, track_id: int, request: Request):
     pose_data = await request.app.state.db.get_pose_by_frame_and_track(
-        video_id, frameno, track_id
+        video_id, frame, track_id
     )
     return Response(
         content=json.dumps(pose_data, cls=MimeJSONEncoder),
@@ -127,9 +139,20 @@ async def pose(video_id: UUID, frameno: int, track_id: int, request: Request):
 
 @mime_api.get("/poses/{video_id}/")
 async def poses(video_id: UUID, request: Request):
-    frame_data = await request.app.state.db.get_pose_data_by_frame(video_id)
+    frame_data = Path(CACHE_FOLDER, str(video_id), "pose_data_by_frame.json")
+    if frame_data.exists():
+        with frame_data.open("r") as _fh:
+            frame_data = _fh.read()
+    else:
+        frame_data = await request.app.state.db.get_pose_data_by_frame(video_id)
+        frame_data = json.dumps(frame_data, cls=MimeJSONEncoder)
+        cache_dir = Path(CACHE_FOLDER, str(video_id))
+        cache_dir.mkdir(parents=True, exist_ok=True)
+        with (cache_dir / "pose_data_by_frame.json").open("w") as _fh:
+            _fh.write(frame_data)
+
     return Response(
-        content=json.dumps(frame_data, cls=MimeJSONEncoder),
+        content=frame_data,
         media_type="application/json",
     )
 

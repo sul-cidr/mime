@@ -94,3 +94,29 @@ default:
   docker compose exec web-extras sh -c "pixplot --images \"input/$1/pose_images/*.jpg\" --vectors input/$1/pose_features --metadata input/$1/$1.csv"
   docker compose exec web-extras sh -c "/bin/mkdir -p /app/poseplot/$1"
   docker compose exec web-extras sh -c "/bin/mv /app/output/* /app/poseplot/$1/."
+
+
+# Print a mapping of UUIDs to video file names
+print-videos:
+  #!/usr/bin/env bash
+  docker exec -i mime-api python - <<< '
+  import asyncio
+  from mime_db import MimeDb
+  async def _():
+      db = await MimeDb.create()
+      print("\n".join(f"""{v.get("id")} {v.get("video_name")}""" for v in await db.get_available_videos()))
+  asyncio.run(_())
+  '
+
+# Probably don't use this
+generate-image-cache-naive:
+  # just print-videos | while read id name; do docker exec -i mime-api bash -c 'mkdir -p "$CACHE_FOLDER"/'$id'/frames; ffmpeg -i "$VIDEO_SRC_FOLDER"/"'$name'" -f image2 "$CACHE_FOLDER"/'$id'/frames/%d.jpeg'; done;
+  just print-videos | while read id name; do echo "sudo mkdir -p "$CACHE_FOLDER"/$id/frames; sudo ffmpeg -i "$VIDEO_SRC_FOLDER"/"$name" -f image2 "$CACHE_FOLDER"/"$id"/frames/%d.jpeg"; done;
+
+# Write hidden files into cache folders to facilitate easier identification
+write-cache-folder-labels:
+  just print-videos | docker exec -i mime-api bash -c 'while read id name; do touch "$CACHE_FOLDER/$id/.$name"; done;'
+
+# Delete cached pose JSON
+clear-cached-pose-json:
+  docker exec -i mime-api bash -c "find \$CACHE_FOLDER/ -maxdepth 2 -type f -iname '*.json' -delete"

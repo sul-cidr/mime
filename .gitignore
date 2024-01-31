@@ -4,3 +4,4 @@ mime-cache
 pose_cluster_images
 .DS_Store
 __pycache__/
+web-extras/pix-plot/
