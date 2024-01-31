@@ -48,12 +48,20 @@ default:
 @make-poem-input path:
   docker compose exec api sh -c "LOG_LEVEL=$LOG_LEVEL /app/make_poem_input.py --video-path \"\$VIDEO_SRC_FOLDER/$1\""
 
+# Run the POEM embeddings generator on an existing CSV file, producing an output CSV file
 @compute-poem-embeddings path:
   docker compose exec api sh -c "LOG_LEVEL=$LOG_LEVEL cd /app/lib && python3 -m poem.pr_vipe.infer --input_csv=/app/poem_files/$1/$1.csv --output_dir=/app/poem_files/$1/ --checkpoint_path=/app/lib/poem/checkpoints/checkpoint_Pr-VIPE_2M/model.ckpt-02013963"
+  docker compose exec api sh -c "LOG_LEVEL=$LOG_LEVEL rm /app/poem_files/$1/unnormalized_embedding_samples.csv && rm /app/poem_files/$1/embedding_stddevs.csv"
 
-# Import Pr-VIPE viewpoint-invariant embeddings for a video's poses from a CSV file (generated externally)
+# Import Pr-VIPE viewpoint-invariant embeddings for a video's poses from a CSV file (already generated)
 @import-poem-embeddings path:
   docker compose exec api sh -c "LOG_LEVEL=$LOG_LEVEL /app/apply_poem_output.py --video-name \"$1\""
+
+# Prepare input for Pr-VIPE viewpoint-invariant pose embeddings; generate and load output into DB for a video
+@do-poem-embeddings path:
+  just make-poem-input $1
+  just compute-poem-embeddings $1
+  just import-poem-embeddings $1
 
 # Video file is in $VIDEO_SRC_FOLDER; detected shots file will be [VIDEO_FILE_NAME].shots.TransNetV2.pkl
 @detect-shots path:
