@@ -18,7 +18,6 @@
     similarPoseFrames,
   } from "@svelte/stores";
 
-  let showFrame: boolean = false;
   let avoidShotInResults: boolean = false;
   export let similarityMetric = "cosine";
   let poses: Array<PoseRecord>;
@@ -32,13 +31,15 @@
     amounts: [simStep],
   };
 
-  const resetPoses = () => ($similarPoseFrames = {});
+  const resetPoses = () => {
+    $currentPose = null;
+    $similarPoseFrames = {};
+  };
 
   const goToFrame = (e: any) => ($currentFrame = e.originalTarget.value);
 
   const updatePoseData = (data: Array<PoseRecord>) => {
     poses = data;
-    console.log(data);
     $similarPoseFrames = {};
     poses.forEach((pose) => {
       $similarPoseFrames[pose["frame"]] = 1;
@@ -47,31 +48,24 @@
   };
 
   async function getPoseData(
-    videoId: number,
-    frame: number,
-    poseIdx: number,
+    thisPose: PoseRecord,
     similarityMetric: string,
-    shot: string,
     avoidShot: boolean,
   ) {
+    if (thisPose === null) return [];
     const response = avoidShot
       ? await fetch(
-          `${API_BASE}/poses/similar/${similarityMetric}/${videoId}/${frame}/${poseIdx}/${shot}/`,
+          `${API_BASE}/poses/similar/${similarityMetric}/${thisPose.video_id}/${thisPose.frame}/${thisPose.pose_idx}/${thisPose.shot}/`,
         )
       : await fetch(
-          `${API_BASE}/poses/similar/${similarityMetric}/${videoId}/${frame}/${poseIdx}/`,
+          `${API_BASE}/poses/similar/${similarityMetric}/${thisPose.video_id}/${thisPose.frame}/${thisPose.pose_idx}/`,
         );
     return await response.json();
   }
 
-  $: getPoseData(
-    $currentPose.video_id,
-    $currentPose.frame,
-    $currentPose.pose_idx,
-    similarityMetric,
-    $currentPose.shot,
-    avoidShotInResults,
-  ).then((data) => updatePoseData(data));
+  $: getPoseData($currentPose, similarityMetric, avoidShotInResults).then(
+    (data) => updatePoseData(data),
+  );
 </script>
 
 {#if Object.keys($similarPoseFrames).length}
