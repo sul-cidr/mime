@@ -139,9 +139,20 @@ async def pose(video_id: UUID, frame: int, track_id: int, request: Request):
 
 @mime_api.get("/poses/{video_id}/")
 async def poses(video_id: UUID, request: Request):
-    frame_data = await request.app.state.db.get_pose_data_by_frame(video_id)
+    frame_data = Path(CACHE_FOLDER, str(video_id), "pose_data_by_frame.json")
+    if frame_data.exists():
+        with frame_data.open("r") as _fh:
+            frame_data = _fh.read()
+    else:
+        frame_data = await request.app.state.db.get_pose_data_by_frame(video_id)
+        frame_data = json.dumps(frame_data, cls=MimeJSONEncoder)
+        cache_dir = Path(CACHE_FOLDER, str(video_id))
+        cache_dir.mkdir(parents=True, exist_ok=True)
+        with (cache_dir / "pose_data_by_frame.json").open("w") as _fh:
+            _fh.write(frame_data)
+
     return Response(
-        content=json.dumps(frame_data, cls=MimeJSONEncoder),
+        content=frame_data,
         media_type="application/json",
     )
 
