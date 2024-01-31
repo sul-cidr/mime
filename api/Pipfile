@@ -4,6 +4,7 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
+absl-py = ">=0.9.0"
 asyncpg = "*"
 av = "*"
 deepface = "*"
@@ -24,7 +25,10 @@ python-dotenv = "*"
 rich = "*"
 scipy = "*"
 scikit-learn = "*"
+six = ">=1.14.0"
 tensorflow = "*"
+tensorflow-probability = ">=0.10.1"
+tf-slim = ">=1.1.0"
 umap-learn = "*"
 uvicorn = {extras = ["standard"], version = "*"}
 
