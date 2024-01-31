@@ -62,7 +62,6 @@ async def initialize_db(conn, drop=False) -> None:
         """
     )
 
-
     await conn.execute(
         """
         CREATE TABLE IF NOT EXISTS face (

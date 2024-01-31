@@ -14,10 +14,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pacmap
 import pandas as pd
-from lib.pose_drawing import *
-from mime_db import MimeDb
 from rich.logging import RichHandler
 from sklearn.cluster import KMeans
+
+from lib.pose_drawing import *
+from mime_db import MimeDb
 
 # from PIL import Image
 
@@ -79,9 +80,7 @@ async def main() -> None:
     # poses_df = pd.DataFrame.from_records(video_poses, columns=video_poses[0].keys())
 
     logging.info("TOTAL MOVELETS: %d", len(movelets_df))
-    logging.info(
-        "NULL MOVELETS: %d", len(movelets_df[movelets_df["movement"].isna()])
-    )
+    logging.info("NULL MOVELETS: %d", len(movelets_df[movelets_df["movement"].isna()]))
     logging.info(
         "MOVELETS WITH 0 MOVEMENT: %d", len(movelets_df[movelets_df["movement"] == 0])
     )
@@ -103,7 +102,7 @@ async def main() -> None:
 
     nonnull_movelets_df = movelets_df.copy()
     nonnull_movelets_df.fillna({"movement": -1}, inplace=True)
-    #nonnull_movelets_df["movement"].fillna(-1, inplace=True)
+    # nonnull_movelets_df["movement"].fillna(-1, inplace=True)
 
     n, bins, patches = plt.hist(
         nonnull_movelets_df[nonnull_movelets_df["movement"] <= 500]["movement"],
@@ -125,7 +124,9 @@ async def main() -> None:
 
     logging.info(f"TOTAL LOW-MOTION POSES: {len(frozen_poses)}")
 
-    clusterable_embedding = pacmap.PaCMAP(n_components=2, n_neighbors=None, MN_ratio=0.5, FP_ratio=2.0).fit_transform(frozen_poses, init="pca")
+    clusterable_embedding = pacmap.PaCMAP(
+        n_components=2, n_neighbors=None, MN_ratio=0.5, FP_ratio=2.0
+    ).fit_transform(frozen_poses, init="pca")
 
     # clusterable_embedding = umap.UMAP(
     #     n_neighbors=10,

@@ -9,9 +9,10 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from mime_db import MimeDb
 from rich.logging import RichHandler
 from sklearn.metrics.pairwise import nan_euclidean_distances
+
+from mime_db import MimeDb
 
 TICK_INTERVAL = 0.1666667  # 1/6 of a second
 
@@ -26,13 +27,6 @@ async def main() -> None:
         action="store_true",
         default=False,
         help="Enable debug logging",
-    )
-
-    parser.add_argument(
-        "--phalp",
-        action="store_true",
-        default=False,
-        help="Use 4D-Humans pose coordinates, if available",
     )
 
     parser.add_argument(
@@ -93,17 +87,20 @@ async def main() -> None:
 
     pose_data_field = "norm"
     total_coords = 26
-    if args.phalp:
-        pose_data_field = "norm4dh"
-        total_coords = 90
+    # if args.phalp:
+    #     pose_data_field = "norm4dh"
+    #     total_coords = 90
 
-    tracks_df["tick_norm"] = tracks_df.groupby(["track_id", "tick"])[pose_data_field].transform(
-        avg_norm_data
-    )
+    tracks_df["tick_norm"] = tracks_df.groupby(["track_id", "tick"])[
+        pose_data_field
+    ].transform(avg_norm_data)
 
-    tracks_df["tick_poem"] = tracks_df.groupby(["track_id", "tick"])["poem_embedding"].transform(
-        avg_norm_data
-    )
+    # The pose-invariant embedding is used subsequently in similarity
+    # comparisons of representative poses of movelet tracks (but it's not
+    # currently used for motion/gesture quantification).
+    tracks_df["tick_poem"] = tracks_df.groupby(["track_id", "tick"])[
+        "poem_embedding"
+    ].transform(avg_norm_data)
 
     # XXX It's important to know exactly when the track/motion begins, which
     # is why we take the minimum of the tick's timecodes, but this is a slight
@@ -212,7 +209,7 @@ async def main() -> None:
             "tick_norm",
             "movelet_vector",
             "movement",
-            "tick_poem"
+            "tick_poem",
         ]
     ].values
 

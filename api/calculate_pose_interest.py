@@ -7,10 +7,11 @@ import asyncio
 import logging
 
 import numpy as np
-from lib.pose_drawing import *
-from mime_db import MimeDb
 from rich.logging import RichHandler
 from scipy.spatial.distance import cosine  # , euclidean
+
+from lib.pose_drawing import *
+from mime_db import MimeDb
 
 DEFAULT_CLUSTERS = 15  # Expected number of pose clusters
 
@@ -57,11 +58,14 @@ async def main() -> None:
     all_pose_coords = []
 
     for pose_data in video_poses:
-        all_pose_coords.append(pose_data['norm'])
+        all_pose_coords.append(pose_data["norm"])
 
     mean_global_pose = np.mean(all_pose_coords, axis=0)
 
-    mean_pose = [[mean_global_pose[x], mean_global_pose[x+1], 1] for x in range(0, len(mean_global_pose), 2)]
+    mean_pose = [
+        [mean_global_pose[x], mean_global_pose[x + 1], 1]
+        for x in range(0, len(mean_global_pose), 2)
+    ]
 
     mean_pose_img = draw_normalized_and_unflattened_pose(mean_pose)
     mean_pose_img.save(f"pose_cluster_images/{args.video_name}.png")
@@ -73,14 +77,17 @@ async def main() -> None:
     last_frame = None
     current_deviations = []
     for pose_data in video_poses:
-        if last_frame is not None and last_frame != pose_data["frame"] and len(current_deviations) > 0:
-
+        if (
+            last_frame is not None
+            and last_frame != pose_data["frame"]
+            and len(current_deviations) > 0
+        ):
             frame_interest[pose_data["frame"]] = np.mean(current_deviations)
             all_distances.append(np.mean(current_deviations))
 
             current_deviations = []
 
-        #current_deviations.append(euclidean(pose_data["norm"], mean_global_pose))
+        # current_deviations.append(euclidean(pose_data["norm"], mean_global_pose))
         current_deviations.append(cosine(pose_data["norm"], mean_global_pose))
 
         last_frame = pose_data["frame"]
@@ -90,9 +97,13 @@ async def main() -> None:
     normalized_frame_interest = []
 
     for frame in frame_interest:
-        normalized_frame_interest.append([video_id, frame, round(frame_interest[frame] / max_distance, 2)])
+        normalized_frame_interest.append(
+            [video_id, frame, round(frame_interest[frame] / max_distance, 2)]
+        )
 
-    logging.info(f"DIST STATS: MEAN {np.mean(all_distances)} MEDIAN {np.median(all_distances)} STDEV {np.std(all_distances)} MAX {np.max(all_distances)} MIN {np.min(all_distances)}")
+    logging.info(
+        f"DIST STATS: MEAN {np.mean(all_distances)} MEDIAN {np.median(all_distances)} STDEV {np.std(all_distances)} MAX {np.max(all_distances)} MIN {np.min(all_distances)}"
+    )
 
     await db.assign_frame_interest(normalized_frame_interest)
 

@@ -9,10 +9,11 @@ import os
 from pathlib import Path
 
 import cv2
-import lib.pose_normalization as pose_normalization
 import numpy as np
-from mime_db import MimeDb
 from rich.logging import RichHandler
+
+import lib.pose_normalization as pose_normalization
+from mime_db import MimeDb
 
 
 def get_video_metadata(video_file):
@@ -28,7 +29,7 @@ def get_video_metadata(video_file):
     }
 
 
-def normalize_pose_data(pose, key='keypoints'):
+def normalize_pose_data(pose, key="keypoints"):
     normalized_coords = pose_normalization.extract_trustworthy_coords(
         pose_normalization.shift_normalize_rescale_pose_coords(pose, key)
     )
@@ -89,19 +90,13 @@ async def main() -> None:
         "norm",
         "vector(26)",
         video_id,
-        lambda pose: tuple(np.nan_to_num(normalize_pose_data(pose, "keypoints"), nan=-1).tolist()),
+        lambda pose: tuple(
+            np.nan_to_num(normalize_pose_data(pose, "keypoints"), nan=-1).tolist()
+        ),
     )
-
-    await db.annotate_pose(
-        "norm4dh",
-        "vector(90)",
-        video_id,
-        lambda pose: tuple(np.nan_to_num(normalize_pose_data(pose, "keypoints4dh"), nan=-1).tolist()),
-    )
-
 
     # This is for when we want to merge the full 45-point PHALP set into a set of
-    # normalized COCO points
+    # normalized COCO points for pose similarity and clustering calculations
     # Normalize pose data and annotate database records
     # logging.info("Normalizing pose data, and annotating db records...")
     # await db.annotate_pose(
@@ -111,6 +106,15 @@ async def main() -> None:
     #     lambda pose: tuple(np.nan_to_num(normalize_pose_data({"keypoints": merge_phalp_coords(pose['keypoints'].reshape(-1, 2), phalp_to_coco).flatten()}), nan=-1).tolist()),
     #     pose_tbl="pose4dh"
     # )
+
+    # We're not using this at present, either
+    # await db.annotate_pose(
+    #     "norm4dh",
+    #     "vector(90)",
+    #     video_id,
+    #     lambda pose: tuple(np.nan_to_num(normalize_pose_data(pose, "keypoints4dh"), nan=-1).tolist()),
+    # )
+
 
 if __name__ == "__main__":
     asyncio.run(main())

@@ -11,52 +11,52 @@ from pathlib import Path
 
 import cv2
 import numpy as np
-import pandas as pd
-from mime_db import MimeDb
 from rich.logging import RichHandler
 
+from mime_db import MimeDb
+
 CSV_HEADERS = [
-"image/width",
-"image/height",
-"image/object/part/NOSE_TIP/center/x",
-"image/object/part/NOSE_TIP/center/y",
-"image/object/part/NOSE_TIP/score",
-"image/object/part/LEFT_SHOULDER/center/x",
-"image/object/part/LEFT_SHOULDER/center/y",
-"image/object/part/LEFT_SHOULDER/score",
-"image/object/part/RIGHT_SHOULDER/center/x",
-"image/object/part/RIGHT_SHOULDER/center/y",
-"image/object/part/RIGHT_SHOULDER/score",
-"image/object/part/LEFT_ELBOW/center/x",
-"image/object/part/LEFT_ELBOW/center/y",
-"image/object/part/LEFT_ELBOW/score",
-"image/object/part/RIGHT_ELBOW/center/x",
-"image/object/part/RIGHT_ELBOW/center/y",
-"image/object/part/RIGHT_ELBOW/score",
-"image/object/part/LEFT_WRIST/center/x",
-"image/object/part/LEFT_WRIST/center/y",
-"image/object/part/LEFT_WRIST/score",
-"image/object/part/RIGHT_WRIST/center/x",
-"image/object/part/RIGHT_WRIST/center/y",
-"image/object/part/RIGHT_WRIST/score",
-"image/object/part/LEFT_HIP/center/x",
-"image/object/part/LEFT_HIP/center/y",
-"image/object/part/LEFT_HIP/score",
-"image/object/part/RIGHT_HIP/center/x",
-"image/object/part/RIGHT_HIP/center/y",
-"image/object/part/RIGHT_HIP/score",
-"image/object/part/LEFT_KNEE/center/x",
-"image/object/part/LEFT_KNEE/center/y",
-"image/object/part/LEFT_KNEE/score",
-"image/object/part/RIGHT_KNEE/center/x",
-"image/object/part/RIGHT_KNEE/center/y",
-"image/object/part/RIGHT_KNEE/score",
-"image/object/part/LEFT_ANKLE/center/x",
-"image/object/part/LEFT_ANKLE/center/y",
-"image/object/part/LEFT_ANKLE/score",
-"image/object/part/RIGHT_ANKLE/center/x",
-"image/object/part/RIGHT_ANKLE/center/y",
-"image/object/part/RIGHT_ANKLE/score"
+    "image/width",
+    "image/height",
+    "image/object/part/NOSE_TIP/center/x",
+    "image/object/part/NOSE_TIP/center/y",
+    "image/object/part/NOSE_TIP/score",
+    "image/object/part/LEFT_SHOULDER/center/x",
+    "image/object/part/LEFT_SHOULDER/center/y",
+    "image/object/part/LEFT_SHOULDER/score",
+    "image/object/part/RIGHT_SHOULDER/center/x",
+    "image/object/part/RIGHT_SHOULDER/center/y",
+    "image/object/part/RIGHT_SHOULDER/score",
+    "image/object/part/LEFT_ELBOW/center/x",
+    "image/object/part/LEFT_ELBOW/center/y",
+    "image/object/part/LEFT_ELBOW/score",
+    "image/object/part/RIGHT_ELBOW/center/x",
+    "image/object/part/RIGHT_ELBOW/center/y",
+    "image/object/part/RIGHT_ELBOW/score",
+    "image/object/part/LEFT_WRIST/center/x",
+    "image/object/part/LEFT_WRIST/center/y",
+    "image/object/part/LEFT_WRIST/score",
+    "image/object/part/RIGHT_WRIST/center/x",
+    "image/object/part/RIGHT_WRIST/center/y",
+    "image/object/part/RIGHT_WRIST/score",
+    "image/object/part/LEFT_HIP/center/x",
+    "image/object/part/LEFT_HIP/center/y",
+    "image/object/part/LEFT_HIP/score",
+    "image/object/part/RIGHT_HIP/center/x",
+    "image/object/part/RIGHT_HIP/center/y",
+    "image/object/part/RIGHT_HIP/score",
+    "image/object/part/LEFT_KNEE/center/x",
+    "image/object/part/LEFT_KNEE/center/y",
+    "image/object/part/LEFT_KNEE/score",
+    "image/object/part/RIGHT_KNEE/center/x",
+    "image/object/part/RIGHT_KNEE/center/y",
+    "image/object/part/RIGHT_KNEE/score",
+    "image/object/part/LEFT_ANKLE/center/x",
+    "image/object/part/LEFT_ANKLE/center/y",
+    "image/object/part/LEFT_ANKLE/score",
+    "image/object/part/RIGHT_ANKLE/center/x",
+    "image/object/part/RIGHT_ANKLE/center/y",
+    "image/object/part/RIGHT_ANKLE/score",
 ]
 
 
@@ -116,11 +116,18 @@ async def main() -> None:
         os.makedirs(f"poem_files/{video_name}")
 
     # Input file to Pr_VIPE code
-    poem_file = open(f"poem_files/{video_name}/{video_name}.csv", "w", newline='', encoding="utf-8")
+    poem_file = open(
+        f"poem_files/{video_name}/{video_name}.csv", "w", newline="", encoding="utf-8"
+    )
 
     # This file provides a key to the input, matching lines in the Pr_VIPE input
     # file to specific poses from the DB
-    poses_file = open(f"poem_files/{video_name}/{video_name}.poses.csv", "w", newline='', encoding="utf-8")
+    poses_file = open(
+        f"poem_files/{video_name}/{video_name}.poses.csv",
+        "w",
+        newline="",
+        encoding="utf-8",
+    )
 
     poemwriter = csv.writer(poem_file)
     poemwriter.writerow(CSV_HEADERS)
@@ -131,7 +138,13 @@ async def main() -> None:
     for pose in video_poses:
         posenorm = np.array(pose["norm"])
         posenorm = posenorm / 100
-        pose_data = np.array([[posenorm[x], posenorm[x+1], 1] for x in range(0, len(posenorm), 2)]).flatten().tolist()
+        pose_data = (
+            np.array(
+                [[posenorm[x], posenorm[x + 1], 1] for x in range(0, len(posenorm), 2)]
+            )
+            .flatten()
+            .tolist()
+        )
         rowdata = [video_metadata["width"]] + [video_metadata["height"]] + pose_data
         poemwriter.writerow(rowdata)
 
@@ -139,6 +152,7 @@ async def main() -> None:
 
     poem_file.close()
     poses_file.close()
+
 
 if __name__ == "__main__":
     asyncio.run(main())

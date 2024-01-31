@@ -8,11 +8,13 @@ import logging
 from pathlib import Path
 
 import jsonlines
-from mime_db import MimeDb
 from rich.logging import RichHandler
+
+from mime_db import MimeDb
 
 BATCH_SIZE = 1000  # How many faces to load into DB at one time
 FACE_FEATURES = 512  # Previously used DeepFace, which has 4096
+
 
 async def main() -> None:
     """Command-line entry-point."""
@@ -84,7 +86,9 @@ async def main() -> None:
             # elements (from ArcFace) are sufficient and use less storage.
             embedding = face["embedding"]
             if len(face["embedding"]) != FACE_FEATURES:
-                logging.error(f"Only face embeddings with {FACE_FEATURES} dimensions are supported.")
+                logging.error(
+                    f"Only face embeddings with {FACE_FEATURES} dimensions are supported."
+                )
                 return
 
             faces_to_add.append(

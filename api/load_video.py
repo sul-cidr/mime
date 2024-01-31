@@ -9,10 +9,11 @@ import os
 from pathlib import Path
 
 import cv2
-import lib.pose_normalization as pose_normalization
 import numpy as np
-from mime_db import MimeDb
 from rich.logging import RichHandler
+
+import lib.pose_normalization as pose_normalization
+from mime_db import MimeDb
 
 
 def get_video_metadata(video_file):

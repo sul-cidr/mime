@@ -13,10 +13,11 @@ import imageio.v3 as iio
 import numpy as np
 import pacmap
 import pandas as pd
-from mime_db import MimeDb
 from PIL import Image
 from rich.logging import RichHandler
 from sklearn.cluster import KMeans
+
+from mime_db import MimeDb
 
 # DeepFace and ArcFace resize/crop face images to 152x152 and 112x112 pixels,
 # respectively, so an image upsized from smaller than 100xH px is not useful.
@@ -25,6 +26,7 @@ DEFAULT_CLUSTERS = 15  # Expected number of face clusters
 FACE_FEATURES = 512  # Previously used DeepFace, which has 4096
 UPSCALE = 5
 FACE_SAMPLE_RATE = 2000  # Faces to skip when creating averages
+
 
 # This averages the feature vectors of every frame of a given face/track.
 # The resulting vector is of limited use, because a pose's face
@@ -99,30 +101,36 @@ async def main() -> None:
     logging.info(f"Total poses with faces: {len(pf_df)}")
 
     pf_df = pf_df[
-        (
-            (~np.isnan(pf_df["face_confidence"]))
-            & (pf_df["face_confidence"] > 0)
-        )
+        ((~np.isnan(pf_df["face_confidence"])) & (pf_df["face_confidence"] > 0))
     ].reset_index()
 
     logging.info(f"Poses with usable faces: {len(pf_df)}")
 
     logging.info("Looking for faces that are square to the camera")
-    pf_df["face_landmarks_array"] = pf_df["face_landmarks"].apply(lambda f: np.array_split(np.array(f), len(f)/2))
-    pf_df["face_landmarks_aspect_ratio"] = pf_df["face_landmarks_array"].apply(lambda f: 0 if (np.max(np.array(f)[:,1]) - np.min(np.array(f)[:,1])) == 0 else (np.max(np.array(f)[:,0]) - np.min(np.array(f)[:,0])) / (np.max(np.array(f)[:,1] - np.min(np.array(f)[:,1]))))
+    pf_df["face_landmarks_array"] = pf_df["face_landmarks"].apply(
+        lambda f: np.array_split(np.array(f), len(f) / 2)
+    )
+    pf_df["face_landmarks_aspect_ratio"] = pf_df["face_landmarks_array"].apply(
+        lambda f: 0
+        if (np.max(np.array(f)[:, 1]) - np.min(np.array(f)[:, 1])) == 0
+        else (np.max(np.array(f)[:, 0]) - np.min(np.array(f)[:, 0]))
+        / (np.max(np.array(f)[:, 1] - np.min(np.array(f)[:, 1])))
+    )
 
     face_aspect_ratio_mean = pf_df["face_landmarks_aspect_ratio"].mean()
     # face_aspect_ratio_std = pf_df["face_landmarks_aspect_ratio"].std()
 
-    pf_df["aspect_ratio_dev"] = pf_df["face_landmarks_aspect_ratio"].apply(lambda f: abs(f - face_aspect_ratio_mean))
-    
+    pf_df["aspect_ratio_dev"] = pf_df["face_landmarks_aspect_ratio"].apply(
+        lambda f: abs(f - face_aspect_ratio_mean)
+    )
+
     # pf_df["face_embedding"] = pf_df["face_embedding"].apply(lambda p: p[:FACE_FEATURES])
 
     # This selects a single face to represent each track and uses it for clustering
     rep_pf_df = pf_df.iloc[
         (
             # This is always pretty close to 1...
-            #pf_df.groupby(["track_id"])["face_confidence"].idxmax()
+            # pf_df.groupby(["track_id"])["face_confidence"].idxmax()
             pf_df.groupby(["track_id"])["aspect_ratio_dev"].idxmin()
         )
     ]
@@ -131,7 +139,9 @@ async def main() -> None:
 
     X = rep_pf_df["face_embedding"].to_list()
 
-    clusterable_embedding = pacmap.PaCMAP(n_components=2, n_neighbors=None, MN_ratio=0.5, FP_ratio=2.0).fit_transform(X, init="pca")
+    clusterable_embedding = pacmap.PaCMAP(
+        n_components=2, n_neighbors=None, MN_ratio=0.5, FP_ratio=2.0
+    ).fit_transform(X, init="pca")
 
     logging.info("fitting clustered model")
 
@@ -151,11 +161,11 @@ async def main() -> None:
 
         face_clusters.append([video_id, cluster_id, int(rep_pf_df.iloc[i]["track_id"])])
 
-    logging.info(f"Assigning {len(face_clusters)} total face clusters by track in the DB")
-
-    await db.assign_face_clusters_by_track(
-        face_clusters
+    logging.info(
+        f"Assigning {len(face_clusters)} total face clusters by track in the DB"
     )
+
+    await db.assign_face_clusters_by_track(face_clusters)
 
     for cluster_id in range(-1, max(labels) + 1):
         if cluster_id != -1:
@@ -174,13 +184,14 @@ async def main() -> None:
     i = -1
     # Draw representative faces for each cluster
     for cluster_face in clustered_faces:
-
         i += 1
 
         if i % FACE_SAMPLE_RATE != 0:
             continue
 
-        logging.info(f"Sampling face {i} out of {len(clustered_faces)} for cluster average")
+        logging.info(
+            f"Sampling face {i} out of {len(clustered_faces)} for cluster average"
+        )
 
         # try:
         #     cluster_face = rep_pf_df.iloc[i]

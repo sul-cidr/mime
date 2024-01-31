@@ -10,15 +10,89 @@ import numpy as np
 
 # This reduces the 45 PHALP coords to 26, just by merging pairs that are very
 # close together (e.g., left elbow front and left elbow back)
-phalp_to_reduced = [[0, 15, 16, 17, 18, 38, 43], [1, 37, 40], [2, 33], [3, 32], [4, 31], [5, 34], [6, 35], [7, 36], [8, 39], [9], [10, 26], [11, 24], [12], [13, 29], [14, 21], [19, 20], [21], [22, 23], [25], [27], [28], [30], [36], [41], [42], [44]]
+phalp_to_reduced = [
+    [0, 15, 16, 17, 18, 38, 43],
+    [1, 37, 40],
+    [2, 33],
+    [3, 32],
+    [4, 31],
+    [5, 34],
+    [6, 35],
+    [7, 36],
+    [8, 39],
+    [9],
+    [10, 26],
+    [11, 24],
+    [12],
+    [13, 29],
+    [14, 21],
+    [19, 20],
+    [21],
+    [22, 23],
+    [25],
+    [27],
+    [28],
+    [30],
+    [36],
+    [41],
+    [42],
+    [44],
+]
 
-phalp_to_coco_17 = [[0], [16], [15], [18], [17], [5, 34], [2, 33], [6, 35], [3, 32], [7, 36], [4, 31], [28], [27], [13, 29], [10, 26], [14, 30], [11, 25]]
+phalp_to_coco_17 = [
+    [0],
+    [16],
+    [15],
+    [18],
+    [17],
+    [5, 34],
+    [2, 33],
+    [6, 35],
+    [3, 32],
+    [7, 36],
+    [4, 31],
+    [28],
+    [27],
+    [13, 29],
+    [10, 26],
+    [14, 30],
+    [11, 25],
+]
 
-phalp_to_coco_13 = [[0], [5, 34], [2, 33], [6, 35], [3, 32], [7, 36], [4, 31], [28], [27], [13, 29], [10, 26], [14, 30], [11, 25]]
+phalp_to_coco_13 = [
+    [0],
+    [5, 34],
+    [2, 33],
+    [6, 35],
+    [3, 32],
+    [7, 36],
+    [4, 31],
+    [28],
+    [27],
+    [13, 29],
+    [10, 26],
+    [14, 30],
+    [11, 25],
+]
 
-openpifpaf_to_coco_13 = [[0], [5], [6], [7], [8], [9], [10], [11], [12], [13], [14], [15], [16]]
+openpifpaf_to_coco_13 = [
+    [0],
+    [5],
+    [6],
+    [7],
+    [8],
+    [9],
+    [10],
+    [11],
+    [12],
+    [13],
+    [14],
+    [15],
+    [16],
+]
 
-CONF_THRESH_4DH = .85 # This is .8 in the PHALP software
+CONF_THRESH_4DH = 0.85  # This is .8 in the PHALP software
+
 
 def merge_coords(all_coords, guide_to_merge, has_confidence=False):
     new_coords = []
@@ -28,7 +102,7 @@ def merge_coords(all_coords, guide_to_merge, has_confidence=False):
         conf = 1.0
         if has_confidence:
             conf = sum([all_coords[i][2] for i in to_merge]) / len(to_merge)
-        new_coords.append([x_avg, y_avg, conf]) 
+        new_coords.append([x_avg, y_avg, conf])
 
     return np.array(new_coords)
 
@@ -81,9 +155,10 @@ async def load_openpifpaf_predictions(
             continue
 
         for pose_id, pose in enumerate(frame["predictions"]):
-
             joints = np.array(pose["keypoints"])
-            coco13_joints = merge_coords(joints, openpifpaf_to_coco_13, has_confidence=True).flatten()
+            coco13_joints = merge_coords(
+                joints, openpifpaf_to_coco_13, has_confidence=True
+            ).flatten()
 
             poses.append(
                 {
@@ -113,9 +188,7 @@ async def load_openpifpaf_predictions(
     logging.info(f"Loaded {len(poses)} predictions!")
 
 
-async def load_4dh_predictions(
-    self, video_id: UUID, pkl_path: Path, clear=True
-) -> None:
+async def load_4dh_predictions(self, video_id: UUID, pkl_path: Path, clear=True) -> None:
     frames = {}
 
     if clear:
@@ -130,7 +203,6 @@ async def load_4dh_predictions(
 
     poses = []
     for _, frame in frames.items():
-
         if not len(frame["2d_joints"]):
             continue
 
@@ -145,7 +217,9 @@ async def load_4dh_predictions(
             if tracked_id in frame["tid"]:
                 pose_idx = frame["tid"].index(tracked_id)
             else:
-                logging.info(f"Frame {frame['time']+1}: couldn't find tracked ID {tracked_id} in list of full IDs {frame['tid']}")
+                logging.info(
+                    f"Frame {frame['time']+1}: couldn't find tracked ID {tracked_id} in list of full IDs {frame['tid']}"
+                )
                 continue
 
             if frame["conf"][pose_idx] < CONF_THRESH_4DH:
@@ -157,13 +231,17 @@ async def load_4dh_predictions(
             joints_2d = copy.deepcopy(pose)
             joints_2d = joints_2d.reshape(-1, 2)
             joints_2d *= img_size
-            joints_2d[:,1] -= (max(img_width, img_height) - min(img_width, img_height)) / 2
+            joints_2d[:, 1] -= (
+                max(img_width, img_height) - min(img_width, img_height)
+            ) / 2
 
             coco17_joints = merge_coords(joints_2d, phalp_to_coco_17).flatten()
 
             coco13_joints = merge_coords(joints_2d, phalp_to_coco_13).flatten()
 
-            all_phalp_keypoints = np.array([[coord[0], coord[1], 1.0] for coord in joints_2d]).flatten()
+            all_phalp_keypoints = np.array(
+                [[coord[0], coord[1], 1.0] for coord in joints_2d]
+            ).flatten()
 
             poses.append(
                 {
@@ -354,7 +432,9 @@ async def assign_poem_embeddings(self, poem_data, reindex=True) -> None:
         )
 
         if reindex:
-            logging.info("Creating approximate index for cosine distance of viewpoint-invariant pose embeddings...")
+            logging.info(
+                "Creating approximate index for cosine distance of viewpoint-invariant pose embeddings..."
+            )
             await conn.execute(
                 """
                 CREATE INDEX ON pose
@@ -382,7 +462,7 @@ async def assign_frame_interest(self, frame_interest) -> None:
         )
 
         return
-    
+
 
 async def assign_face_clusters(self, video_id, cluster_id, faces_data) -> None:
     async with self._pool.acquire() as conn:
@@ -454,14 +534,16 @@ async def annotate_pose(
     video_id: UUID | None,
     annotation_func: Callable,
     reindex=True,
-    pose_tbl = "pose",
+    pose_tbl="pose",
 ) -> None:
     async with self._pool.acquire() as conn:
         await conn.execute(
             f"ALTER TABLE {pose_tbl} ADD COLUMN IF NOT EXISTS {column} {col_type};"
         )
 
-        poses = await conn.fetch(f"SELECT * FROM {pose_tbl} WHERE video_id = $1;", video_id)
+        poses = await conn.fetch(
+            f"SELECT * FROM {pose_tbl} WHERE video_id = $1;", video_id
+        )
         async with conn.transaction():
             for i, pose in enumerate(poses):
                 if i % (len(poses) // 10) == 0:
