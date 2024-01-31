@@ -82,7 +82,7 @@ async def get_frame(video_id: UUID, frame: int, request: Request):
     )
 
 
-@mime_api.get("/frame/{video_id}/{frame}/{xywh}/")
+@mime_api.get("/frame/excerpt/{video_id}/{frame}/{xywh}/")
 async def get_frame_region(video_id: UUID, frame: int, xywh: str, request: Request):
     img = await get_frame_image(video_id, frame, request)
     x, y, w, h = [round(float(elt)) for elt in xywh.split(",")]
@@ -126,10 +126,31 @@ async def get_pose_cluster_image(video_name: str, cluster_id: int, request: Requ
     )
 
 
-@mime_api.get("/frame_track_pose/{video_id}/{frame}/{track_id}")
-async def pose(video_id: UUID, frame: int, track_id: int, request: Request):
+@mime_api.get("/face_cluster_image/{video_name}/{cluster_id}/")
+async def get_face_cluster_image(video_name: str, cluster_id: int, request: Request):
+    image_path = f"/app/face_cluster_images/{video_name}/{cluster_id}.png"
+    img = iio.imread(image_path)
+    return Response(
+        content=iio.imwrite("<bytes>", img, extension=".png"),
+        media_type="image/png",
+    )
+
+
+@mime_api.get("/frame_track_pose/{video_id}/{frameno}/{track_id}")
+async def pose(video_id: UUID, frameno: int, track_id: int, request: Request):
     pose_data = await request.app.state.db.get_pose_by_frame_and_track(
-        video_id, frame, track_id
+        video_id, frameno, track_id
+    )
+    return Response(
+        content=json.dumps(pose_data, cls=MimeJSONEncoder),
+        media_type="application/json",
+    )
+
+
+@mime_api.get("/frame_track_face/{video_id}/{frameno}/{track_id}")
+async def face(video_id: UUID, frameno: int, track_id: int, request: Request):
+    pose_data = await request.app.state.db.get_face_by_frame_and_track(
+        video_id, frameno, track_id
     )
     return Response(
         content=json.dumps(pose_data, cls=MimeJSONEncoder),
@@ -208,8 +229,30 @@ async def faces_by_frame(video_id: UUID, frame: int, request: Request):
 async def get_nearest_poses(
     metric: str, video_id: UUID, frame: int, pose_idx: int, request: Request
 ):
+    embedding = "norm"
+    if metric == "poem_embedding":
+        metric = "cosine"
+        embedding = "poem_embedding"
     frame_data = await request.app.state.db.get_nearest_poses(
-        video_id, frame, pose_idx, metric
+        video_id, frame, pose_idx, metric, embedding
+    )
+    return Response(
+        content=json.dumps(frame_data, cls=MimeJSONEncoder),
+        media_type="application/json",
+    )
+
+
+@mime_api.get("/poses/similar/{metric}/{video_id}/{frame}/{pose_idx}/{shot}/")
+async def get_nearest_poses_othershot(
+    metric: str, video_id: UUID, frame: int, pose_idx: int, shot: int, request: Request
+):
+    embedding = "norm"
+    if metric == "poem_embedding":
+        metric = "cosine"
+        embedding = "poem_embedding"
+
+    frame_data = await request.app.state.db.get_nearest_poses(
+        video_id, frame, pose_idx, metric, embedding, avoid_shot=shot
     )
     return Response(
         content=json.dumps(frame_data, cls=MimeJSONEncoder),

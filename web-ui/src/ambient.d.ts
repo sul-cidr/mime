@@ -29,7 +29,7 @@ type PoseRecord = {
   video_id: number;
   frame: number;
   pose_idx: number;
-  keypoints: CocoSkeletonWithConfidence;
+  keypointsopp: CocoSkeletonWithConfidence;
   bbox: FixedLengthArray<number, 4>; // bbox format for PifPaf is x0, y0, width, height
   score: number;
   track_id: number | null;
@@ -40,6 +40,9 @@ type PoseRecord = {
   norm4dh: SmplSkeletonNoConfidence;
   hidden: boolean | undefined;
   distance?: number;
+  shot: number | 0;
+  face_cluster_id: number | null;
+  pose_interest: number | 0; // this is actually the avg for all poses in the frame :-/
 };
 
 interface MoveletPoseRecord extends PoseRecord {
@@ -66,14 +69,17 @@ type FrameRecord = {
   trackCt: number;
   isShot: number | undefined;
   movement: number | undefined;
+  interest: number | undefined;
   sim_pose: number | undefined;
   sim_move: number | undefined;
   time: string | undefined;
+  shot: number | 0;
 };
 
 type ShotRecord = {
   frame: number;
   isShot: number | undefined;
+  shot: number | 0;
 };
 
 type MoveletRecord = {

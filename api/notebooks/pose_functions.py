@@ -92,8 +92,8 @@ def unflatten_pose_data(prediction):
     Convert an Open PifPaf pose prediction (a 1D 51-element list) into a 17-element
     list (not a NumPy array) of [x_coord, y_coord, confidence] triples.
     OR, if the input has already been flattened and normalized, in which case it's
-    a 1D 34-element list in which the confidence values have been removed and NaNs
-    have been provided as x,y pairs for low- or no-confidence coordinates,
+    a 1D 34-element or 26-element list in which the confidence values have been removed
+    and NaNs have been provided as x,y pairs for low- or no-confidence coordinates,
     fill in the confidence values with 0 if x or y is NaN and 1 otherwise.
     """
     if len(prediction["keypoints"]) == COORDS_PER_POSE * 3:

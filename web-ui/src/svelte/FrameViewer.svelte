@@ -13,6 +13,8 @@
   let showFrame: boolean = true;
   let playInterval: number | undefined;
   let hoveredPoseIdx: number | undefined;
+  let shot: number | 0;
+  let interest: number | 0;
 
   const updatePoseData = (data: Array<PoseRecord>) => {
     if (data) {
@@ -21,6 +23,8 @@
       if (data.length) {
         data.forEach((pr: PoseRecord) => {
           if (pr.track_id !== null) trackCount += 1;
+          shot = pr.shot;
+          interest = pr.pose_interest;
         });
       }
       trackCt = trackCount;
@@ -40,6 +44,7 @@
               faceCt += 1;
               poseData[pi]!.face_bbox = fr.bbox;
               poseData[pi]!.face_landmarks = fr.landmarks;
+              poseData[pi]!.face_cluster_id = fr.cluster_id;
             }
           });
         });
@@ -79,13 +84,14 @@
       <button
         type="button"
         class="btn btn-sm variant-filled"
-        on:click={() => ($currentFrame = ($currentFrame || 0) - 1)}
+        on:click={() => ($currentFrame = (Number($currentFrame) || 0) - 1)}
         >previous</button
       >
       <button
         type="button"
         class="btn btn-sm variant-filled"
-        on:click={() => ($currentFrame = ($currentFrame || 0) + 1)}>next</button
+        on:click={() => ($currentFrame = (Number($currentFrame) || 0) + 1)}
+        >next</button
       >
       <button
         type="button"
@@ -98,7 +104,7 @@
             playInterval = undefined;
           } else {
             playInterval = setInterval(() => {
-              $currentFrame = ($currentFrame || 0) + 5;
+              $currentFrame = (Number($currentFrame) || 0) + 5;
             }, 400);
           }
         }}>{playInterval ? "stop" : "play"}</button
@@ -122,7 +128,7 @@
       <button
         type="button"
         class="btn btn-sm variant-filled"
-        on:click={() => ($currentFrame = null)}>X</button
+        on:click={() => ($currentFrame = 0)}>X</button
       >
     </div>
   </header>
@@ -135,6 +141,8 @@
         {trackCt}
         {faceCt}
         bind:hoveredPoseIdx
+        {shot}
+        {interest}
       />
     {:else}
       Loading pose data... <ProgressBar />

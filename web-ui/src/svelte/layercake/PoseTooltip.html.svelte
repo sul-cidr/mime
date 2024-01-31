@@ -43,6 +43,7 @@
   export let hiddenKeys = [];
 
   const w = 300;
+  const h = 180;
   const w2 = w / 2;
 
   let showFrame = true;
@@ -111,6 +112,7 @@
       class="svelte-tooltip"
       style="
         width:{w}px;
+        height:{h}px;
         display: {visible ? 'flex' : 'none'};
         top:{$yScale(
         highlightKeyValue === null ? foundArray[0].value : highlightKeyValue,

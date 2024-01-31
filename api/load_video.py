@@ -86,7 +86,7 @@ async def main() -> None:
     logging.info("Normalizing pose data, and annotating db records...")
     await db.annotate_pose(
         "norm",
-        "vector(34)",
+        "vector(26)",
         video_id,
         lambda pose: tuple(np.nan_to_num(normalize_pose_data(pose), nan=-1).tolist()),
     )

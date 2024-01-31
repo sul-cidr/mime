@@ -44,6 +44,25 @@ default:
 @add-video-4dh path: && refresh-db-views
   docker compose exec api sh -c "LOG_LEVEL=$LOG_LEVEL /app/load_video_4dh.py --video-path \"\$VIDEO_SRC_FOLDER/$1\""
 
+# Export a video's pose data into a CSV to serve as input to a Pr-VIPE (POEM) viewpoint-invariant embedding
+@make-poem-input path:
+  docker compose exec api sh -c "LOG_LEVEL=$LOG_LEVEL /app/make_poem_input.py --video-path \"\$VIDEO_SRC_FOLDER/$1\""
+
+# Run the POEM embeddings generator on an existing CSV file, producing an output CSV file
+@compute-poem-embeddings path:
+  docker compose exec api sh -c "LOG_LEVEL=$LOG_LEVEL cd /app/lib && python3 -m poem.pr_vipe.infer --input_csv=/app/poem_files/$1/$1.csv --output_dir=/app/poem_files/$1/ --checkpoint_path=/app/lib/poem/checkpoints/checkpoint_Pr-VIPE_2M/model.ckpt-02013963"
+  docker compose exec api sh -c "LOG_LEVEL=$LOG_LEVEL rm /app/poem_files/$1/unnormalized_embedding_samples.csv && rm /app/poem_files/$1/embedding_stddevs.csv"
+
+# Import Pr-VIPE viewpoint-invariant embeddings for a video's poses from a CSV file (already generated)
+@import-poem-embeddings path:
+  docker compose exec api sh -c "LOG_LEVEL=$LOG_LEVEL /app/apply_poem_output.py --video-name \"$1\""
+
+# Prepare input for Pr-VIPE viewpoint-invariant pose embeddings; generate and load output into DB for a video
+@do-poem-embeddings path:
+  just make-poem-input $1
+  just compute-poem-embeddings $1
+  just import-poem-embeddings $1
+
 # Video file is in $VIDEO_SRC_FOLDER; detected shots file will be [VIDEO_FILE_NAME].shots.TransNetV2.pkl
 @detect-shots path:
   docker compose exec api sh -c "LOG_LEVEL=$LOG_LEVEL /app/detect_shots_offline.py --video-path \"\$VIDEO_SRC_FOLDER/$1\""
@@ -51,6 +70,10 @@ default:
 # Load detected shot boundary data; input file is in $VIDEO_SRC_FOLDER with extension .shots.TransNetV2.pkl
 @add-shots path: && refresh-db-views
   docker compose exec api sh -c "LOG_LEVEL=$LOG_LEVEL /app/load_shot_boundaries.py --video-path \"\$VIDEO_SRC_FOLDER/$1\""
+
+# Calculate pose distances from the global mean for a video already in the DB
+@calculate-pose-interest path: && refresh-db-views
+  docker compose exec api sh -c "LOG_LEVEL=$LOG_LEVEL /app/calculate_pose_interest.py --video-name \"$1\""
 
 # Video file is in $VIDEO_SRC_FOLDER; detected faces file will be [VIDEO_FILE_NAME].faces.ArcFace.jsonl
 @detect-faces path:

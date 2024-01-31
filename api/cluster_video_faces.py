@@ -5,23 +5,27 @@
 import argparse
 import asyncio
 import logging
+import os
 from pathlib import Path
 
-# import imageio.v3 as iio
+import cv2
+import imageio.v3 as iio
 import numpy as np
 import pacmap
 import pandas as pd
-from mime_db import MimeDb
+from PIL import Image
 from rich.logging import RichHandler
 from sklearn.cluster import KMeans
 
-# from PIL import Image
+from mime_db import MimeDb
 
 # DeepFace and ArcFace resize/crop face images to 152x152 and 112x112 pixels,
 # respectively, so an image upsized from smaller than 100xH px is not useful.
-WIDTH_THRESHOLD = 100  # pixels of width
+WIDTH_THRESHOLD = 100  # Desired face image width in pixels
 DEFAULT_CLUSTERS = 15  # Expected number of face clusters
-FACE_FEATURES = 512  # 4096 for DeepFace, 512 for ArcFace
+FACE_FEATURES = 512  # Previously used DeepFace, which has 4096
+UPSCALE = 5
+FACE_SAMPLE_RATE = 2000  # Faces to skip when creating averages
 
 
 # This averages the feature vectors of every frame of a given face/track.
@@ -94,42 +98,40 @@ async def main() -> None:
 
     pf_df = all_pf_df.copy()
 
-    pf_df["face_width"] = pf_df.apply(
-        lambda p: 0 if p["face_bbox"] is None else p["face_bbox"][2], axis=1
-    )
-
     logging.info(f"Total poses with faces: {len(pf_df)}")
 
     pf_df = pf_df[
-        (
-            (~np.isnan(pf_df["face_confidence"]))
-            & (pf_df["face_confidence"] > 0)
-            # & (pf_df["face_width"] > WIDTH_THRESHOLD)
-        )
+        ((~np.isnan(pf_df["face_confidence"])) & (pf_df["face_confidence"] > 0))
     ].reset_index()
 
     logging.info(f"Poses with usable faces: {len(pf_df)}")
 
-    # We can use the largest face image as a thumbnail/rep (if desired)
-    pf_df["face_area"] = pf_df.apply(
-        lambda p: 0
-        if p["face_bbox"] is None
-        else p["face_bbox"][2] * p["face_bbox"][3],
-        axis=1,
+    logging.info("Looking for faces that are square to the camera")
+    pf_df["face_landmarks_array"] = pf_df["face_landmarks"].apply(
+        lambda f: np.array_split(np.array(f), len(f) / 2)
+    )
+    pf_df["face_landmarks_aspect_ratio"] = pf_df["face_landmarks_array"].apply(
+        lambda f: 0
+        if (np.max(np.array(f)[:, 1]) - np.min(np.array(f)[:, 1])) == 0
+        else (np.max(np.array(f)[:, 0]) - np.min(np.array(f)[:, 0]))
+        / (np.max(np.array(f)[:, 1] - np.min(np.array(f)[:, 1])))
     )
 
-    pf_df["face_avg"] = pf_df.groupby(["track_id"])["face_embedding"].transform(
-        average_face_embeddings
+    face_aspect_ratio_mean = pf_df["face_landmarks_aspect_ratio"].mean()
+    # face_aspect_ratio_std = pf_df["face_landmarks_aspect_ratio"].std()
+
+    pf_df["aspect_ratio_dev"] = pf_df["face_landmarks_aspect_ratio"].apply(
+        lambda f: abs(f - face_aspect_ratio_mean)
     )
 
-    pf_df["face_embedding"] = pf_df["face_embedding"].apply(lambda p: p[:FACE_FEATURES])
+    # pf_df["face_embedding"] = pf_df["face_embedding"].apply(lambda p: p[:FACE_FEATURES])
 
     # This selects a single face to represent each track and uses it for clustering
     rep_pf_df = pf_df.iloc[
         (
-            # poses_df.groupby(["track_id"])["face_area"].idxmax()
             # This is always pretty close to 1...
-            pf_df.groupby(["track_id"])["face_confidence"].idxmax()
+            # pf_df.groupby(["track_id"])["face_confidence"].idxmax()
+            pf_df.groupby(["track_id"])["aspect_ratio_dev"].idxmin()
         )
     ]
 
@@ -137,30 +139,15 @@ async def main() -> None:
 
     X = rep_pf_df["face_embedding"].to_list()
 
-    # im_labels = (
-    #     rep_pf_df[["track_id", "frame"]].map(str).agg("_".join, axis=1).to_list()
-    # )
-    # standard_embedding = umap.UMAP(
-    #     random_state=42,
-    # ).fit_transform(X)
-
-    # clusterable_embedding = umap.UMAP(
-    #     n_neighbors=10,
-    #     min_dist=0.0,
-    #     n_components=2,
-    #     random_state=42,
-    # ).fit_transform(X)
-
-    clusterable_embedding = pacmap.PaCMAP(n_components=2, n_neighbors=None, MN_ratio=0.5, FP_ratio=2.0).fit_transform(X, init="pca")
+    clusterable_embedding = pacmap.PaCMAP(
+        n_components=2, n_neighbors=None, MN_ratio=0.5, FP_ratio=2.0
+    ).fit_transform(X, init="pca")
 
     logging.info("fitting clustered model")
 
     # clst = HDBSCAN(min_cluster_size=3, min_samples=4)  # , max_cluster_size=15
     clst = KMeans(int(args.n_clusters))
-    # embedding = standard_embedding
-    embedding = clusterable_embedding
-    clst.fit(embedding)
-    # clst.fit(X) # Won't be plottable
+    clst.fit(clusterable_embedding)
     labels = clst.labels_.tolist()
 
     assigned_faces = 0
@@ -172,17 +159,13 @@ async def main() -> None:
         if cluster_id == -1:
             continue
 
-        # logging.info(
-        #     f"assigning cluster {cluster_id} to track {int(rep_pf_df.iloc[i]['track_id'])}"
-        # )
-
         face_clusters.append([video_id, cluster_id, int(rep_pf_df.iloc[i]["track_id"])])
 
-    logging.info(f"Assigning {len(face_clusters)} total face clusters by track in the DB")
-
-    await db.assign_face_clusters_by_track(
-        face_clusters
+    logging.info(
+        f"Assigning {len(face_clusters)} total face clusters by track in the DB"
     )
+
+    await db.assign_face_clusters_by_track(face_clusters)
 
     for cluster_id in range(-1, max(labels) + 1):
         if cluster_id != -1:
@@ -192,20 +175,60 @@ async def main() -> None:
         f"assigned {assigned_faces} track faces out of {len(labels)}, {round(assigned_faces/len(labels),4)}"
     )
 
+    logging.info("Generating representative face averages for timeline")
+
+    clustered_faces = await db.get_clustered_face_data_from_video(video_id)
+
+    cluster_images = {}
+
+    i = -1
     # Draw representative faces for each cluster
-    # Commented out here for now, but may be useful in the future
-    # for i, cluster_id in enumerate(labels):
-    #     try:
-    #         cluster_pose = rep_pf_df.iloc[i]
-    #     except Exception as e:
-    #         print("Error referencing face", i)
-    #         print(e)
-    #         continue
-    #     x, y, w, h = [round(coord) for coord in cluster_pose["face_bbox"]]
-    #     video_handle = f"/videos/{video_name}"
-    #     img = iio.imread(video_handle, index=cluster_pose["frame"] - 1, plugin="pyav")
-    #     img_region = img[y : y + h, x : x + w]
-    #     iio.imwrite(f"{cluster_id}/{i}.jpg", img_region, extension=".jpeg")
+    for cluster_face in clustered_faces:
+        i += 1
+
+        if i % FACE_SAMPLE_RATE != 0:
+            continue
+
+        logging.info(
+            f"Sampling face {i} out of {len(clustered_faces)} for cluster average"
+        )
+
+        # try:
+        #     cluster_face = rep_pf_df.iloc[i]
+        # except Exception as e:
+        #     logging.error(f"Error referencing face {i}")
+        #     continue
+
+        cluster_id = cluster_face["cluster_id"]
+
+        if cluster_id not in cluster_images:
+            cluster_images[cluster_id] = []
+
+        x, y, w, h = [round(coord) for coord in cluster_face["bbox"]]
+        video_handle = f"/videos/{video_name}"
+        img = iio.imread(video_handle, index=cluster_face["frame"] - 1, plugin="pyav")
+        img_region = img[y : y + h, x : x + w]
+
+        # Resize/normalize the cutout background dimensions, just as is done
+        # for the pose itself
+        resized_image = cv2.resize(
+            img_region,
+            dsize=(WIDTH_THRESHOLD * UPSCALE, WIDTH_THRESHOLD * UPSCALE),
+            interpolation=cv2.INTER_LANCZOS4,
+        )
+        cluster_images[cluster_id].append(resized_image)
+
+    for cluster_id in cluster_images:
+        images_array = np.array(cluster_images[cluster_id], dtype=float)
+
+        # Average the RGB values of all of the face excerpts
+        avg_background_img = np.mean(images_array, axis=0).astype(np.uint8)
+        avg_pil_img = Image.fromarray(avg_background_img)
+
+        if not os.path.isdir(f"face_cluster_images/{video_name}"):
+            os.makedirs(f"face_cluster_images/{video_name}")
+
+        avg_pil_img.save(f"face_cluster_images/{video_name}/{cluster_id}.png")
 
 
 if __name__ == "__main__":

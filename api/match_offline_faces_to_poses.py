@@ -14,6 +14,7 @@ from rich.logging import RichHandler
 from mime_db import MimeDb
 
 BATCH_SIZE = 1000
+FACE_FEATURES = 512  # Previously used DeepFace, which has 4096
 
 
 def unflatten_pose_data(keypoints):
@@ -98,10 +99,14 @@ async def match_faces_in_frames(video_id, faces_to_match, min_frameno, max_frame
                 ]
 
                 embedding = frame_faces[best_match]["embedding"]
-                if len(frame_faces[best_match]["embedding"]) < 4096:
-                    embedding.extend(
-                        [0] * (4096 - len(frame_faces[best_match]["embedding"]))
+                # Previously, we padded all embeddings to 4096 elements because we
+                # might use DeepFace, which produces that many. But the 512
+                # elements (from ArcFace) are sufficient and use less storage.
+                if len(embedding) != FACE_FEATURES:
+                    logging.error(
+                        f"Only face embeddings with {FACE_FEATURES} dimensions are supported."
                     )
+                    return
 
                 matches_to_assign.append(
                     [

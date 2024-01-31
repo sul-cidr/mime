@@ -24,7 +24,11 @@
     amounts: [simStep],
   };
 
-  const resetMovelets = () => ($similarMoveletFrames = {});
+  const resetMovelets = () => {
+    $currentMovelet = null;
+    $currentMoveletPose = null;
+    $similarMoveletFrames = {};
+  };
 
   const updateMoveletData = (data: MoveletRecord[]) => {
     movelets = data;
@@ -44,40 +48,31 @@
   const goToFrame = (e: any) => ($currentFrame = e.originalTarget.value);
 
   async function getMoveletData(
-    videoId: number,
-    frame: number,
-    trackIdx: number,
+    thisMoveletPose: MoveletPoseRecord,
     similarityMetric: string,
   ) {
+    if (thisMoveletPose === null) return [];
     const response = await fetch(
-      `${API_BASE}/movelets/similar/${similarityMetric}/${videoId}/${frame}/${trackIdx}/`,
+      `${API_BASE}/movelets/similar/${similarityMetric}/${thisMoveletPose.video_id}/${thisMoveletPose.frame}/${thisMoveletPose.track_id}/`,
     );
     return await response.json();
   }
 
-  async function getMoveletFromPose(
-    videoId: number,
-    frame: number,
-    trackIdx: number,
-  ) {
+  async function getMoveletFromPose(thisMoveletPose: MoveletPoseRecord) {
+    if (thisMoveletPose === null) return null;
     const response = await fetch(
-      `${API_BASE}/movelets/pose/${videoId}/${frame}/${trackIdx}/`,
+      `${API_BASE}/movelets/pose/${thisMoveletPose.video_id}/${thisMoveletPose.frame}/${thisMoveletPose.track_id}/`,
     );
     return await response.json();
   }
 
-  $: getMoveletData(
-    $currentMoveletPose.video_id,
-    $currentMoveletPose.frame,
-    $currentMoveletPose.track_id,
-    similarityMetric,
-  ).then((data) => updateMoveletData(data));
+  $: getMoveletData($currentMoveletPose, similarityMetric).then((data) =>
+    updateMoveletData(data),
+  );
 
-  $: getMoveletFromPose(
-    $currentMoveletPose.video_id,
-    $currentMoveletPose.frame,
-    $currentMoveletPose.track_id,
-  ).then((data) => updateCurrentMovelet(data));
+  $: getMoveletFromPose($currentMoveletPose).then((data) =>
+    updateCurrentMovelet(data),
+  );
 </script>
 
 {#if Object.keys($similarMoveletFrames).length}
@@ -162,14 +157,16 @@
                   <li>Distance: {movelet.distance?.toFixed(4)}</li>
                 </ul>
                 <span
-                ><strong
-                  ><button
-                    class="btn-sm variant-filled"
-                    type="button"
-                    value={movelet.start_frame}
-                    on:click={goToFrame}>Go to frame {movelet.start_frame}</button
-                  ></strong
-                ></span>
+                  ><strong
+                    ><button
+                      class="btn-sm variant-filled"
+                      type="button"
+                      value={movelet.start_frame}
+                      on:click={goToFrame}
+                      >Go to frame {movelet.start_frame}</button
+                    ></strong
+                  ></span
+                >
               </footer>
             </div>
           {/if}

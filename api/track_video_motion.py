@@ -30,13 +30,6 @@ async def main() -> None:
     )
 
     parser.add_argument(
-        "--phalp",
-        action="store_true",
-        default=False,
-        help="Use 4D-Humans pose coordinates, if available",
-    )
-
-    parser.add_argument(
         "--drop",
         action="store_true",
         default=False,
@@ -93,14 +86,21 @@ async def main() -> None:
         return [data_mean] * len(norms)
 
     pose_data_field = "norm"
-    total_coords = 34
-    if args.phalp:
-        pose_data_field = "norm4dh"
-        total_coords = 90
+    total_coords = 26
+    # if args.phalp:
+    #     pose_data_field = "norm4dh"
+    #     total_coords = 90
 
-    tracks_df["tick_norm"] = tracks_df.groupby(["track_id", "tick"])[pose_data_field].transform(
-        avg_norm_data
-    )
+    tracks_df["tick_norm"] = tracks_df.groupby(["track_id", "tick"])[
+        pose_data_field
+    ].transform(avg_norm_data)
+
+    # The pose-invariant embedding is used subsequently in similarity
+    # comparisons of representative poses of movelet tracks (but it's not
+    # currently used for motion/gesture quantification).
+    tracks_df["tick_poem"] = tracks_df.groupby(["track_id", "tick"])[
+        "poem_embedding"
+    ].transform(avg_norm_data)
 
     # XXX It's important to know exactly when the track/motion begins, which
     # is why we take the minimum of the tick's timecodes, but this is a slight
@@ -191,6 +191,10 @@ async def main() -> None:
         lambda x: np.nan_to_num(x, nan=-1)
     )
 
+    tracks_tick_df["tick_poem"] = tracks_tick_df["tick_poem"].apply(
+        lambda x: np.nan_to_num(x, nan=-1)
+    )
+
     movelets = tracks_tick_df[
         [
             "video_id",
@@ -205,6 +209,7 @@ async def main() -> None:
             "tick_norm",
             "movelet_vector",
             "movement",
+            "tick_poem",
         ]
     ].values
 

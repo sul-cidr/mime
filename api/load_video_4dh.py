@@ -15,19 +15,6 @@ from rich.logging import RichHandler
 import lib.pose_normalization as pose_normalization
 from mime_db import MimeDb
 
-phalp_to_reduced = [[0, 15, 16, 17, 18, 38, 43], [1, 37, 40], [2, 33], [3, 32], [4, 31], [5, 34], [6, 35], [7, 36], [8, 39], [9], [10, 26], [11, 24], [12], [13, 29], [14, 21], [19, 20], [21], [22, 23], [25], [27], [28], [30], [36], [41], [42], [44]]
-
-phalp_to_coco = [[0], [16], [15], [18], [17], [5, 34], [2, 33], [6, 35], [3, 32], [7, 36], [4, 31], [28], [27], [13, 29], [10, 26], [14, 30], [11, 25]]
-
-def merge_phalp_coords(all_coords, phalp_to_merge):
-    new_coords = []
-    for to_merge in phalp_to_merge:
-        x_avg = sum([all_coords[i][0] for i in to_merge]) / len(to_merge)
-        y_avg = sum([all_coords[i][1] for i in to_merge]) / len(to_merge)
-        new_coords.append([x_avg, y_avg, 1.0]) # Add a bogus confidence value because the other code expects it
-
-    return np.array(new_coords)
-
 
 def get_video_metadata(video_file):
     # TODO: rewrite this without OpenCV?
@@ -42,7 +29,7 @@ def get_video_metadata(video_file):
     }
 
 
-def normalize_pose_data(pose, key='keypoints'):
+def normalize_pose_data(pose, key="keypoints"):
     normalized_coords = pose_normalization.extract_trustworthy_coords(
         pose_normalization.shift_normalize_rescale_pose_coords(pose, key)
     )
@@ -101,21 +88,15 @@ async def main() -> None:
     logging.info("Normalizing pose data, and annotating db records...")
     await db.annotate_pose(
         "norm",
-        "vector(34)",
+        "vector(26)",
         video_id,
-        lambda pose: tuple(np.nan_to_num(normalize_pose_data(pose, "keypoints"), nan=-1).tolist()),
+        lambda pose: tuple(
+            np.nan_to_num(normalize_pose_data(pose, "keypoints"), nan=-1).tolist()
+        ),
     )
-
-    await db.annotate_pose(
-        "norm4dh",
-        "vector(90)",
-        video_id,
-        lambda pose: tuple(np.nan_to_num(normalize_pose_data(pose, "keypoints4dh"), nan=-1).tolist()),
-    )
-
 
     # This is for when we want to merge the full 45-point PHALP set into a set of
-    # normalized COCO points
+    # normalized COCO points for pose similarity and clustering calculations
     # Normalize pose data and annotate database records
     # logging.info("Normalizing pose data, and annotating db records...")
     # await db.annotate_pose(
@@ -125,6 +106,15 @@ async def main() -> None:
     #     lambda pose: tuple(np.nan_to_num(normalize_pose_data({"keypoints": merge_phalp_coords(pose['keypoints'].reshape(-1, 2), phalp_to_coco).flatten()}), nan=-1).tolist()),
     #     pose_tbl="pose4dh"
     # )
+
+    # We're not using this at present, either
+    # await db.annotate_pose(
+    #     "norm4dh",
+    #     "vector(90)",
+    #     video_id,
+    #     lambda pose: tuple(np.nan_to_num(normalize_pose_data(pose, "keypoints4dh"), nan=-1).tolist()),
+    # )
+
 
 if __name__ == "__main__":
     asyncio.run(main())

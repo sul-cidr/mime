@@ -144,6 +144,7 @@
       </Html>
     </LayerCake>
   </div>
+  <h3>Pose cluster averages</h3>
   <div>
     <ul>
       {#each Array(maxCluster + 1) as _, index (index)}
@@ -151,7 +152,7 @@
           cluster {index}
           <img
             src={`${API_BASE}/pose_cluster_image/${videoName}/${index}/`}
-            class="ambassador-pose-image"
+            class="ambassador-image"
           />
         </li>
       {/each}
@@ -164,10 +165,11 @@
 <style>
   .chart-container {
     width: 100%;
-    height: 450px;
-    padding-top: 20px;
+    height: 500px;
+    padding-top: 10px;
     padding-left: 10px;
     padding-right: 10px;
+    margin-top: 50px;
   }
   .ambassador-box {
     display: inline-block;
@@ -176,7 +178,7 @@
     margin: 0.75em;
     padding: 5px;
   }
-  .ambassador-pose-image {
+  .ambassador-image {
     width: 100px;
   }
 </style>

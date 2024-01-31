@@ -4,9 +4,31 @@ from PIL import Image, ImageColor, ImageDraw
 # The body part numberings and armature connectors for the 17-keypoint COCO pose format
 # are defined in
 # https://github.com/openpifpaf/openpifpaf/blob/main/src/openpifpaf/plugins/coco/constants.py
+# But they're repeated here for easy reference.
+
+COCO_KEYPOINTS = [
+    "nose",  # 1
+    "left_eye",  # 2
+    "right_eye",  # 3
+    "left_ear",  # 4
+    "right_ear",  # 5
+    "left_shoulder",  # 6
+    "right_shoulder",  # 7
+    "left_elbow",  # 8
+    "right_elbow",  # 9
+    "left_wrist",  # 10
+    "right_wrist",  # 11
+    "left_hip",  # 12
+    "right_hip",  # 13
+    "left_knee",  # 14
+    "right_knee",  # 15
+    "left_ankle",  # 16
+    "right_ankle",  # 17
+]
+
 # Note that the body part numbers in the connector (skeleton) definitions begin with 1,
 # for some reason, not 0
-OPP_COCO_SKELETON = [
+COCO_17_SKELETON = [
     (16, 14),
     (14, 12),
     (17, 15),
@@ -27,7 +49,25 @@ OPP_COCO_SKELETON = [
     (4, 6),
     (5, 7),
 ]
-OPP_COCO_COLORS = [
+
+COCO_13_SKELETON = [
+    (12, 10),
+    (10, 8),
+    (13, 11),
+    (11, 9),
+    (8, 9),
+    (2, 8),
+    (3, 9),
+    (2, 3),
+    (2, 4),
+    (3, 5),
+    (4, 6),
+    (5, 7),
+    (1, 2),
+    (1, 3),
+]
+
+COCO_COLORS = [
     "orangered",
     "orange",
     "blue",
@@ -51,8 +91,6 @@ OPP_COCO_COLORS = [
 
 UPSCALE = 5  # See draw_frame()
 
-COORDS_PER_POSE = 17
-
 # Default dimension (length, width, maybe depth, eventually) of single pose viz
 POSE_MAX_DIM = 100
 
@@ -73,8 +111,8 @@ def draw_armatures(pose_coords, drawing, line_prevalences=None, x_shift=0, y_shi
     """
     if line_prevalences is None:
         line_prevalences = []
-    for i, seg in enumerate(OPP_COCO_SKELETON):
-        line_color = ImageColor.getrgb(OPP_COCO_COLORS[i])
+    for i, seg in enumerate(COCO_13_SKELETON):
+        line_color = ImageColor.getrgb(COCO_COLORS[i])
 
         # If line_prevalences are provided, we know the pose coords don't contain
         # confidence values, and instead the x and y values are NaN if the point
@@ -128,11 +166,11 @@ def get_armature_prevalences(cluster_poses):
     which then can be used to fade out the elements that are less well represented
     in the pose when computing an averaged representative pose from the cluster.
     """
-    armature_appearances = [0] * len(OPP_COCO_SKELETON)
+    armature_appearances = [0] * len(COCO_13_SKELETON)
     for pose_coords in cluster_poses:
         pose_coords = np.array_split(pose_coords, len(pose_coords) / 2)
 
-        for i, seg in enumerate(OPP_COCO_SKELETON):
+        for i, seg in enumerate(COCO_13_SKELETON):
             if not np.isnan(pose_coords[seg[0] - 1][0]) and not np.isnan(
                 pose_coords[seg[1] - 1][1]
             ):

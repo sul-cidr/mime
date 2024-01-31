@@ -12,6 +12,8 @@
   export let trackCt: number;
   export let faceCt: number;
   export let hoveredPoseIdx: number | undefined;
+  export let shot: number | 0;
+  export let interest: number | 0;
 </script>
 
 <div class="card variant-ghost-secondary p-4 w-full">
@@ -19,14 +21,16 @@
     <h3>Details for frame #{$currentFrame}</h3>
   </header>
   <dl class="grid grid-cols-2 gap-2 p-4 [&>dt]:font-bold">
-    <dt>#Poses:</dt>
-    <dd>{poses.length}</dd>
     <dt>#Tracked Poses:</dt>
     <dd>{trackCt}</dd>
     <dt>#Detected Faces:</dt>
     <dd>{faceCt}</dd>
     <dt>Time:</dt>
     <dd>{formatSeconds(($currentFrame || 0) / $currentVideo.fps)}</dd>
+    <dt>Shot:</dt>
+    <dd>{shot}</dd>
+    <dt>Interest:</dt>
+    <dd>{(interest * 100).toFixed(2)}%</dd>
   </dl>
 
   <ul>

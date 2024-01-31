@@ -33,7 +33,9 @@ async def initialize_db(conn, drop=False) -> None:
             local_shot_prob FLOAT NOT NULL,
             global_shot_prob FLOAT NOT NULL,
             is_shot_boundary BOOLEAN DEFAULT FALSE,
+            shot INTEGER DEFAULT 0,
             total_movement FLOAT DEFAULT 0.0,
+            pose_interest FLOAT DEFAULT 0.0,
             PRIMARY KEY(video_id, frame)
         )
         ;
@@ -46,18 +48,19 @@ async def initialize_db(conn, drop=False) -> None:
             video_id uuid NOT NULL REFERENCES video(id) ON DELETE CASCADE,
             frame INTEGER NOT NULL,
             pose_idx INTEGER NOT NULL,
-            keypoints vector(51) NOT NULL,
+            keypoints vector(39) NOT NULL,
+            keypointsopp vector(51) DEFAULT NULL,
             keypoints4dh vector(135) DEFAULT NULL,
             bbox FLOAT[4] NOT NULL,
             score FLOAT NOT NULL,
             category INTEGER,
             track_id INTEGER DEFAULT NULL,
+            poem_embedding vector(16) DEFAULT NULL,
             PRIMARY KEY(video_id, frame, pose_idx)
         )
         ;
         """
     )
-
 
     await conn.execute(
         """
@@ -68,7 +71,7 @@ async def initialize_db(conn, drop=False) -> None:
             bbox FLOAT[4] NOT NULL,
             confidence FLOAT NOT NULL,
             landmarks vector(10) NOT NULL,
-            embedding vector(4096) NOT NULL,
+            embedding vector(512) NOT NULL,
             track_id INTEGER DEFAULT NULL,
             cluster_id INTEGER DEFAULT NULL
         )
@@ -87,10 +90,11 @@ async def initialize_db(conn, drop=False) -> None:
             pose_idx INTEGER NOT NULL,
             start_timecode FLOAT NOT NULL,
             end_timecode FLOAT NOT NULL,
-            prev_norm vector(34) NOT NULL,
-            norm vector(34) NOT NULL,
-            motion vector(68) NOT NULL,
+            prev_norm vector(26) NOT NULL,
+            norm vector(26) NOT NULL,
+            motion vector(52) NOT NULL,
             movement FLOAT DEFAULT 0,
+            poem_embedding vector(16) DEFAULT NULL,
             cluster_id INTEGER DEFAULT NULL,
             PRIMARY KEY(video_id, track_id, tick)
         )
@@ -141,6 +145,7 @@ async def initialize_db(conn, drop=False) -> None:
                 pose_faces.face_ct,
                 pose_faces.avg_score,
                 CAST(frame.is_shot_boundary AS INT) AS is_shot,
+                frame.pose_interest,
                 CASE
                   WHEN frame.total_movement = 'NaN'
                   THEN 0.0

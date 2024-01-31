@@ -80,11 +80,9 @@ async def main() -> None:
     # poses_df = pd.DataFrame.from_records(video_poses, columns=video_poses[0].keys())
 
     logging.info("TOTAL MOVELETS: %d", len(movelets_df))
+    logging.info("NULL MOVELETS: %d", len(movelets_df[movelets_df["movement"].isna()]))
     logging.info(
-        "NULL MOTION MOVELETS: %d", len(movelets_df[movelets_df["movement"].isna()])
-    )
-    logging.info(
-        "MOVELETS WITH STILL MOTION: %d", len(movelets_df[movelets_df["movement"] == 0])
+        "MOVELETS WITH 0 MOVEMENT: %d", len(movelets_df[movelets_df["movement"] == 0])
     )
     logging.info(
         "MOVELETS WITH MOVEMENT < 10px/sec: %d",
@@ -103,7 +101,8 @@ async def main() -> None:
     )
 
     nonnull_movelets_df = movelets_df.copy()
-    nonnull_movelets_df["movement"].fillna(-1, inplace=True)
+    nonnull_movelets_df.fillna({"movement": -1}, inplace=True)
+    # nonnull_movelets_df["movement"].fillna(-1, inplace=True)
 
     n, bins, patches = plt.hist(
         nonnull_movelets_df[nonnull_movelets_df["movement"] <= 500]["movement"],
@@ -119,9 +118,15 @@ async def main() -> None:
     frozen_movelets = movelets_df[
         (movelets_df["movement"] >= 0) & (movelets_df["movement"] < movement_mode)
     ].reset_index()
-    frozen_poses = frozen_movelets["norm"].tolist()
+    # XXX Use POEM viewpoint-invariant embedding features instead
+    frozen_poses = frozen_movelets["poem_embedding"].tolist()
+    frozen_norms = frozen_movelets["norm"].tolist()
 
-    clusterable_embedding = pacmap.PaCMAP(n_components=2, n_neighbors=None, MN_ratio=0.5, FP_ratio=2.0).fit_transform(frozen_poses, init="pca")
+    logging.info(f"TOTAL LOW-MOTION POSES: {len(frozen_poses)}")
+
+    clusterable_embedding = pacmap.PaCMAP(
+        n_components=2, n_neighbors=None, MN_ratio=0.5, FP_ratio=2.0
+    ).fit_transform(frozen_poses, init="pca")
 
     # clusterable_embedding = umap.UMAP(
     #     n_neighbors=10,
@@ -232,7 +237,7 @@ async def main() -> None:
             f"CLUSTER: {cluster_id}, POSES: {len(cluster_to_poses[cluster_id])}"
         )
         for pose_index in cluster_to_poses[cluster_id]:
-            cl_pose = frozen_poses[pose_index]
+            cl_pose = frozen_norms[pose_index]
             cl_pose[cl_pose == -1] = np.nan
             cluster_poses.append(cl_pose)
         cluster_average = np.nanmean(np.array(cluster_poses), axis=0).tolist()

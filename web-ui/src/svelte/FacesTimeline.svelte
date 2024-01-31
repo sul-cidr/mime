@@ -8,10 +8,11 @@
   import AxisY from "@layercake/AxisY.svelte";
   import ProgressLine from "@layercake/ProgressLine.svelte";
   import ScatterSvg from "@layercake/ScatterSvg.svelte";
-  import SharedTooltip from "@layercake/SharedTooltip.html.svelte";
+  import FaceTooltip from "@layercake/FaceTooltip.html.svelte";
   import { currentFrame, currentVideo } from "@svelte/stores";
 
   export let videoId: string;
+  export let videoName: string;
 
   let facesData: Array<FaceRecord> | undefined;
   let shotsData: Array<ShotRecord> | undefined;
@@ -121,14 +122,29 @@
         />
       </Svg>
       <Html>
-        <SharedTooltip
+        <FaceTooltip
           {formatTitle}
           dataset={facesData}
           searchRadius={"10"}
           highlightKey={"cluster_id"}
+          hiddenKeys={["bbox"]}
         />
       </Html>
     </LayerCake>
+  </div>
+  <h3>Face cluster averages</h3>
+  <div>
+    <ul>
+      {#each Array(maxCluster + 1) as _, index (index)}
+        <li class="ambassador-box">
+          cluster {index}
+          <img
+            src={`${API_BASE}/face_cluster_image/${videoName}/${index}/`}
+            class="ambassador-image"
+          />
+        </li>
+      {/each}
+    </ul>
   </div>
 {:else}
   Loading faces data... <ProgressBar />
@@ -138,8 +154,19 @@
   .chart-container {
     width: 100%;
     height: 450px;
-    padding-top: 20px;
+    margin-top: 50px;
+    padding-top: 10px;
     padding-left: 10px;
     padding-right: 10px;
+  }
+  .ambassador-box {
+    display: inline-block;
+    list-style-position: inside;
+    border: 1px solid black;
+    margin: 0.75em;
+    padding: 5px;
+  }
+  .ambassador-image {
+    width: 100px;
   }
 </style>
