@@ -14,6 +14,7 @@
   let playInterval: number | undefined;
   let hoveredPoseIdx: number | undefined;
   let shot: number | 0;
+  let interest: number | 0;
 
   const updatePoseData = (data: Array<PoseRecord>) => {
     if (data) {
@@ -23,6 +24,7 @@
         data.forEach((pr: PoseRecord) => {
           if (pr.track_id !== null) trackCount += 1;
           shot = pr.shot;
+          interest = pr.pose_interest;
         });
       }
       trackCt = trackCount;
@@ -88,7 +90,8 @@
       <button
         type="button"
         class="btn btn-sm variant-filled"
-        on:click={() => ($currentFrame = (Number($currentFrame) || 0) + 1)}>next</button
+        on:click={() => ($currentFrame = (Number($currentFrame) || 0) + 1)}
+        >next</button
       >
       <button
         type="button"
@@ -139,6 +142,7 @@
         {faceCt}
         bind:hoveredPoseIdx
         {shot}
+        {interest}
       />
     {:else}
       Loading pose data... <ProgressBar />

@@ -72,11 +72,12 @@
    * weirdness, and the values are artificially inflated (though still clamped
    * to the max integer value from the DB). Hopefully this won't happen on the
    * deployed production version.
-   */ 
+   */
   const seriesToFit = ["movement", "avgScore", "interest"]; // always normalize between 0 and maxValue
   let normalizedSeriesAlreadyScaled = false;
 
-  const scaleToFit = (thisValue: number) => Math.min(maxValue, thisValue * maxValue);
+  const scaleToFit = (thisValue: number) =>
+    Math.min(maxValue, thisValue * maxValue);
 
   // This is a pretty silly way to get a bar that always extends to the top
   // of the chart, but short of implementing multiple Y axes for the MultiLine
@@ -87,7 +88,10 @@
     let maxSoFar = 0;
     for (const item of timelineData) {
       for (const [key, value] of Object.entries(item)) {
-        if ((!hiddenSeries.concat(["frame"]).includes(key)) && (!seriesToFit.includes(key))) {
+        if (
+          !hiddenSeries.concat(["frame"]).includes(key) &&
+          !seriesToFit.includes(key)
+        ) {
           if (value !== undefined && +value > maxSoFar) {
             maxSoFar = +value;
           }
@@ -136,10 +140,8 @@
       // in the tooltips for frames with matching poses. Either the tooltip
       // code should be customized to hide these, or we shouldn't use this
       // method at all for highlighting matching frames.
-      thisFrame["sim_pose"] =
-        i in similarPoseFrames ? maxValue : 0;
-      thisFrame["sim_move"] =
-        i in similarMoveletFrames ? maxValue : 0;
+      thisFrame["sim_pose"] = i in similarPoseFrames ? maxValue : 0;
+      thisFrame["sim_move"] = i in similarMoveletFrames ? maxValue : 0;
       if (!normalizedSeriesAlreadyScaled) {
         seriesToFit.forEach((series: string) => {
           thisFrame[series] = scaleToFit(frame[series]);
@@ -159,7 +161,7 @@
         movement: 0,
         interest: 0,
         sim_pose: 0,
-        sim_move: 0
+        sim_move: 0,
       });
       i++;
     }
@@ -259,7 +261,14 @@
       <SharedTooltip
         {formatTitle}
         dataset={timelineData}
-        hiddenKeys={["sim_pose", "sim_move", "isShot", "avgScore", "movement"]}
+        hiddenKeys={[
+          "sim_pose",
+          "sim_move",
+          "isShot",
+          "avgScore",
+          "movement",
+          "interest",
+        ]}
       />
       <Key align="end" bind:hiddenSeries />
     </Html>

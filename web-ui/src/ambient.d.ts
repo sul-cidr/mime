@@ -42,6 +42,7 @@ type PoseRecord = {
   distance?: number;
   shot: number | 0;
   face_cluster_id: number | null;
+  pose_interest: number | 0; // this is actually the avg for all poses in the frame :-/
 };
 
 interface MoveletPoseRecord extends PoseRecord {
