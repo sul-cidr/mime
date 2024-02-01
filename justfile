@@ -112,11 +112,11 @@ default:
   docker compose exec api sh -c "LOG_LEVEL=$LOG_LEVEL /app/cluster_video_poses.py --video-name \"\$VIDEO_SRC_FOLDER/$1\" --n_clusters $2"
 
 # Provide path to video file relative to $VIDEO_SRC_FOLDER
-@plot-poses path:
-  docker compose exec api sh -c "LOG_LEVEL=$LOG_LEVEL /app/poseplot_prep.py --video-path \"\$VIDEO_SRC_FOLDER/$1\""
-  docker compose exec web-extras sh -c "pixplot --images \"input/$1/pose_images/*.jpg\" --vectors input/$1/pose_features --metadata input/$1/$1.csv"
-  docker compose exec web-extras sh -c "/bin/mkdir -p /app/poseplot/$1"
-  docker compose exec web-extras sh -c "/bin/mv /app/output/* /app/poseplot/$1/."
+@cluster-plot-poses path n_clusters: && refresh-db-views
+  docker compose exec api sh -c "LOG_LEVEL=$LOG_LEVEL /app/poseplot_prep.py --video-path \"\$VIDEO_SRC_FOLDER/$1\" --n_clusters $2"
+  #docker compose exec web-extras sh -c "pixplot --images \"input/$1/pose_images/*.jpg\" --vectors input/$1/pose_features --metadata input/$1/$1.csv"
+  #docker compose exec web-extras sh -c "/bin/mkdir -p /app/poseplot/$1"
+  #docker compose exec web-extras sh -c "/bin/mv /app/output/* /app/poseplot/$1/."
 
 
 # Print a mapping of UUIDs to video file names

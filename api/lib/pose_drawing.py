@@ -95,7 +95,9 @@ UPSCALE = 5  # See draw_frame()
 POSE_MAX_DIM = 100
 
 
-def draw_armatures(pose_coords, drawing, line_prevalences=None, x_shift=0, y_shift=0):
+def draw_armatures(
+    pose_coords, drawing, line_prevalences=None, x_shift=0, y_shift=0, coco_coords=13
+):
     """
     Draw, colorize and adjust the transparency of armature connections in the
     pose_coords data from an Open PifPaf pose prediction. This function can receive pose
@@ -109,9 +111,13 @@ def draw_armatures(pose_coords, drawing, line_prevalences=None, x_shift=0, y_shi
     to the drawing. As with add_pose_to_drawing(), a background can already have been
     added to the drawing, or it can be added/superimposed later (or left blank).
     """
+    skeleton = COCO_13_SKELETON
+    if coco_coords != 13:
+        skeleton = COCO_17_SKELETON
+
     if line_prevalences is None:
         line_prevalences = []
-    for i, seg in enumerate(COCO_13_SKELETON):
+    for i, seg in enumerate(skeleton):
         line_color = ImageColor.getrgb(COCO_COLORS[i])
 
         # If line_prevalences are provided, we know the pose coords don't contain
