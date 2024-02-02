@@ -14,6 +14,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi_utils.timing import add_timing_middleware
 
 from lib.json_encoder import MimeJSONEncoder
+from lib.pose_drawing import pad_and_excerpt_image
 from mime_db import MimeDb
 
 load_dotenv()
@@ -86,7 +87,7 @@ async def get_frame(video_id: UUID, frame: int, request: Request):
 async def get_frame_region(video_id: UUID, frame: int, xywh: str, request: Request):
     img = await get_frame_image(video_id, frame, request)
     x, y, w, h = [round(float(elt)) for elt in xywh.split(",")]
-    img_region = img[y : y + h, x : x + w]
+    img_region = pad_and_excerpt_image(img, x, y, w, h)
     return Response(
         content=iio.imwrite("<bytes>", img_region, extension=".jpeg"),
         media_type="image/jpeg",
@@ -100,7 +101,7 @@ async def get_frame_region_resized(
     img = await get_frame_image(video_id, frame, request)
     xywh, resize_dims = xywh_resize.split("|")
     x, y, w, h = [round(float(elt)) for elt in xywh.split(",")]
-    img_region = img[y : y + h, x : x + w]
+    img_region = pad_and_excerpt_image(img, x, y, w, h)
     rw, rh = [round(float(elt)) for elt in resize_dims.split(",")]
     if rw is not None and rh is not None:
         resized_region = cv2.resize(img_region, (rw, rh))

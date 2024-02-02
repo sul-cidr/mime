@@ -182,3 +182,33 @@ def get_armature_prevalences(cluster_poses):
             ):
                 armature_appearances[i] += 1
     return [segcount / len(cluster_poses) for segcount in armature_appearances]
+
+
+def pad_and_excerpt_image(img, x, y, w, h):
+    """The extent of a requested pose cutout may include negative x,y values
+    and/or pixels beyond the range of the full frame image height and
+    width (note however that the pose bbox coordinates are always
+    constrained to the image boundaries), so it's best to pad the frame
+    image with blank pixels and crop the padded image."""
+    img_h, img_w, _ = img.shape
+    left_pad, top_pad, right_pad, bottom_pad = 0, 0, 0, 0
+    if x < 0:
+        left_pad = -x
+    if y < 0:
+        top_pad = -y
+    if x + w > img_w:
+        right_pad = (x + w) - img_w
+    if y + h > img_h:
+        bottom_pad = (y + h) - img_h
+    img = np.pad(img, ((top_pad, bottom_pad), (left_pad, right_pad), (0, 0)))
+
+    if y < 0:
+        h = h - y
+        y = 0
+    if x < 0:
+        w = w - x
+        x = 0
+
+    img_region = img[y : y + h, x : x + w]
+
+    return img_region

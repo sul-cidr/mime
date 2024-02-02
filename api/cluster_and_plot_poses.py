@@ -8,13 +8,12 @@ import json
 import logging
 import math
 import os
-from collections import defaultdict
+from collections import OrderedDict, defaultdict
 from pathlib import Path
 
 import imageio.v3 as iio
 import matplotlib.pyplot as plt
 import numpy as np
-import pacmap
 import pandas as pd
 
 # import rasterfairy
@@ -22,8 +21,16 @@ from PIL import Image, ImageDraw
 from pointgrid import align_points_to_grid
 from rich.logging import RichHandler
 from sklearn.cluster import KMeans
+from sklearn.decomposition import PCA
+from umap import UMAP
 
-from lib.pose_drawing import UPSCALE, draw_armatures
+from lib.pose_drawing import (
+    UPSCALE,
+    draw_armatures,
+    draw_normalized_and_unflattened_pose,
+    get_armature_prevalences,
+    pad_and_excerpt_image,
+)
 from mime_db import MimeDb
 
 # import sys
@@ -41,7 +48,8 @@ LOD_CELL_HEIGHT = 128
 def save_atlas(atlas, out_dir, n):
     """Save an atlas image to disk"""
     out_path = os.path.join(out_dir, f"atlas-{n}.jpg")
-    im = Image.fromarray(atlas)
+    atlas = atlas.astype(np.uint8)
+    im = Image.fromarray(atlas, "RGB")
     im.save(out_path)
 
 
@@ -109,8 +117,11 @@ async def main() -> None:
     video_name = video_path.name
 
     # This is where PixPlot expects to find the layout data
-    output_path = Path(OUTPUT_VOL, "poseplot", video_name, "data")
-    os.makedirs(output_path, exist_ok=True)
+    data_path = Path(OUTPUT_VOL, "poseplot", video_name, "data")
+    os.makedirs(data_path, exist_ok=True)
+
+    # This is the base path to use when referring to local assets in manifest.json
+    output_path = Path("data")
 
     # Connect to the database
     db = await MimeDb.create()
@@ -130,7 +141,6 @@ async def main() -> None:
     video_poses = await db.get_pose_data_from_video(video_id)
     # video_poses = await db.get_poses_with_faces(video_id)
     poses_df = pd.DataFrame.from_records(video_poses, columns=video_poses[0].keys())
-    print("TOTAL POSES:", len(poses_df))
 
     # Some stats about the amount of motion in the movelets
     logging.info("TOTAL MOVELETS: %d", len(movelets_df))
@@ -175,12 +185,12 @@ async def main() -> None:
     ].reset_index()
     # XXX Use POEM viewpoint-invariant embedding features for clustering and embedding
     static_poses = static_movelets["poem_embedding"].tolist()
-    # static_norms = static_movelets["norm"].tolist()
+    static_norms = static_movelets["norm"].tolist()
 
     logging.info(f"TOTAL LOW-MOTION POSES: {len(static_poses)}")
 
     # Extract representative pose images and keep track of their metadata
-    images_dir = Path(output_path, "originals")
+    images_dir = Path(data_path, "originals")
     os.makedirs(images_dir, exist_ok=True)
     img_metadata = []
 
@@ -197,7 +207,6 @@ async def main() -> None:
 
     all_image_paths = []
 
-    print("STATIC MOVELETS:", len(static_movelets))
     match_failures = 0
 
     # Grab a pose from (ideally) somewhere in the middle of the movelet to use
@@ -234,8 +243,32 @@ async def main() -> None:
         # Cut the pose out of the video frame and draw the armature on top of it
         if not os.path.isfile(save_name):
             logging.info(f"Extracting pose from frame {save_name}")
-            bbox = [round(v) for v in target_pose["bbox"]]
 
+            # This is always truncated at the edges of the image, which we don't want
+            # pose_bbox = [round(v) for v in target_pose["bbox"]]
+
+            keypoints_triples = [
+                (
+                    target_pose["keypointsopp"][i],
+                    target_pose["keypointsopp"][i + 1],
+                    target_pose["keypointsopp"][i + 2],
+                )
+                for i in range(0, len(target_pose["keypointsopp"]), 3)
+            ]
+
+            keypoints_array = np.array(keypoints_triples)
+
+            pose_min_x = round(np.min(keypoints_array[:, 0]))
+            pose_max_x = round(np.max(keypoints_array[:, 0]))
+            pose_min_y = round(np.min(keypoints_array[:, 1]))
+            pose_max_y = round(np.max(keypoints_array[:, 1]))
+
+            pose_width = pose_max_x - pose_min_x
+            pose_height = pose_max_y - pose_min_y
+
+            bbox = [pose_min_x, pose_min_y, pose_width, pose_height]
+
+            # Add the face to the pose extent if present
             frame_faces = await db.get_frame_faces(video_id, target_frame)
 
             if len(frame_faces):
@@ -248,59 +281,53 @@ async def main() -> None:
                     target_face_df = target_face.iloc[0]
                     face_bbox = [round(v) for v in target_face_df["bbox"]]
 
-                    min_x = min(bbox[0], face_bbox[0])
-                    min_y = min(bbox[1], face_bbox[1])
-                    max_x = max(bbox[0] + bbox[2], face_bbox[0] + face_bbox[2])
-                    max_y = max(bbox[1] + bbox[3], face_bbox[1] + face_bbox[3])
+                    min_x = min(pose_min_x, face_bbox[0])
+                    min_y = min(pose_min_y, face_bbox[1])
+                    max_x = max(pose_max_x, face_bbox[0] + face_bbox[2])
+                    max_y = max(pose_max_y, face_bbox[1] + face_bbox[3])
                     b_w = max_x - min_x
                     b_h = max_y - min_y
 
                     # A bbox that includes the body and the face (if detected)
                     bbox = [min_x, min_y, b_w, b_h]
 
-            pose_frame_image = iio.imread(
-                f"/videos/{video_name}", index=target_frame - 1, plugin="pyav"
+            frame_image = Path(
+                "mime-cache", str(video_id), "frames", f"{target_frame}.jpeg"
+            )
+            if frame_image.exists():
+                print("Image found in cache!")
+                pose_frame_image = iio.imread(frame_image)
+            else:
+                pose_frame_image = iio.imread(
+                    f"/videos/{video_name}", index=target_frame - 1, plugin="pyav"
+                )
+
+            pose_img_region = pad_and_excerpt_image(
+                pose_frame_image, bbox[0], bbox[1], bbox[2], bbox[3]
             )
 
-            pose_img = Image.fromarray(pose_frame_image)
+            pose_img = Image.fromarray(pose_img_region)
 
             img_size = pose_img.size
 
             pose_img = pose_img.resize((img_size[0] * UPSCALE, img_size[1] * UPSCALE))
             drawing = ImageDraw.Draw(pose_img)
-            keypoints_triples = [
-                (
-                    target_pose["keypointsopp"][i],
-                    target_pose["keypointsopp"][i + 1],
-                    target_pose["keypointsopp"][i + 2],
-                )
-                for i in range(0, len(target_pose["keypointsopp"]), 3)
+
+            # Shift the armature coordinates to match the cropped image
+            shifted_triples = [
+                [triple[0] - bbox[0], triple[1] - bbox[1], triple[2]]
+                for triple in keypoints_triples
             ]
-            drawing = draw_armatures(keypoints_triples, drawing, coco_coords=17)
+
+            drawing = draw_armatures(shifted_triples, drawing, coco_coords=17)
 
             pose_img = pose_img.resize(
                 (img_size[0], img_size[1]), resample=Image.Resampling.LANCZOS
             )
 
-            cropped_pose_frame_image = pose_img.crop(
-                [bbox[0], bbox[1], bbox[0] + bbox[2], bbox[1] + bbox[3]]
-            )
+            pose_img.save(save_name)
 
-            img = cropped_pose_frame_image
-
-            img.save(save_name)
-
-            cropped_pose_frame_image.close()
             pose_img.close()
-
-            # Assumes there's always a features file if there's an image file
-            # pose_features = np.nan_to_num(movelet["norm"], nan=-1)
-            # np.save(
-            #     f"{features_dir}/{target_frame}_{target_pose['pose_idx']}.npy",
-            #     pose_features,
-            # )
-
-            img.close()
 
         frame_minute = round(target_frame / video_fps / 60)
 
@@ -314,10 +341,8 @@ async def main() -> None:
 
         all_image_paths.append(save_name)
 
-    print("MATCH FAILURES:", match_failures)
-
     # Write metadata in desired format for PixPlot
-    out_dir = Path(output_path, "metadata")
+    out_dir = Path(data_path, "metadata")
     for i in ["filters", "options", "file"]:
         out_path = Path(out_dir, i)
         os.makedirs(out_path, exist_ok=True)
@@ -333,7 +358,9 @@ async def main() -> None:
         ) as outfile:
             json.dump(i, outfile, indent=4)
     # This is the master list of filters (often there are none)
-    with open(Path(out_dir, "filters", "filers.json"), "w", encoding="utf-8") as outfile:
+    with open(
+        Path(out_dir, "filters", "filters.json"), "w", encoding="utf-8"
+    ) as outfile:
         json.dump(
             [
                 {
@@ -380,33 +407,36 @@ async def main() -> None:
             )
 
     # Get the main embedding
-    logging.info("Computing PaCMAP embedding")
-    pacmap_embedding = pacmap.PaCMAP(
-        n_components=2, n_neighbors=None, MN_ratio=0.5, FP_ratio=2.0
-    ).fit_transform(static_poses, init="pca")
+    logging.info("Computing PCA decomposition")
+    # n_components = 16 = the length of a POEM embedding
+    pca_decomposition = PCA(n_components=16).fit_transform(static_poses)
 
-    # main embedding (PaCMAP) layout
-    out_path = Path(output_path, "layouts")
+    umap_embedding = UMAP(n_components=2, n_neighbors=15, min_dist=0.01).fit_transform(
+        pca_decomposition
+    )
+
+    umap_embedding = umap_embedding / 2
+
+    # main embedding (UMAP) layout
+    out_path = Path(data_path, "layouts")
     os.makedirs(out_path, exist_ok=True)
-    pacmap_path = Path(out_path, "pacmap.json")
-    if isinstance(pacmap_embedding, np.ndarray):
-        main_embedding = pacmap_embedding.tolist()
-    with open(pacmap_path, "w", encoding="utf-8") as outfile:
+    if isinstance(umap_embedding, np.ndarray):
+        main_embedding = umap_embedding.tolist()
+    with open(Path(out_path, "umap.json"), "w", encoding="utf-8") as outfile:
         json.dump(main_embedding, outfile, indent=4)
 
     # jittered embedding layout
-    jittered_path = Path(out_path, "pacmap-jittered.json")
-    jittered_embedding = align_points_to_grid(pacmap_embedding, fill=0.01).tolist()
-    with open(jittered_path, "w", encoding="utf-8") as outfile:
+    jittered_embedding = align_points_to_grid(umap_embedding, fill=0.01).tolist()
+    with open(Path(out_path, "umap-jittered.json"), "w", encoding="utf-8") as outfile:
         json.dump(jittered_embedding, outfile, indent=4)
 
-    pacmap_desc = {
+    umap_desc = {
         "variants": [
             {
-                "n_neighbors": 1,
-                "min_dist": 1,
-                "jittered": jittered_path,
-                "layout": pacmap_path,
+                "n_neighbors": 15,
+                "min_dist": 0.01,
+                "jittered": str(Path(output_path, "layouts", "umap-jittered.json")),
+                "layout": str(Path(output_path, "layouts", "umap.json")),
             }
         ]
     }
@@ -418,31 +448,30 @@ async def main() -> None:
         x = i % n
         y = math.floor(i / n)
         alphabetic_layout.append([x, y])
-    alphabetic_path = Path(output_path, "layouts", "grid.json")
-    with open(alphabetic_path, "w", encoding="utf-8") as outfile:
+    with open(Path(data_path, "layouts", "grid.json"), "w", encoding="utf-8") as outfile:
         json.dump(alphabetic_layout, outfile, indent=4)
 
     # embedding layout, but squashed into a grid
     # XXX rasterfairy (whether the Yale DH version or upstream) is out of date
-    # grid_path = Path(output_path, "layouts", "rasterfairy.json")
-    # grid_pacmap = (pacmap_embedding + 1) / 2  # scale 0:1
+    # grid_path = Path(data_path, "layouts", "rasterfairy.json")
+    # grid_umap = (umap_embedding + 1) / 2  # scale 0:1
     # try:
-    #     grid_pacmap = rasterfairy.coonswarp.rectifyCloud(
-    #         grid_pacmap,  # stretch the distribution
+    #     grid_umap = rasterfairy.coonswarp.rectifyCloud(
+    #         grid_umap,  # stretch the distribution
     #         perimeterSubdivisionSteps=4,
     #         autoPerimeterOffset=False,
     #         paddingScale=1.05,
     #     )
     # except Exception as exc:
     #     logging.error(f"Coonswarp rectification could not be performed: {exc}")
-    # pos = rasterfairy.transformPointCloud2D(grid_pacmap)[0]
+    # pos = rasterfairy.transformPointCloud2D(grid_umap)[0]
     # with open(grid_path, "w", encoding="utf-8") as outfile:
     #     json.dump(pos, outfile, indent=4)
 
     layouts = {
-        "pacmap": pacmap_desc,
+        "umap": umap_desc,
         "alphabetic": {
-            "layout": alphabetic_path,
+            "layout": str(Path(output_path, "layouts", "grid.json")),
         },
         "grid": {
             "layout": None,  # grid_path,
@@ -455,7 +484,7 @@ async def main() -> None:
 
     # Clustering will be used later
     clst = KMeans(int(args.n_clusters))
-    est = clst.fit(pacmap_embedding)
+    est = clst.fit(umap_embedding)
     # labels = clst.labels_.tolist()
 
     # create a map from cluster label to image indices in cluster
@@ -471,7 +500,7 @@ async def main() -> None:
         # find percent of images in cluster
         image_percent = len(d[i]["images"]) / len(all_image_paths)
         # determine if image or area percent is too large
-        if image_percent > 0.5:
+        if image_percent > 0.6:
             deletable.append(i)
     for i in deletable:
         del d[i]
@@ -484,14 +513,14 @@ async def main() -> None:
     clusters = clusters[: int(args.n_clusters)]
     # save the hotspots to disk and return the path to the saved json
     logging.info(f"Found {len(clusters)} hotspots")
-    clusters_path = Path(output_path, "hotspots")
+    clusters_path = Path(data_path, "hotspots")
     os.makedirs(clusters_path, exist_ok=True)
     with open(Path(clusters_path, "hotspot.json"), "w", encoding="utf-8") as outfile:
         json.dump(clusters, outfile, indent=4)
 
     # Generate and save to disk all atlases to be used for this visualization
     # If square, center each cell in an nxn square, else use uniform height
-    out_dir = Path(output_path, "atlases")
+    out_dir = Path(data_path, "atlases")
     os.makedirs(out_dir, exist_ok=True)
     # create the atlas images and store the positions of cells in atlases
     logging.info("Creating atlas files")
@@ -534,10 +563,10 @@ async def main() -> None:
     save_atlas(atlas, out_dir, n)
     out_path = os.path.join(out_dir, "atlas_positions.json")
     with open(out_path, "w", encoding="utf-8") as out:
-        json.dump(atlas_data, out)
+        json.dump(atlas_data, out, indent=4)
 
     # Create the base object for the manifest output file
-    atlas_ids = set([i["idx"] for i in atlas])
+    atlas_ids = {i["idx"] for i in atlas_data}
     sizes = [[] for _ in atlas_ids]
     pos = [[] for _ in atlas_ids]
     for i in atlas_data:
@@ -568,15 +597,15 @@ async def main() -> None:
     manifest = {
         "version": "Pose_Plot_0.0.1",
         # "plot_id": UUID,
-        "output_directory": "output",
+        "output_directory": "data",
         "layouts": layouts,
-        "initial_layout": "pacmap",
+        "initial_layout": "umap",
         "point_sizes": point_sizes,
-        "imagelist": Path("output", "imagelists", "imagelist"),
-        "atlas_dir": Path("output", "atlases"),
+        "imagelist": str(Path(output_path, "imagelists", "imagelist.json")),
+        "atlas_dir": str(Path(output_path, "atlases")),
         "metadata": True,
-        "default_hotspots": Path("output", "hotspots", "hotspot"),
-        # "custom_hotspots": # PATH TO USER HOTSPOTS,
+        "default_hotspots": str(Path(output_path, "hotspots", "hotspot.json")),
+        "custom_hotspots": False,  # PATH TO USER HOTSPOTS, APPARENTLY
         # "gzipped": kwargs["gzip"],
         "config": {
             "sizes": {
@@ -595,8 +624,8 @@ async def main() -> None:
     # }
     # manifest_path = Path("output", "manifests", "manifest")
     # json.dump(manifest, open(manifest_path, "w", encoding="utf-8")
-    manifest_path = Path(output_path, "manifest.json")
-    json.dump(manifest, open(manifest_path, "w", encoding="utf-8"))
+    manifest_path = Path(data_path, "manifest.json")
+    json.dump(manifest, open(manifest_path, "w", encoding="utf-8"), indent=4)
     # create images json
     imagelist = {
         "cell_sizes": sizes,
@@ -606,8 +635,10 @@ async def main() -> None:
             "positions": pos,
         },
     }
-    imagelist_path = Path(output_path, "imagelists", "imagelist.json")
-    with open(imagelist_path, "w", encoding="utf-8") as outfile:
+    os.makedirs(Path(data_path, "imagelists"), exist_ok=True)
+    with open(
+        Path(data_path, "imagelists", "imagelist.json"), "w", encoding="utf-8"
+    ) as outfile:
         json.dump(imagelist, outfile, indent=4)
 
     # Write all original images and thumbs to the output dir
@@ -615,7 +646,7 @@ async def main() -> None:
         im = Image.open(im_path)
         filename = os.path.basename(im_path)
         # copy original for lightbox
-        out_dir = Path("output", "originals")
+        out_dir = Path(data_path, "originals")
         os.makedirs(out_dir, exist_ok=True)
         out_path = Path(out_dir, filename)
         if not os.path.exists(out_path):
@@ -623,11 +654,108 @@ async def main() -> None:
             resized = Image.fromarray(resized)
             resized.save(out_path)
         # copy thumb for lod texture
-        out_dir = Path("output", "thumbs")
+        out_dir = Path(data_path, "thumbs")
         os.makedirs(out_dir, exist_ok=True)
         out_path = Path(out_dir, filename)
         img = Image.fromarray(resize_to_max(im, LOD_CELL_HEIGHT))
         img.save(out_path)
+
+    # Assign the explorer clusters to the DB so that the poses timeline tab
+    # shows the same clusters as the explorer
+    labels = clst.labels_.tolist()
+
+    assigned_poses = 0
+    for cluster_id in range(-1, max(labels) + 1):
+        if cluster_id != -1:
+            assigned_poses += labels.count(cluster_id)
+
+    logging.info(
+        f"assigned {assigned_poses} track poses out of {len(labels)}, "
+        f"{round(assigned_poses/len(labels),4)}"
+    )
+
+    cluster_to_poses = {}
+    for i, cluster_id in enumerate(labels):
+        if cluster_id not in cluster_to_poses:
+            cluster_to_poses[cluster_id] = [i]
+        else:
+            cluster_to_poses[cluster_id].append(i)
+
+    # Also assign the movelet cluster IDs in the DB
+
+    filtered_movelet_indices = []
+
+    movelet_clusters = []
+    for cluster_id in range(max(labels) + 1):
+        logging.info(f"Poses in cluster {cluster_id}: {labels.count(cluster_id)}")
+
+        cluster_track_poses = {}
+        for movelet_id in cluster_to_poses[cluster_id]:
+            this_movelet = static_movelets.iloc[movelet_id]
+            logging.debug(
+                f"assigning cluster {cluster_id} to movelet in frames {this_movelet['start_frame']} to {this_movelet['end_frame']}, pose {this_movelet['pose_idx']}"
+            )
+            movelet_clusters.append(
+                (
+                    video_id,
+                    this_movelet["start_frame"],
+                    this_movelet["end_frame"],
+                    this_movelet["pose_idx"],
+                    cluster_id,
+                )
+            )
+
+            movelet_track = this_movelet["track_id"]
+            if movelet_track not in cluster_track_poses:
+                filtered_movelet_indices.append(movelet_id)
+            #     cluster_track_poses[movelet_track] = 1 # Include non-clustered poses?
+            # else:
+            #     cluster_track_poses[movelet_track] += 1
+
+    logging.info(f"Assigning {len(movelet_clusters)} total movelet clusters in the DB")
+
+    await db.assign_movelet_clusters(movelet_clusters)
+
+    # Get the full pose data for each representative movelet from a track in a cluster,
+    # to be used to display armatures
+
+    filtered_movelet_counts = {}
+    for i in filtered_movelet_indices:
+        filtered_movelet_counts[i] = filtered_movelet_counts.get(i, 0) + 1
+
+    logging.info("Filtered movelets: %d", len(set(filtered_movelet_indices)))
+    filtered_movelets = static_movelets.iloc[list(set(filtered_movelet_indices))]
+    filtered_movelets.reset_index(inplace=True)
+    filtered_poses = filtered_movelets["norm"].tolist()
+    filtered_poses = [np.nan_to_num(pose, nan=-1) for pose in filtered_poses]
+
+    logging.info("Saving representative cluster images")
+
+    if not os.path.isdir(f"pose_cluster_images/{video_name}"):
+        os.makedirs(f"pose_cluster_images/{video_name}")
+
+    ord_cluster_to_poses = OrderedDict(
+        sorted(cluster_to_poses.items(), key=lambda x: len(x[1]), reverse=True)
+    ).keys()
+    for cluster_id in ord_cluster_to_poses:
+        cluster_poses = []
+        # fig, ax = plt.subplots()
+        # fig.set_size_inches(UPSCALE * 100 / fig.dpi, UPSCALE * 100 / fig.dpi)
+        # fig.canvas.draw()
+        logging.info(
+            f"CLUSTER: {cluster_id}, POSES: {len(cluster_to_poses[cluster_id])}"
+        )
+        for pose_index in cluster_to_poses[cluster_id]:
+            cl_pose = static_norms[pose_index]
+            cl_pose[cl_pose == -1] = np.nan
+            cluster_poses.append(cl_pose)
+        cluster_average = np.nanmean(np.array(cluster_poses), axis=0).tolist()
+        armature_prevalences = get_armature_prevalences(cluster_poses)
+        cluster_average = np.array_split(cluster_average, len(cluster_average) / 2)
+        cluster_average_img = draw_normalized_and_unflattened_pose(
+            cluster_average, armature_prevalences=armature_prevalences
+        )
+        cluster_average_img.save(f"pose_cluster_images/{video_name}/{cluster_id}.png")
 
     # Use the below if the number of images, features and metadata entries are
     # not equal

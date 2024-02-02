@@ -17,7 +17,10 @@ import pandas as pd
 from rich.logging import RichHandler
 from sklearn.cluster import KMeans
 
-from lib.pose_drawing import *
+from lib.pose_drawing import (
+    draw_normalized_and_unflattened_pose,
+    get_armature_prevalences,
+)
 from mime_db import MimeDb
 
 # from PIL import Image
