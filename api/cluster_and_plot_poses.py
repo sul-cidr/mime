@@ -231,7 +231,7 @@ async def main() -> None:
                 (poses_df["frame"] == target_frame)
                 & (poses_df["track_id"] == movelet["track_id"])
             ].iloc[0]
-        except Exception as ex:
+        except Exception:
             logging.info(
                 "Couldn't find representative pose from movelet middle or beginning, skipping"
             )
@@ -292,10 +292,9 @@ async def main() -> None:
                     bbox = [min_x, min_y, b_w, b_h]
 
             frame_image = Path(
-                "mime-cache", str(video_id), "frames", f"{target_frame}.jpeg"
+                "/static", str(video_id), "frames", f"{target_frame}.jpeg"
             )
             if frame_image.exists():
-                print("Image found in cache!")
                 pose_frame_image = iio.imread(frame_image)
             else:
                 pose_frame_image = iio.imread(

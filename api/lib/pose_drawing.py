@@ -152,7 +152,7 @@ def draw_armatures(
     return drawing
 
 
-def draw_normalized_and_unflattened_pose(pose_prediction, armature_prevalences=[]):
+def draw_normalized_and_unflattened_pose(pose_prediction, armature_prevalences=None):
     """
     Variant of normalize_and_draw_pose() for a pose that has already been normalized and
     may have armature prevalence values calculated separately. Currently this is only used
