@@ -172,7 +172,7 @@
         {:else if tabSet === 4}
           {#if $currentVideo}
             <h2>{$currentVideo.video_name}</h2>
-            <div class="second-row">{@html poseplotFrame}</div>
+            <div>{@html poseplotFrame}</div>
           {/if}
         {/if}
       </svelte:fragment>
