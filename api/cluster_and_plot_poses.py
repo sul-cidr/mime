@@ -413,11 +413,15 @@ async def main() -> None:
     # n_components = 16 = the length of a POEM embedding
     pca_decomposition = PCA(n_components=16).fit_transform(static_poses)
 
-    umap_embedding = UMAP(n_components=2, n_neighbors=15, min_dist=0.01).fit_transform(
+    logging.info("Computing UMAP embedding")
+    umap_embedding = UMAP(
+        n_components=2, n_neighbors=100, min_dist=0.5, metric="euclidean"
+    ).fit_transform(
+        # static_poses
         pca_decomposition
     )
 
-    umap_embedding = umap_embedding / 2
+    umap_embedding = umap_embedding / 4
 
     # main embedding (UMAP) layout
     out_path = Path(data_path, "layouts")
@@ -551,175 +555,6 @@ async def main() -> None:
     est = clst.fit(umap_embedding)
     # labels = clst.labels_.tolist()
 
-    # create a map from cluster label to image indices in cluster
-    d = defaultdict(lambda: defaultdict(list))
-    for idx, i in enumerate(est.labels_):
-        if i != -1:
-            d[i]["images"].append(idx)
-            d[i]["img"] = os.path.basename(all_image_paths[idx])
-            d[i]["layout"] = "vectors"
-    # remove massive clusters
-    deletable = []
-    for i in d:
-        # find percent of images in cluster
-        image_percent = len(d[i]["images"]) / len(all_image_paths)
-        # determine if image or area percent is too large
-        if image_percent > 0.5:
-            deletable.append(i)
-    for i in deletable:
-        del d[i]
-    # sort the clusers by size and then label the clusters
-    clusters = d.values()
-    clusters = sorted(clusters, key=lambda i: len(i["images"]), reverse=True)
-    for idx, i in enumerate(clusters):
-        i["label"] = f"Cluster {idx + 1}"
-    # slice off the first `max_clusters`
-    clusters = clusters[: int(args.n_clusters)]
-    # save the hotspots to disk and return the path to the saved json
-    logging.info(f"Found {len(clusters)} hotspots")
-    clusters_path = Path(data_path, "hotspots")
-    os.makedirs(clusters_path, exist_ok=True)
-    with open(Path(clusters_path, "hotspot.json"), "w", encoding="utf-8") as outfile:
-        json.dump(clusters, outfile, indent=4)
-
-    # Generate and save to disk all atlases to be used for this visualization
-    # If square, center each cell in an nxn square, else use uniform height
-    out_dir = Path(data_path, "atlases")
-    os.makedirs(out_dir, exist_ok=True)
-    # create the atlas images and store the positions of cells in atlases
-    logging.info("Creating atlas files")
-    n = 0  # number of atlases
-    x = 0  # x pos in atlas
-    y = 0  # y pos in atlas
-    atlas_data = []  # l[cell_idx] = atlas data
-    atlas = np.zeros((ATLAS_SIZE, ATLAS_SIZE, 3))
-    for i in all_image_paths:
-        im = Image.open(i)
-        cell_data = resize_to_height(im, CELL_SIZE)
-        _, v, _ = cell_data.shape
-        appendable = False
-        if (x + v) <= ATLAS_SIZE:
-            appendable = True
-        elif (y + (2 * CELL_SIZE)) <= ATLAS_SIZE:
-            y += CELL_SIZE
-            x = 0
-            appendable = True
-        if not appendable:
-            save_atlas(atlas, out_dir, n)
-            n += 1
-            atlas = np.zeros((ATLAS_SIZE, ATLAS_SIZE, 3))
-            x = 0
-            y = 0
-        atlas[y : y + CELL_SIZE, x : x + v] = cell_data
-        # find the size of the cell in the lod canvas
-        lod_data = resize_to_max(im, LOD_CELL_HEIGHT)
-        h, w, _ = lod_data.shape  # h,w,colors in lod-cell sized image `i`
-        atlas_data.append(
-            {
-                "idx": n,  # atlas idx
-                "x": x,  # x offset of cell in atlas
-                "y": y,  # y offset of cell in atlas
-                "w": w,  # w of cell at lod size
-                "h": h,  # h of cell at lod size
-            }
-        )
-        x += v
-    save_atlas(atlas, out_dir, n)
-    out_path = os.path.join(out_dir, "atlas_positions.json")
-    with open(out_path, "w", encoding="utf-8") as out:
-        json.dump(atlas_data, out, indent=4)
-
-    # Create the base object for the manifest output file
-    atlas_ids = {i["idx"] for i in atlas_data}
-    sizes = [[] for _ in atlas_ids]
-    pos = [[] for _ in atlas_ids]
-    for i in atlas_data:
-        sizes[i["idx"]].append([i["w"], i["h"]])
-        pos[i["idx"]].append([i["x"], i["y"]])
-
-    # XXX Not clear (yet) why this would be needed
-    # create a heightmap for the umap layout
-    # if "umap" in layouts and layouts["umap"]:
-    #    get_heightmap(layouts["umap"]["variants"][0]["layout"], "umap", **kwargs)
-
-    # specify point size scalars
-    point_sizes = {}
-    point_sizes["min"] = 0
-    point_sizes["grid"] = 1 / math.ceil(len(all_image_paths) ** (1 / 2))
-    point_sizes["max"] = point_sizes["grid"] * 1.2
-    point_sizes["scatter"] = point_sizes["grid"] * 0.2
-    point_sizes["initial"] = point_sizes["scatter"]
-    point_sizes["categorical"] = point_sizes["grid"] * 0.6
-    point_sizes["geographic"] = point_sizes["grid"] * 0.025
-    # fetch the date distribution data for point sizing
-    point_sizes["date"] = 1 / ((date_layout["cols"] + 1) * len(date_layout["labels"]))
-    # create manifest json
-    manifest = {
-        "version": "Pose_Plot_0.0.1",
-        # "plot_id": UUID,
-        "output_directory": "data",
-        "layouts": layouts,
-        "initial_layout": "umap",
-        "point_sizes": point_sizes,
-        "imagelist": str(Path(output_path, "imagelists", "imagelist.json")),
-        "atlas_dir": str(Path(output_path, "atlases")),
-        "metadata": True,
-        "default_hotspots": str(Path(output_path, "hotspots", "hotspot.json")),
-        "custom_hotspots": False,  # PATH TO USER HOTSPOTS, APPARENTLY
-        # "gzipped": kwargs["gzip"],
-        "config": {
-            "sizes": {
-                "atlas": ATLAS_SIZE,
-                "cell": CELL_SIZE,
-                "lod": LOD_CELL_HEIGHT,
-            },
-        },
-        # "creation_date": datetime.datetime.today().strftime("%d-%B-%Y-%H:%M:%S"),
-    }
-    # write the manifest without gzipping
-    # no_gzip_kwargs = {
-    #     "out_dir": kwargs["out_dir"],
-    #     "gzip": False,
-    #     "plot_id": kwargs["plot_id"],
-    # }
-    # manifest_path = Path("output", "manifests", "manifest")
-    # json.dump(manifest, open(manifest_path, "w", encoding="utf-8")
-    manifest_path = Path(data_path, "manifest.json")
-    json.dump(manifest, open(manifest_path, "w", encoding="utf-8"), indent=4)
-    # create images json
-    imagelist = {
-        "cell_sizes": sizes,
-        "images": [os.path.basename(i) for i in all_image_paths],
-        "atlas": {
-            "count": len(atlas_ids),
-            "positions": pos,
-        },
-    }
-    os.makedirs(Path(data_path, "imagelists"), exist_ok=True)
-    with open(
-        Path(data_path, "imagelists", "imagelist.json"), "w", encoding="utf-8"
-    ) as outfile:
-        json.dump(imagelist, outfile, indent=4)
-
-    # Write all original images and thumbs to the output dir
-    for im_path in all_image_paths:
-        im = Image.open(im_path)
-        filename = os.path.basename(im_path)
-        # copy original for lightbox
-        out_dir = Path(data_path, "originals")
-        os.makedirs(out_dir, exist_ok=True)
-        out_path = Path(out_dir, filename)
-        if not os.path.exists(out_path):
-            resized = resize_to_height(im, 600)
-            resized = Image.fromarray(resized)
-            resized.save(out_path)
-        # copy thumb for lod texture
-        out_dir = Path(data_path, "thumbs")
-        os.makedirs(out_dir, exist_ok=True)
-        out_path = Path(out_dir, filename)
-        img = Image.fromarray(resize_to_max(im, LOD_CELL_HEIGHT))
-        img.save(out_path)
-
     # Assign the explorer clusters to the DB so that the poses timeline tab
     # shows the same clusters as the explorer
     labels = clst.labels_.tolist()
@@ -816,6 +651,180 @@ async def main() -> None:
             cluster_average, armature_prevalences=armature_prevalences
         )
         cluster_average_img.save(f"pose_cluster_images/{video_name}/{cluster_id}.png")
+        os.makedirs(Path(data_path, "pose_cluster_images"), exist_ok=True)
+        cluster_average_img.save(
+            Path(data_path, "pose_cluster_images", f"{cluster_id}.png")
+        )
+
+    # create a map from cluster label to image indices in cluster
+    d = defaultdict(lambda: defaultdict(list))
+    for idx, i in enumerate(est.labels_):
+        if i != -1:
+            d[i]["images"].append(idx)
+            d[i]["img"] = os.path.basename(all_image_paths[idx])
+            d[i]["avg_img"] = f"{i}.png"
+            d[i]["layout"] = "vectors"
+    # remove massive clusters
+    # deletable = []
+    # for i in d:
+    #     # find percent of images in cluster
+    #     image_percent = len(d[i]["images"]) / len(all_image_paths)
+    #     # determine if image or area percent is too large
+    #     if image_percent > 0.5:
+    #         deletable.append(i)
+    # for i in deletable:
+    #     del d[i]
+    # sort the clusers by size and then label the clusters
+    clusters = d.values()
+    clusters = sorted(clusters, key=lambda i: len(i["images"]), reverse=True)
+    for idx, i in enumerate(clusters):
+        i["label"] = f"Cluster {idx + 1}"
+    # slice off the first `max_clusters`
+    clusters = clusters[: int(args.n_clusters)]
+    # save the hotspots to disk and return the path to the saved json
+    logging.info(f"Found {len(clusters)} hotspots")
+    clusters_path = Path(data_path, "hotspots")
+    os.makedirs(clusters_path, exist_ok=True)
+    with open(Path(clusters_path, "hotspot.json"), "w", encoding="utf-8") as outfile:
+        json.dump(clusters, outfile, indent=4)
+
+    # Generate and save to disk all atlases to be used for this visualization
+    # If square, center each cell in an nxn square, else use uniform height
+    out_dir = Path(data_path, "atlases")
+    os.makedirs(out_dir, exist_ok=True)
+    # create the atlas images and store the positions of cells in atlases
+    logging.info("Creating atlas files")
+    n = 0  # number of atlases
+    x = 0  # x pos in atlas
+    y = 0  # y pos in atlas
+    atlas_data = []  # l[cell_idx] = atlas data
+    atlas = np.zeros((ATLAS_SIZE, ATLAS_SIZE, 3))
+    for i in all_image_paths:
+        im = Image.open(i)
+        cell_data = resize_to_height(im, CELL_SIZE)
+        _, v, _ = cell_data.shape
+        appendable = False
+        if (x + v) <= ATLAS_SIZE:
+            appendable = True
+        elif (y + (2 * CELL_SIZE)) <= ATLAS_SIZE:
+            y += CELL_SIZE
+            x = 0
+            appendable = True
+        if not appendable:
+            save_atlas(atlas, out_dir, n)
+            n += 1
+            atlas = np.zeros((ATLAS_SIZE, ATLAS_SIZE, 3))
+            x = 0
+            y = 0
+        atlas[y : y + CELL_SIZE, x : x + v] = cell_data
+        # find the size of the cell in the lod canvas
+        lod_data = resize_to_max(im, LOD_CELL_HEIGHT)
+        h, w, _ = lod_data.shape  # h,w,colors in lod-cell sized image `i`
+        atlas_data.append(
+            {
+                "idx": n,  # atlas idx
+                "x": x,  # x offset of cell in atlas
+                "y": y,  # y offset of cell in atlas
+                "w": w,  # w of cell at lod size
+                "h": h,  # h of cell at lod size
+            }
+        )
+        x += v
+    save_atlas(atlas, out_dir, n)
+    out_path = os.path.join(out_dir, "atlas_positions.json")
+    with open(out_path, "w", encoding="utf-8") as out:
+        json.dump(atlas_data, out, indent=4)
+
+    # Create the base object for the manifest output file
+    atlas_ids = {i["idx"] for i in atlas_data}
+    sizes = [[] for _ in atlas_ids]
+    pos = [[] for _ in atlas_ids]
+    for i in atlas_data:
+        sizes[i["idx"]].append([i["w"], i["h"]])
+        pos[i["idx"]].append([i["x"], i["y"]])
+
+    # XXX Not clear (yet) why this would be needed
+    # create a heightmap for the umap layout
+    # if "umap" in layouts and layouts["umap"]:
+    #    get_heightmap(layouts["umap"]["variants"][0]["layout"], "umap", **kwargs)
+
+    # specify point size scalars
+    point_sizes = {}
+    point_sizes["min"] = 0
+    point_sizes["grid"] = 1 / math.ceil(len(all_image_paths) ** (1 / 2))
+    point_sizes["max"] = point_sizes["grid"] * 1.5
+    point_sizes["scatter"] = point_sizes["grid"] * 1
+    point_sizes["initial"] = point_sizes["scatter"]
+    point_sizes["categorical"] = point_sizes["grid"] * 1
+    point_sizes["geographic"] = point_sizes["grid"] * 0.025
+    # fetch the date distribution data for point sizing
+    point_sizes["date"] = 2 / ((date_layout["cols"] + 1) * len(date_layout["labels"]))
+    # create manifest json
+    manifest = {
+        "version": "Pose_Plot_0.0.1",
+        # "plot_id": UUID,
+        "output_directory": "data",
+        "layouts": layouts,
+        "initial_layout": "umap",
+        "point_sizes": point_sizes,
+        "imagelist": str(Path(output_path, "imagelists", "imagelist.json")),
+        "atlas_dir": str(Path(output_path, "atlases")),
+        "metadata": True,
+        "default_hotspots": str(Path(output_path, "hotspots", "hotspot.json")),
+        "custom_hotspots": False,  # PATH TO USER HOTSPOTS, APPARENTLY
+        # "gzipped": kwargs["gzip"],
+        "config": {
+            "sizes": {
+                "atlas": ATLAS_SIZE,
+                "cell": CELL_SIZE,
+                "lod": LOD_CELL_HEIGHT,
+            },
+        },
+        # "creation_date": datetime.datetime.today().strftime("%d-%B-%Y-%H:%M:%S"),
+    }
+    # write the manifest without gzipping
+    # no_gzip_kwargs = {
+    #     "out_dir": kwargs["out_dir"],
+    #     "gzip": False,
+    #     "plot_id": kwargs["plot_id"],
+    # }
+    # manifest_path = Path("output", "manifests", "manifest")
+    # json.dump(manifest, open(manifest_path, "w", encoding="utf-8")
+    manifest_path = Path(data_path, "manifest.json")
+    json.dump(manifest, open(manifest_path, "w", encoding="utf-8"), indent=4)
+    # create images json
+    imagelist = {
+        "cell_sizes": sizes,
+        "images": [os.path.basename(i) for i in all_image_paths],
+        "atlas": {
+            "count": len(atlas_ids),
+            "positions": pos,
+        },
+    }
+    os.makedirs(Path(data_path, "imagelists"), exist_ok=True)
+    with open(
+        Path(data_path, "imagelists", "imagelist.json"), "w", encoding="utf-8"
+    ) as outfile:
+        json.dump(imagelist, outfile, indent=4)
+
+    # Write all original images and thumbs to the output dir
+    for im_path in all_image_paths:
+        im = Image.open(im_path)
+        filename = os.path.basename(im_path)
+        # copy original for lightbox
+        out_dir = Path(data_path, "originals")
+        os.makedirs(out_dir, exist_ok=True)
+        out_path = Path(out_dir, filename)
+        if not os.path.exists(out_path):
+            resized = resize_to_height(im, 600)
+            resized = Image.fromarray(resized)
+            resized.save(out_path)
+        # copy thumb for lod texture
+        out_dir = Path(data_path, "thumbs")
+        os.makedirs(out_dir, exist_ok=True)
+        out_path = Path(out_dir, filename)
+        img = Image.fromarray(resize_to_max(im, LOD_CELL_HEIGHT))
+        img.save(out_path)
 
     # Use the below if the number of images, features and metadata entries are
     # not equal
