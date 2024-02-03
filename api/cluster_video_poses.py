@@ -17,7 +17,10 @@ import pandas as pd
 from rich.logging import RichHandler
 from sklearn.cluster import KMeans
 
-from lib.pose_drawing import *
+from lib.pose_drawing import (
+    draw_normalized_and_unflattened_pose,
+    get_armature_prevalences,
+)
 from mime_db import MimeDb
 
 # from PIL import Image
@@ -104,7 +107,7 @@ async def main() -> None:
     nonnull_movelets_df.fillna({"movement": -1}, inplace=True)
     # nonnull_movelets_df["movement"].fillna(-1, inplace=True)
 
-    n, bins, patches = plt.hist(
+    n, bins, _ = plt.hist(
         nonnull_movelets_df[nonnull_movelets_df["movement"] <= 500]["movement"],
         bins=300,
     )
@@ -139,10 +142,7 @@ async def main() -> None:
 
     # clst = HDBSCAN(min_cluster_size=3, min_samples=4)  # , max_cluster_size=15
     clst = KMeans(int(args.n_clusters))
-    # embedding = standard_embedding
-    embedding = clusterable_embedding
-    clst.fit(embedding)
-    # clst.fit(X) # Won't be plottable
+    clst.fit(clusterable_embedding)
     labels = clst.labels_.tolist()
 
     assigned_poses = 0
@@ -210,7 +210,7 @@ async def main() -> None:
     # Get the full pose data for each representative movelet from a track in a cluster,
     # to be used to display armatures
 
-    filtered_movelet_counts = dict()
+    filtered_movelet_counts = {}
     for i in filtered_movelet_indices:
         filtered_movelet_counts[i] = filtered_movelet_counts.get(i, 0) + 1
 

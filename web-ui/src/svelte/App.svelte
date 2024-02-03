@@ -29,7 +29,7 @@
   let poseplotFrame = "";
 
   $: $currentVideo, ($currentFrame = undefined);
-  $: poseplotFrame = `<iframe src="/poseplot/${$currentVideo?.video_name}/index.html" width="100%" height="1200" title="Pose Cluster Explorer" />`;
+  $: poseplotFrame = `<iframe src="/poseplot/${$currentVideo?.video_name}/index.html" width="100%" height="1200px" title="Pose Cluster Explorer" />`;
 </script>
 
 <AppShell>
@@ -83,7 +83,15 @@
   </svelte:fragment>
 
   <section class="m-8 flex flex-col gap-10">
-    <TabGroup>
+    <TabGroup
+      justify="justify-left"
+      active="variant-filled-primary"
+      hover="hover:variant-soft-primary"
+      flex="flex-1 lg:flex-none"
+      rounded=""
+      border=""
+      class="bg-surface-100-800-token w-full"
+    >
       <Tab bind:group={tabSet} name="tab1" value={0}>Performances</Tab>
       <Tab
         bind:group={tabSet}
@@ -147,7 +155,10 @@
         {:else if tabSet === 3}
           {#if $currentVideo}
             <h2>{$currentVideo.video_name}</h2>
-            <FacesTimeline videoId={$currentVideo.id} videoName={$currentVideo.video_name}/>
+            <FacesTimeline
+              videoId={$currentVideo.id}
+              videoName={$currentVideo.video_name}
+            />
             {#if $currentFrame}
               <FrameViewer />
             {/if}

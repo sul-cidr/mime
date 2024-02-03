@@ -77,7 +77,9 @@
   ];
 
   export let poseData: CocoSkeletonWithConfidence | CocoSkeletonNoConfidence;
-  export let pose4dhData: SmplSkeletonWithConfidence | SmplSkeletonNoConfidence = null;
+  export let pose4dhData:
+    | SmplSkeletonWithConfidence
+    | SmplSkeletonNoConfidence = null;
   export let faceData: FaceLandmarks = null;
   export let scaleFactor = 1;
   export let normalizedPose = false;
@@ -140,7 +142,7 @@
       // If the confidence value for a given armature point is 0, skip related segments.
       coco_skeleton.forEach(([from, to], i) => {
         let fromX, fromY, toX, toY;
-        if (poseData.length === total_coco_coords*3) {
+        if (poseData.length === total_coco_coords * 3) {
           let fromConfidence, toConfidence;
           [fromX, fromY, fromConfidence] = segments[from! - 1]!;
           [toX, toY, toConfidence] = segments[to! - 1]!;
@@ -178,7 +180,7 @@
             2 * Math.PI,
             false,
           );
-          $ctx.globalAlpha = .8;
+          $ctx.globalAlpha = 0.8;
           $ctx.fillStyle = SMPL_COLOR!;
           $ctx.fill();
           //$ctx.lineWidth = dotRadius;

@@ -10,7 +10,7 @@ import numpy as np
 from rich.logging import RichHandler
 from scipy.spatial.distance import cosine  # , euclidean
 
-from lib.pose_drawing import *
+from lib.pose_drawing import draw_normalized_and_unflattened_pose
 from mime_db import MimeDb
 
 DEFAULT_CLUSTERS = 15  # Expected number of pose clusters

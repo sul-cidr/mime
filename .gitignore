@@ -3,4 +3,5 @@
 mime-cache
 .DS_Store
 __pycache__/
-web-extras/pix-plot/
+web-extras/poseplot/*
+!web-extras/poseplot/web/
