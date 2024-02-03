@@ -133,7 +133,7 @@ Data.prototype.load = function () {
         getPath(json.imagelist),
         function (data) {
           this.parseManifest(Object.assign({}, json, data));
-        }.bind(this)
+        }.bind(this),
       );
     }.bind(this),
     function (err) {
@@ -144,7 +144,7 @@ Data.prototype.load = function () {
       } else {
         console.warn("ERROR: could not load manifest.json");
       }
-    }.bind(this)
+    }.bind(this),
   );
 };
 
@@ -169,8 +169,8 @@ Data.prototype.parseManifest = function (json) {
     Object.keys(this.layouts).filter(
       function (i) {
         return this.layouts[i];
-      }.bind(this)
-    )
+      }.bind(this),
+    ),
   );
   // load the filter options if metadata present
   if (json.metadata) filters.loadFilters();
@@ -183,7 +183,7 @@ Data.prototype.parseManifest = function (json) {
         idx: i,
         onProgress: this.onTextureProgress.bind(this),
         onLoad: this.onTextureLoad.bind(this),
-      })
+      }),
     );
   }
   // add cells to the world
@@ -193,7 +193,7 @@ Data.prototype.parseManifest = function (json) {
     function (data) {
       this.addCells(data);
       this.hotspots.initialize();
-    }.bind(this)
+    }.bind(this),
   );
 };
 
@@ -240,7 +240,7 @@ Data.prototype.addCells = function (positions) {
           z: worldPos[2] || null, // z position of cell in world
           dx: atlasPos[0] + atlasOffset.x, // x offset of cell in atlas
           dy: atlasPos[1] + atlasOffset.y, // y offset of cell in atlas
-        })
+        }),
       );
       idx++;
     }
@@ -297,7 +297,7 @@ Texture.prototype.load = function () {
         idx: config.atlasesPerTex * this.idx + i, // atlas index among all atlases
         onProgress: this.onAtlasProgress.bind(this),
         onLoad: this.onAtlasLoad.bind(this),
-      })
+      }),
     );
   }
 };
@@ -428,7 +428,7 @@ Cell.prototype.updateParentBoundingBox = function () {
     function (d) {
       bb[d].max = Math.max(bb[d].max, this[d]);
       bb[d].min = Math.min(bb[d].min, this[d]);
-    }.bind(this)
+    }.bind(this),
   );
 };
 
@@ -563,10 +563,10 @@ function Layout() {
     minDistInput: document.querySelector("#min-dist-range-input"),
     nNeighborsInput: document.querySelector("#n-neighbors-range-input"),
     minDistInputContainer: document.querySelector(
-      "#min-dist-range-input-container"
+      "#min-dist-range-input-container",
     ),
     nNeighborsInputContainer: document.querySelector(
-      "#n-neighbors-range-input-container"
+      "#n-neighbors-range-input-container",
     ),
     layoutSelect: document.querySelector("#layout-select"),
   };
@@ -598,7 +598,7 @@ Layout.prototype.initializeMobileLayoutOptions = function () {
         option.textContent = o;
         this.elems.layoutSelect.appendChild(option);
       }
-    }.bind(this)
+    }.bind(this),
   );
 };
 
@@ -609,7 +609,7 @@ Layout.prototype.showHideIcons = function () {
   for (var i = 0; i < icons.length; i++) {
     var layout = icons[i].getAttribute("id").replace("layout-", "");
     if (icons[i].classList.contains("conditional")) {
-      if (!layout in data.layouts || !data.layouts[layout]) {
+      if ((!layout) in data.layouts || !data.layouts[layout]) {
         icons[i].style.display = "none";
       }
     } else {
@@ -628,13 +628,13 @@ Layout.prototype.initializeUmapInputs = function () {
     "change",
     function () {
       this.set("umap", true);
-    }.bind(this)
+    }.bind(this),
   );
   this.elems.minDistInput.addEventListener(
     "change",
     function () {
       this.set("umap", true);
-    }.bind(this)
+    }.bind(this),
   );
 };
 
@@ -707,7 +707,7 @@ Layout.prototype.addEventListeners = function () {
     function (e) {
       if (!e.target || !e.target.id || e.target.id == "icons") return;
       this.set(e.target.id.replace("layout-", ""), true);
-    }.bind(this)
+    }.bind(this),
   );
   // allow clicks on jitter container to update jitter state
   this.elems.jitter.addEventListener(
@@ -723,21 +723,21 @@ Layout.prototype.addEventListeners = function () {
         }
       }
       this.set(this.selected, false);
-    }.bind(this)
+    }.bind(this),
   );
   // change the layout when the mobile select changes
   this.elems.layoutSelect.addEventListener(
     "change",
     function (e) {
       this.set(e.target.value);
-    }.bind(this)
+    }.bind(this),
   );
   // show/hide icons
   window.addEventListener(
     "resize",
     function (e) {
       this.showHideIcons();
-    }.bind(this)
+    }.bind(this),
   );
 };
 
@@ -795,24 +795,24 @@ Layout.prototype.set = function (layout, enableDelay) {
               i
             ].geometry.attributes.targetTranslation.needsUpdate = true;
             animatable.push(
-              world.group.children[i].material.uniforms.transitionPercent
+              world.group.children[i].material.uniforms.transitionPercent,
             );
           }
           // begin the animation
           TweenMax.to(
             animatable,
             config.transitions.duration,
-            config.transitions.ease
+            config.transitions.ease,
           );
           // prepare to update all the cell buffers once transition completes
           setTimeout(
             this.onTransitionComplete.bind(this),
-            config.transitions.duration * 1000
+            config.transitions.duration * 1000,
           );
-        }.bind(this)
+        }.bind(this),
       );
     }.bind(this),
-    delay
+    delay,
   );
 };
 
@@ -825,7 +825,7 @@ Layout.prototype.getLayoutPath = function () {
         v.n_neighbors.toString() === this.getSelectedNNeighbors() &&
         v.min_dist.toString() === this.getSelectedMinDist()
       );
-    }.bind(this)
+    }.bind(this),
   )[0];
   return selected[layoutType];
 };
@@ -1104,11 +1104,11 @@ World.prototype.setScaleUniforms = function () {
 World.prototype.addScalarChangeListener = function () {
   this.elems.pointSize.addEventListener(
     "change",
-    this.setScaleUniforms.bind(this)
+    this.setScaleUniforms.bind(this),
   );
   this.elems.pointSize.addEventListener(
     "input",
-    this.setScaleUniforms.bind(this)
+    this.setScaleUniforms.bind(this),
   );
 };
 
@@ -1119,11 +1119,11 @@ World.prototype.addScalarChangeListener = function () {
 World.prototype.addBorderWidthChangeListener = function () {
   this.elems.borderWidth.addEventListener(
     "change",
-    this.setBorderWidthUniforms.bind(this)
+    this.setBorderWidthUniforms.bind(this),
   );
   this.elems.borderWidth.addEventListener(
     "input",
-    this.setBorderWidthUniforms.bind(this)
+    this.setBorderWidthUniforms.bind(this),
   );
 };
 
@@ -1145,9 +1145,9 @@ World.prototype.addTabChangeListeners = function () {
         function () {
           this.canvas.width = this.canvas.width - 1;
         }.bind(this),
-        50
+        50,
       );
-    }.bind(this)
+    }.bind(this),
   );
 };
 
@@ -1299,13 +1299,13 @@ World.prototype.getGroupAttributes = function (cells) {
       it.translation,
       3,
       true,
-      1
+      1,
     ),
     targetTranslation = new THREE.InstancedBufferAttribute(
       it.targetTranslation,
       3,
       true,
-      1
+      1,
     ),
     color = new THREE.InstancedBufferAttribute(it.color, 3, true, 1),
     opacity = new THREE.InstancedBufferAttribute(it.opacity, 1, true, 1),
@@ -1314,7 +1314,7 @@ World.prototype.getGroupAttributes = function (cells) {
       it.clusterSelected,
       1,
       false,
-      1
+      1,
     ),
     texIndex = new THREE.InstancedBufferAttribute(it.texIndex, 1, false, 1),
     width = new THREE.InstancedBufferAttribute(it.width, 1, false, 1),
@@ -1577,7 +1577,7 @@ World.prototype.getFragmentShader = function (obj) {
   if (useColor) {
     fragShader = fragShader.replace(
       "uniform sampler2D textures[N_TEXTURES];",
-      ""
+      "",
     );
     fragShader = fragShader.replace("TEXTURE_LOOKUP_TREE", "");
     return fragShader;
@@ -1621,9 +1621,9 @@ World.prototype.attrsNeedUpdate = function (attrs) {
       attrs.forEach(
         function (attr) {
           mesh.geometry.attributes[attr].needsUpdate = true;
-        }.bind(this)
+        }.bind(this),
       );
-    }.bind(this)
+    }.bind(this),
   );
 };
 
@@ -1672,7 +1672,7 @@ World.prototype.flyTo = function (obj) {
         q0,
         camera.quaternion,
         this.camera.quaternion,
-        deg
+        deg,
       );
     }.bind(this),
     onComplete: function () {
@@ -1702,7 +1702,7 @@ World.prototype.flyToCellIdx = function (idx) {
     y: cell.y,
     z: Math.min(
       config.pickerMaxZ - 0.0001,
-      cell.z + this.getPointScale() / 100
+      cell.z + this.getPointScale() / 100,
     ),
   });
 };
@@ -1827,7 +1827,7 @@ World.prototype.showSelectTooltip = function () {
     "click",
     function () {
       this.hideSelectTooltip();
-    }.bind(this)
+    }.bind(this),
   );
 };
 
@@ -1877,7 +1877,7 @@ World.prototype.addDeviceInteractionGuide = function () {
     "click",
     function () {
       elem.style.display = "none";
-    }.bind(this)
+    }.bind(this),
   );
 };
 
@@ -1987,11 +1987,11 @@ Lasso.prototype.addModalEventListeners = function () {
             if (i === e.target.getAttribute("data-image"))
               index = indices.length;
             if (this.selected[i]) indices.push(idx);
-          }.bind(this)
+          }.bind(this),
         );
         modal.showCells(indices, index);
       }
-    }.bind(this)
+    }.bind(this),
   );
 
   // show the list of images the user selected
@@ -2001,13 +2001,13 @@ Lasso.prototype.addModalEventListeners = function () {
       var images = Object.keys(this.selected).filter(
         function (k) {
           return this.selected[k];
-        }.bind(this)
+        }.bind(this),
       );
       var template = _.template(this.elems.modalTemplate.textContent);
       this.elems.modalTarget.innerHTML = template({ images: images });
       this.elems.modalContainer.style.display = "block";
       this.displayed = true;
-    }.bind(this)
+    }.bind(this),
   );
 
   // toggle the inclusion of a cell in the selection
@@ -2026,7 +2026,7 @@ Lasso.prototype.addModalEventListeners = function () {
           }
         }
       }
-    }.bind(this)
+    }.bind(this),
   );
 
   // let users set the download filetype
@@ -2039,14 +2039,14 @@ Lasso.prototype.addModalEventListeners = function () {
         }
         e.target.classList.add("active");
         this.downloadFiletype = e.target.id;
-      }.bind(this)
+      }.bind(this),
     );
   }
 
   // let users trigger the download
   this.elems.downloadLink.addEventListener(
     "click",
-    this.downloadSelected.bind(this)
+    this.downloadSelected.bind(this),
   );
 
   // allow users to clear the selected images
@@ -2164,7 +2164,7 @@ Lasso.prototype.getSelectedMetadata = function (callback) {
             }
             callback(rows);
           }
-        }.bind(this)
+        }.bind(this),
       );
     }
   } else {
@@ -2204,7 +2204,7 @@ Lasso.prototype.downloadSelected = function () {
           });
         }
       }
-    }.bind(this)
+    }.bind(this),
   );
 };
 
@@ -2213,7 +2213,7 @@ Lasso.prototype.getSelectedFilenames = function () {
   return Object.keys(this.selected).filter(
     function (k) {
       return this.selected[k];
-    }.bind(this)
+    }.bind(this),
   );
 };
 
@@ -2316,7 +2316,7 @@ ConvexHullGrahamScan.prototype = {
     if (newAnchor) {
       if (this.anchorPoint !== undefined) {
         this.points.push(
-          new this.Point(this.anchorPoint.x, this.anchorPoint.y)
+          new this.Point(this.anchorPoint.x, this.anchorPoint.y),
         );
       }
       this.anchorPoint = new this.Point(x, y);
@@ -2564,7 +2564,7 @@ Dates.prototype.load = function () {
           json.dates[k].forEach(
             function (img) {
               this.state.data[img] = _k;
-            }.bind(this)
+            }.bind(this),
           );
           this.imageSelected = function (image) {
             var year = this.state.data[image];
@@ -2579,11 +2579,11 @@ Dates.prototype.load = function () {
               year >= this.state.selected[0] && year <= this.state.selected[1]
             );
           };
-        }.bind(this)
+        }.bind(this),
       );
       // add the filter now that the dates have loaded
       this.addFilter();
-    }.bind(this)
+    }.bind(this),
   );
 };
 
@@ -2612,7 +2612,7 @@ Dates.prototype.addFilter = function () {
     function (values) {
       this.state.selected = values;
       filters.filterImages();
-    }.bind(this)
+    }.bind(this),
   );
 };
 
@@ -2641,7 +2641,7 @@ Text.prototype.addEventListeners = function () {
     function () {
       if (!this.mesh) return;
       this.mesh.material.uniforms.scale.value = world.getPointScale();
-    }.bind(this)
+    }.bind(this),
   );
 };
 
@@ -2675,7 +2675,7 @@ Text.prototype.getTexture = function () {
     ctx.fillText(
       char,
       x + xOffset * this.point,
-      y + this.point - yOffset * this.point
+      y + this.point - yOffset * this.point,
     );
     x += this.point;
     if (x > canvas.width - this.point) {
@@ -2758,7 +2758,7 @@ Text.prototype.setWords = function (arr) {
       this.mesh.geometry.attributes.offset.array = offsets;
       this.mesh.geometry.attributes.position.needsUpdate = true;
       this.mesh.geometry.attributes.offset.needsUpdate = true;
-    }.bind(this)
+    }.bind(this),
   );
 };
 
@@ -2806,7 +2806,7 @@ Modal.prototype.showCells = function (cellIndices, cellIdx) {
   function showModal(json) {
     var json = json || {};
     var template = document.querySelector(
-      "#selected-image-template"
+      "#selected-image-template",
     ).textContent;
     var target = document.querySelector("#selected-image-modal");
     var templateData = {
@@ -2832,7 +2832,7 @@ Modal.prototype.showCells = function (cellIndices, cellIdx) {
       config.data.dir + "/metadata/file/" + filename + ".json",
       function (json) {
         showModal(Object.assign({}, json, { image: image }));
-      }
+      },
     );
   };
   image.src = src;
@@ -2849,7 +2849,7 @@ Modal.prototype.close = function () {
       this.cellIdx = null;
       this.state.displayed = false;
     }.bind(this),
-    230
+    230,
   );
 };
 
@@ -2885,7 +2885,7 @@ Modal.prototype.showPreviousCell = function () {
     function () {
       this.showCells(this.cellIndices, cellIdx);
     }.bind(this),
-    250
+    250,
   );
 };
 
@@ -2898,7 +2898,7 @@ Modal.prototype.showNextCell = function () {
     function () {
       this.showCells(this.cellIndices, cellIdx);
     }.bind(this),
-    250
+    250,
   );
 };
 
@@ -2966,7 +2966,7 @@ LOD.prototype.indexCells = function () {
       if (!coords[x]) coords[x] = {};
       if (!coords[x][y]) coords[x][y] = [];
       coords[x][y].push(cell.idx);
-    }.bind(this)
+    }.bind(this),
   );
   this.grid = coords;
 };
@@ -3063,7 +3063,7 @@ LOD.prototype.fetchNextImage = function () {
           cellIndices = getNested(this.grid, coords, []).filter(
             function (cellIdx) {
               return !this.state.cellIdxToCoords[cellIdx];
-            }.bind(this)
+            }.bind(this),
           );
         this.state.fetchQueue = this.state.fetchQueue.concat(cellIndices);
       }
@@ -3102,7 +3102,7 @@ LOD.prototype.addCellsToLodTexture = function () {
         this.state.gridPosToCoords[gridKey] = [];
       // add the cell data to the data stores
       this.state.gridPosToCoords[gridKey].push(
-        Object.assign({}, coords, { cellIdx: cell.idx })
+        Object.assign({}, coords, { cellIdx: cell.idx }),
       );
       this.state.cellIdxToCoords[cell.idx] = coords;
       // draw the cell's image in a new canvas
@@ -3139,7 +3139,7 @@ LOD.prototype.unload = function () {
       if (!this.inRadius({ x: parseInt(split[0]), y: parseInt(split[1]) })) {
         this.unloadGridPos(gridPos);
       }
-    }.bind(this)
+    }.bind(this),
   );
 };
 
@@ -3154,7 +3154,7 @@ LOD.prototype.unloadGridPos = function (gridPos) {
         data.cells[coords.cellIdx].deactivate();
         delete this.state.cellIdxToCoords[coords.cellIdx];
       } catch (err) {}
-    }.bind(this)
+    }.bind(this),
   );
   // remove the old grid position from the list of active grid positions
   delete this.state.gridPosToCoords[gridPos];
@@ -3165,7 +3165,7 @@ LOD.prototype.unloadGridPos = function (gridPos) {
 // clear the LOD state entirely
 LOD.prototype.clear = function () {
   Object.keys(this.state.gridPosToCoords).forEach(
-    this.unloadGridPos.bind(this)
+    this.unloadGridPos.bind(this),
   );
   this.state.camPos = {
     x: Number.POSITIVE_INFINITY,
@@ -3193,7 +3193,7 @@ Filters.prototype.loadFilters = function () {
       for (var i = 0; i < data.length; i++) {
         this.filters.push(new Filter(data[i]));
       }
-    }.bind(this)
+    }.bind(this),
   );
 };
 
@@ -3341,7 +3341,7 @@ Filter.prototype.filterImages = function () {
           return image in vals;
         };
         filters.filterImages();
-      }.bind(this)
+      }.bind(this),
     );
   }
 };
@@ -3449,7 +3449,7 @@ Hotspots.prototype.addEventListeners = function () {
       this.render();
       // scroll to the bottom of the hotspots
       setTimeout(this.scrollToBottom.bind(this), 100);
-    }.bind(this)
+    }.bind(this),
   );
   // add save hotspots event listener
   this.elems.saveHotspots.addEventListener(
@@ -3457,7 +3457,7 @@ Hotspots.prototype.addEventListeners = function () {
     function () {
       downloadFile(this.json, "user_hotspots.json");
       this.setEdited(false);
-    }.bind(this)
+    }.bind(this),
   );
   // add drag to reorder event listeners
   this.elems.navInner.addEventListener("dragover", function (e) {
@@ -3493,7 +3493,7 @@ Hotspots.prototype.addEventListeners = function () {
       this.render();
       // if the dragged item changed positions, allow user to save data
       if (idxA != idxB) this.setEdited(true);
-    }.bind(this)
+    }.bind(this),
   );
   // add tooltip event listener
   this.elems.nav.addEventListener(
@@ -3501,7 +3501,7 @@ Hotspots.prototype.addEventListeners = function () {
     function (e) {
       if (localStorage.getItem("hotspots-tooltip-cleared")) return;
       this.elems.tooltip.style.display = "block";
-    }.bind(this)
+    }.bind(this),
   );
   // add tooltip clearing event listener
   this.elems.clearTooltip.addEventListener(
@@ -3509,7 +3509,7 @@ Hotspots.prototype.addEventListeners = function () {
     function (e) {
       localStorage.setItem("hotspots-tooltip-cleared", true);
       this.elems.tooltip.style.display = "none";
-    }.bind(this)
+    }.bind(this),
   );
 };
 
@@ -3533,7 +3533,7 @@ Hotspots.prototype.render = function () {
       "click",
       function (idx) {
         world.flyToCellImage(this.json[idx].img);
-      }.bind(this, i)
+      }.bind(this, i),
     );
     // show the convex hull of a cluster on mouse enter
     hotspots[i].addEventListener(
@@ -3541,7 +3541,7 @@ Hotspots.prototype.render = function () {
       function (idx) {
         // update the hover cell buffer
         this.setHotspotHoverBuffer(this.json[idx].images);
-      }.bind(this, i)
+      }.bind(this, i),
     );
     // remove the convex hull shape on mouseout
     hotspots[i].addEventListener(
@@ -3551,7 +3551,7 @@ Hotspots.prototype.render = function () {
         this.setHotspotHoverBuffer([]);
         // remove the mesh
         world.scene.remove(this.mesh);
-      }.bind(this)
+      }.bind(this),
     );
     // allow users on localhost to delete hotspots
     var elem = hotspots[i].querySelector(".remove-hotspot-x");
@@ -3566,7 +3566,7 @@ Hotspots.prototype.render = function () {
           this.json.splice(i, 1);
           this.setEdited(true);
           this.render();
-        }.bind(this, i)
+        }.bind(this, i),
       );
     }
     // allow users to select new "diplomat" images for the cluster
@@ -3584,7 +3584,7 @@ Hotspots.prototype.render = function () {
           // make the change saveable
           this.setEdited(true);
           this.render();
-        }.bind(this, i)
+        }.bind(this, i),
       );
     }
     // prevent newlines when retitling
@@ -3596,7 +3596,7 @@ Hotspots.prototype.render = function () {
           e.preventDefault();
           hotspots[i].querySelector(".hotspot-label").blur();
         }
-      }.bind(this, i)
+      }.bind(this, i),
     );
     // allow users to retitle hotspots
     hotspots[i].querySelector(".hotspot-label").addEventListener(
@@ -3604,9 +3604,9 @@ Hotspots.prototype.render = function () {
       function (i, e) {
         this.setEdited(true);
         this.json[i].label = this.formatLabel(
-          hotspots[i].querySelector(".hotspot-label").textContent
+          hotspots[i].querySelector(".hotspot-label").textContent,
         );
-      }.bind(this, i)
+      }.bind(this, i),
     );
     // allow users to reorder hotspots
     hotspots[i].addEventListener("dragstart", function (e) {
@@ -3794,13 +3794,13 @@ Webgl.prototype.getLimits = function () {
     // max h,w of textures in px
     textureSize: Math.min(
       this.gl.getParameter(this.gl.MAX_TEXTURE_SIZE),
-      2 ** 13
+      2 ** 13,
     ),
     // max textures that can be used in fragment shader
     textureCount: this.gl.getParameter(this.gl.MAX_TEXTURE_IMAGE_UNITS),
     // max textures that can be used in vertex shader
     vShaderTextures: this.gl.getParameter(
-      this.gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS
+      this.gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS,
     ),
     // max number of indexed elements
     indexedElements: maxIndex,
@@ -3817,13 +3817,13 @@ function Keyboard() {
     "keydown",
     function (e) {
       this.pressed[e.keyCode] = true;
-    }.bind(this)
+    }.bind(this),
   );
   window.addEventListener(
     "keyup",
     function (e) {
       this.pressed[e.keyCode] = false;
-    }.bind(this)
+    }.bind(this),
   );
 }
 
@@ -3856,7 +3856,7 @@ function Tooltip() {
     // },
     {
       elem: document.querySelector("#layout-date"),
-      text: "Order poses by date",
+      text: "Order poses by minute",
     },
     {
       elem: document.querySelector("#layout-categorical"),
@@ -3887,10 +3887,10 @@ function Tooltip() {
             9 +
             "px";
           this.elem.style.top = offsets.top + i.elem.clientHeight + 16 + "px";
-        }.bind(this)
+        }.bind(this),
       );
       i.elem.addEventListener("mouseleave", this.hide.bind(this));
-    }.bind(this)
+    }.bind(this),
   );
 }
 
@@ -3917,9 +3917,9 @@ Welcome.prototype.onButtonClick = function (e) {
         this.removeLoader(
           function () {
             this.startWorld();
-          }.bind(this)
+          }.bind(this),
         );
-      }.bind(this)
+      }.bind(this),
     );
   }
 };
@@ -3935,10 +3935,10 @@ Welcome.prototype.removeLoader = function (onSuccess) {
             blocks[i].parentNode.removeChild(blocks[i]);
             if (i == blocks.length - 1) onSuccess();
           }.bind(this, i),
-          1000
+          1000,
         );
       }.bind(this, i),
-      i * 100
+      i * 100,
     );
   }
   document.querySelector("#progress").style.opacity = 0;
@@ -3974,7 +3974,7 @@ Welcome.prototype.startWorld = function () {
           document.querySelector("#header-controls").style.opacity = 1;
         });
       }, 1500);
-    }.bind(this)
+    }.bind(this),
   );
 };
 
@@ -3991,7 +3991,7 @@ function Swipes(obj) {
       this.xDown = e.touches[0].clientX;
       this.yDown = e.touches[0].clientY;
     },
-    false
+    false,
   );
   document.addEventListener(
     "touchmove",
@@ -4025,7 +4025,7 @@ function Swipes(obj) {
       this.xDown = null;
       this.yDown = null;
     },
-    false
+    false,
   );
 }
 
@@ -4157,7 +4157,7 @@ function AttractMode() {
   ["click", "mousemove", "keydown", "visibilitychange"].forEach(
     function (e) {
       window.addEventListener(e, this.resetActiveTimer.bind(this));
-    }.bind(this)
+    }.bind(this),
   );
 }
 
@@ -4170,7 +4170,7 @@ AttractMode.prototype.resetActiveTimer = function () {
     function () {
       this.setActive(true);
     }.bind(this),
-    this.delays.initialize
+    this.delays.initialize,
   );
 };
 
@@ -4204,7 +4204,7 @@ AttractMode.prototype.nextEvent = function () {
         this.eventIndex++;
         this.nextEvent();
       }.bind(this),
-      this.delays.layoutChange
+      this.delays.layoutChange,
     );
     // first image in sequence
   } else if (this.eventIndex === -2) {
@@ -4216,14 +4216,14 @@ AttractMode.prototype.nextEvent = function () {
         data.json.images.forEach(
           function (i, idx) {
             if (i === this.hotspot.img) index = idx;
-          }.bind(this)
+          }.bind(this),
         );
         // fly to the cluster
         world.flyToCellIdx(index);
         this.eventIndex++;
         this.nextEvent();
       }.bind(this),
-      this.delays.clusterZoom
+      this.delays.clusterZoom,
     );
   } else if (this.eventIndex === -1) {
     this.timeout = setTimeout(
@@ -4233,7 +4233,7 @@ AttractMode.prototype.nextEvent = function () {
         this.eventIndex++;
         this.nextEvent();
       }.bind(this),
-      this.delays.beforeLightbox
+      this.delays.beforeLightbox,
     );
     // between first and last image in sequence
   } else if (this.eventIndex < this.nImages) {
@@ -4244,7 +4244,7 @@ AttractMode.prototype.nextEvent = function () {
         this.eventIndex++;
         this.nextEvent();
       }.bind(this),
-      this.delays.betweenLightbox
+      this.delays.betweenLightbox,
     );
     // images are now finished, close the lightbox and wait
   } else if (this.eventIndex === this.nImages) {
@@ -4256,7 +4256,7 @@ AttractMode.prototype.nextEvent = function () {
         this.eventIndex++;
         this.nextEvent();
       }.bind(this),
-      this.delays.betweenLightbox
+      this.delays.betweenLightbox,
     );
     // we've waited after closing the lightbox; go to the next view/hotspot
   } else if (this.eventIndex > this.nImages) {
@@ -4492,22 +4492,22 @@ function getEventClientCoords(e) {
       e.touches && e.touches[0] && "clientX" in e.touches[0]
         ? e.touches[0].clientX
         : e.changedTouches &&
-          e.changedTouches[0] &&
-          "clientX" in e.changedTouches[0]
-        ? e.changedTouches[0].clientX
-        : e.clientX
-        ? e.clientX
-        : e.pageX,
+            e.changedTouches[0] &&
+            "clientX" in e.changedTouches[0]
+          ? e.changedTouches[0].clientX
+          : e.clientX
+            ? e.clientX
+            : e.pageX,
     y:
       e.touches && e.touches[0] && "clientY" in e.touches[0]
         ? e.touches[0].clientY
         : e.changedTouches &&
-          e.changedTouches[0] &&
-          "clientY" in e.changedTouches[0]
-        ? e.changedTouches[0].clientY
-        : e.clientY
-        ? e.clientY
-        : e.pageY,
+            e.changedTouches[0] &&
+            "clientY" in e.changedTouches[0]
+          ? e.changedTouches[0].clientY
+          : e.clientY
+            ? e.clientY
+            : e.pageY,
   };
 }
 

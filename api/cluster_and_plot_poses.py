@@ -377,22 +377,25 @@ async def main() -> None:
             Path(out_dir, "options", i + ".jon"), "w", encoding="utf-8"
         ) as outfile:
             json.dump(d[i], outfile, indent=4)
-    # create the map from date to images with that date (if dates present)
+    # create the map from sequence number to images with that seqno (if present)
     date_d = defaultdict(list)
+    all_dates = []
     for i in img_metadata:
         date = i.get("year", "")
         if date:
             date_d[date].append(i["filename"])
+            all_dates.append(date)
     # find the min and max dates to show on the date slider
-    dates = np.array([int(i.strip()) for i in date_d if isinstance(i, int)])
-    domain = {"min": float("inf"), "max": -float("inf")}
-    mean = np.mean(dates)
-    std = np.std(dates)
-    for i in dates:
-        # update the date domain with all non-outlier dates
-        if abs(mean - i) < (std * 4):
-            domain["min"] = int(min(i, domain["min"]))
-            domain["max"] = int(max(i, domain["max"]))
+    # dates = np.array([int(i.strip()) for i in date_d if isinstance(i, int)])
+    dates = np.array([int(key) for key in date_d.keys()])
+    domain = {"min": int(min(dates)), "max": int(max(dates))}
+    # mean = np.mean(dates)
+    # std = np.std(dates)
+    # for i in dates:
+    #     # update the date domain with all non-outlier dates
+    #     if abs(mean - i) < (std * 4):
+    #         domain["min"] = int(min(i, domain["min"]))
+    #         domain["max"] = int(max(i, domain["max"]))
     # write the dates json
     if len(date_d) > 1:
         with open(Path(out_dir, "dates.json"), "w", encoding="utf-8") as outfile:
@@ -467,6 +470,68 @@ async def main() -> None:
     # with open(grid_path, "w", encoding="utf-8") as outfile:
     #     json.dump(pos, outfile, indent=4)
 
+    # "Date" layout (actually just frame numbers converted to minutes)
+
+    d = defaultdict(list)
+    for idx, i in enumerate(all_dates):
+        d[i].append(idx)
+
+    n_coords_y = 0
+    n_coords_x = -1
+
+    cols = 2
+    while n_coords_y > n_coords_x:
+        cols = cols * 2
+        n_coords_x = (cols + 1) * len(d)
+        n_coords_y = 1 + max([len(d[i]) for i in d]) // cols
+
+    logging.info(f"Creating date layout with {cols} columns")
+
+    # create a mesh of grid positions in clip space -1:1 given the time distribution
+    grid_x = (np.arange(0, n_coords_x) / (n_coords_x - 1)) * 2
+    grid_y = (np.arange(0, n_coords_y) / (n_coords_x - 1)) * 2
+    # divide each grid axis by half its max length to center at the origin 0,0
+    grid_x = grid_x - np.max(grid_x) / 2.0
+    grid_y = grid_y - np.max(grid_y) / 2.0
+    # make dates increase from left to right by sorting keys of d
+    d_keys = np.array(list(d.keys()))
+    # seconds = np.array([date_to_seconds(dates[ d[i][0] ]) for i in d_keys])
+    seconds = np.array([all_dates[d[i][0]] for i in d_keys])
+    d_keys = d_keys[np.argsort(np.array(seconds).astype(int))]
+    # determine which images will fill which units of the grid established above
+    coords = np.zeros(
+        (len(all_dates), 2)
+    )  # 2D array with x, y clip-space coords of each date
+    for jdx, j in enumerate(d_keys):
+        for kdx, k in enumerate(d[j]):
+            x = jdx * (cols + 1) + (kdx % cols)
+            y = kdx // cols
+            coords[k] = [grid_x[x], grid_y[y]]
+    # find the positions of labels
+    label_positions = np.array(
+        [[grid_x[i * (cols + 1)], grid_y[0]] for i in range(len(d))]
+    )
+    # move the labels down in the y dimension by a grid unit
+    dx = grid_x[1] - grid_x[0]  # size of a single cell
+    label_positions[:, 1] = label_positions[:, 1] - dx
+    # quantize the label positions and label positions
+    image_positions = [[round(float(j), 5) for j in i] for i in coords]
+    label_positions = [[round(float(j), 5) for j in i] for i in label_positions.tolist()]
+
+    positions_out_path = Path(data_path, "layouts", "timeline.json")
+    with open(positions_out_path, "w", encoding="utf-8") as outfile:
+        json.dump(image_positions, outfile)
+    labels_out_path = Path(data_path, "layouts", "timeline-labels.json")
+    date_layout = {"positions": label_positions, "labels": d_keys.tolist(), "cols": cols}
+    with open(labels_out_path, "w", encoding="utf-8") as outfile:
+        json.dump(date_layout, outfile)
+
+    # write and return the paths to the date based layout
+    date_layout_info = {
+        "layout": str(Path("data", "layouts", "timeline.json")),
+        "labels": str(Path("data", "layouts", "timeline-labels.json")),
+    }
+
     layouts = {
         "umap": umap_desc,
         "alphabetic": {
@@ -476,7 +541,7 @@ async def main() -> None:
             "layout": None,  # grid_path,
         },
         "categorical": None,  # get_categorical_layout(**kwargs),
-        "date": None,  # get_date_layout(**kwargs),
+        "date": date_layout_info,
         "geographic": None,  # get_geographic_layout(**kwargs),
         "custom": None,  # get_custom_layout(**kwargs),
     }
@@ -499,7 +564,7 @@ async def main() -> None:
         # find percent of images in cluster
         image_percent = len(d[i]["images"]) / len(all_image_paths)
         # determine if image or area percent is too large
-        if image_percent > 0.6:
+        if image_percent > 0.5:
             deletable.append(i)
     for i in deletable:
         del d[i]
@@ -507,7 +572,7 @@ async def main() -> None:
     clusters = d.values()
     clusters = sorted(clusters, key=lambda i: len(i["images"]), reverse=True)
     for idx, i in enumerate(clusters):
-        i["label"] = "Cluster {}".format(idx + 1)
+        i["label"] = f"Cluster {idx + 1}"
     # slice off the first `max_clusters`
     clusters = clusters[: int(args.n_clusters)]
     # save the hotspots to disk and return the path to the saved json
@@ -587,11 +652,7 @@ async def main() -> None:
     point_sizes["categorical"] = point_sizes["grid"] * 0.6
     point_sizes["geographic"] = point_sizes["grid"] * 0.025
     # fetch the date distribution data for point sizing
-    # if "date" in layouts and layouts["date"]:
-    #     date_layout = json.load(open(layouts["date"]["labels"], "r", encoding="utf-8"))
-    #     point_sizes["date"] = 1 / (
-    #         (date_layout["cols"] + 1) * len(date_layout["labels"])
-    #     )
+    point_sizes["date"] = 1 / ((date_layout["cols"] + 1) * len(date_layout["labels"]))
     # create manifest json
     manifest = {
         "version": "Pose_Plot_0.0.1",
