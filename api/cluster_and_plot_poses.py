@@ -662,7 +662,6 @@ async def main() -> None:
         if i != -1:
             d[i]["images"].append(idx)
             d[i]["img"] = os.path.basename(all_image_paths[idx])
-            d[i]["avg_img"] = f"{i}.png"
             d[i]["layout"] = "vectors"
     # remove massive clusters
     # deletable = []
@@ -679,6 +678,7 @@ async def main() -> None:
     clusters = sorted(clusters, key=lambda i: len(i["images"]), reverse=True)
     for idx, i in enumerate(clusters):
         i["label"] = f"Cluster {idx + 1}"
+        i["avg_img"] = f"{idx}.png"
     # slice off the first `max_clusters`
     clusters = clusters[: int(args.n_clusters)]
     # save the hotspots to disk and return the path to the saved json
