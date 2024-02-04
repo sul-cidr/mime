@@ -673,12 +673,17 @@ async def main() -> None:
     #         deletable.append(i)
     # for i in deletable:
     #     del d[i]
-    # sort the clusers by size and then label the clusters
-    clusters = d.values()
-    clusters = sorted(clusters, key=lambda i: len(i["images"]), reverse=True)
-    for idx, i in enumerate(clusters):
-        i["label"] = f"Cluster {idx + 1}"
-        i["avg_img"] = f"{idx}.png"
+    # DO NOT sort the clusers by size
+    # Sort the clusters by label, and label them accordingly
+    # clusters = sorted(clusters, key=lambda i: len(i["images"]), reverse=True)
+    clusters = dict(sorted(d.items()))
+    # for idx, i in enumerate(clusters):
+    #     i["label"] = f"Cluster {idx}"
+    #     i["avg_img"] = f"{idx}.png"
+    for i in clusters:
+        clusters[i]["label"] = f"Cluster {i}"
+        clusters[i]["avg_img"] = f"{i}.png"
+    clusters = list(clusters.values())
     # slice off the first `max_clusters`
     clusters = clusters[: int(args.n_clusters)]
     # save the hotspots to disk and return the path to the saved json

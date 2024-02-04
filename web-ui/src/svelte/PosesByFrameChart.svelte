@@ -28,7 +28,7 @@
     "#0fba81", // green-blue
     "#4f46e5", // blue
     "lime",
-    "f00ff88", // magenta
+    "#ff00ff88", // magenta
     "black",
     "gray",
     "orange",
