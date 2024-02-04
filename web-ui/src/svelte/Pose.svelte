@@ -93,8 +93,8 @@
   }
 
   let segments: FixedLengthArray<
-    FixedLengthArray<number, 2> | FixedLengthArray<number, 3>
-    //,total_coco_coords;
+    FixedLengthArray<number, 2> | FixedLengthArray<number, 3>,
+    total_coco_coords
   >;
 
   import { getContext } from "svelte";
