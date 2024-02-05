@@ -3906,40 +3906,40 @@ function Welcome() {
   this.progressElem = document.querySelector("#progress");
   this.loaderTextElem = document.querySelector("#loader-text");
   this.loaderSceneElem = document.querySelector("#loader-scene");
-  this.buttonElem = document.querySelector("#enter-button");
-  this.buttonElem.addEventListener("click", this.onButtonClick.bind(this));
+  //this.buttonElem = document.querySelector("#enter-button");
+  //this.buttonElem.addEventListener("click", this.onButtonClick.bind(this));
 }
 
-Welcome.prototype.onButtonClick = function (e) {
-  if (e.target.className.indexOf("active") > -1) {
-    requestAnimationFrame(
-      function () {
-        this.removeLoader(
-          function () {
-            this.startWorld();
-          }.bind(this),
-        );
-      }.bind(this),
-    );
-  }
-};
+// Welcome.prototype.onButtonClick = function (e) {
+//   if (e.target.className.indexOf("active") > -1) {
+//     requestAnimationFrame(
+//       function () {
+//         this.removeLoader(
+//           function () {
+//             this.startWorld();
+//           }.bind(this),
+//         );
+//       }.bind(this),
+//     );
+//   }
+// };
 
 Welcome.prototype.removeLoader = function (onSuccess) {
   var blocks = document.querySelectorAll(".block");
   for (var i = 0; i < blocks.length; i++) {
-    setTimeout(
-      function (i) {
-        blocks[i].style.animation = "exit 300s";
-        setTimeout(
-          function (i) {
+    // setTimeout(
+    //   function (i) {
+    //     blocks[i].style.animation = "exit 300s";
+    //     setTimeout(
+    //       function (i) {
             blocks[i].parentNode.removeChild(blocks[i]);
             if (i == blocks.length - 1) onSuccess();
-          }.bind(this, i),
-          1000,
-        );
-      }.bind(this, i),
-      i * 100,
-    );
+    //       }.bind(this, i),
+    //       1000,
+    //     );
+    //   }.bind(this, i),
+    //   i * 100,
+    // );
   }
   document.querySelector("#progress").style.opacity = 0;
 };
@@ -3957,7 +3957,17 @@ Welcome.prototype.updateProgress = function () {
     data.loadedTextures == data.textureCount &&
     world.heightmap
   ) {
-    this.buttonElem.className += " active";
+    //this.buttonElem.className += " active";
+    console.log("All loaded, starting world");
+    requestAnimationFrame(
+      function () {
+        this.removeLoader(
+          function () {
+            this.startWorld();
+          }.bind(this),
+        );
+      }.bind(this),
+    );
   }
 };
 

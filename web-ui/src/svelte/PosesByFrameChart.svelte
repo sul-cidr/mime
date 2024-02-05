@@ -25,16 +25,16 @@
   export let timelineData: Array<FrameRecord>;
 
   const seriesColors = [
-    "#0fba81",
-    "#4f46e5",
+    "#0fba81", // green-blue
+    "#4f46e5", // blue
     "lime",
-    "magenta",
+    "#ff00ff88", // magenta
     "black",
     "gray",
     "orange",
-    "#f9e07688",
-    "#FFA50088",
-    "brown",
+    "#964B00BB", // brown
+    "#fA8072BB", // salmon
+    "fbceb1", // apricot
   ];
   const formatTickXAsTime = (d: number) => {
     return new Date((d / $currentVideo.fps) * 1000)
