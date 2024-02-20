@@ -1,4 +1,8 @@
-# mime
+# MIME (Machine Intelligence for Motion Exegesis)
+
+MIME is a collaborative effort between faculty in the Department of Theater and Performance Studies at Stanford University and developers at the Stanford Libraries’ Center for Interdisciplinary Digital Research to study recorded theatrical performances through the lens of pose estimation and motion tracking.
+
+This repository contains code for ingesting, indexing and exploring the output of software tools for running pose estimation and related tasks on video files. For further details, see our [poster for DH 2023](https://sul-cidr.github.io/mime/).
 
 ## Simple Bring-Up
 
@@ -61,7 +65,7 @@ In addition to making it possible to run parts of the stack independently of the
 
 ## Ingesting videos for analysis
 
-The processing steps are highly subject to change as analytical methods are added or modified, but as of late January 2024, the full sequence for adding a performance video to the platform is as described below. The provided file paths are all relative to the folder on the host system set by `VIDEO_SRC_FOLDER=` in the `.env` file. Note that the steps assume an output .json from from running pose estimation on the video file is already present in the same folder as the video; all other video analysis steps now can be done via the commands below.
+The processing steps are highly subject to change as analytical methods are added or modified, but as of late February 2024, the full sequence for adding a performance video to the platform is as described below. The provided file paths are all relative to the folder on the host system set by `VIDEO_SRC_FOLDER=` in the `.env` file. Note that the steps assume an output .json from from running pose estimation on the video file is already present in the same folder as the video; all other video analysis steps now can be done via the commands below.
 
 Steps marked with an asterisk `*` may be optional if a viable output file is present from a previous run of the step.
 
