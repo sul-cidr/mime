@@ -1,8 +1,8 @@
-# MIME (Machine Intelligence for Motion Exegesis)
+# MIME: Machine Intelligence for Motion Exegesis
 
 MIME is a collaborative effort between faculty in the Department of Theater and Performance Studies at Stanford University and developers at the Stanford Libraries’ Center for Interdisciplinary Digital Research to study recorded theatrical performances through the lens of pose estimation and motion tracking.
 
-This repository contains code for ingesting, indexing and exploring the output of software tools for running pose estimation and related tasks on video files. For further details, see our [poster for DH 2023](https://sul-cidr.github.io/mime/).
+This repository contains code for ingesting, indexing and exploring the output of software tools for running pose estimation and related tasks on video files. For further background and screenshots, see our [poster for DH 2023](https://sul-cidr.github.io/mime/).
 
 ## Simple Bring-Up
 
