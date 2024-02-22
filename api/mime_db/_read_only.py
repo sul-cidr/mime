@@ -155,6 +155,7 @@ async def get_nearest_poses(
     pose_idx: int,
     metric="cosine",
     embedding="norm",
+    max_distance="Infinity",
     avoid_shot=-1,
     limit=500,
 ) -> list:
@@ -167,14 +168,19 @@ async def get_nearest_poses(
     distance = {
         "cosine": f"{embedding} <=> ({sub_query})",
         "euclidean": f"{embedding} <-> ({sub_query})",
-        "innerproduct": f"{embedding} <#> ({sub_query})",
+        "innerproduct": f"({embedding} <#> ({sub_query}) * -1",
     }[metric]
+
+    print("METRIC:", metric, "MAX_DISTANCE", max_distance)
 
     return await self._pool.fetch(
         f"""
-        SELECT pose.*, {distance} AS distance, frame.shot AS shot, face.cluster_id AS face_cluster_id FROM pose, frame, face
-        WHERE pose.video_id = $1 AND frame.video_id = $1 AND face.video_id = $1 AND face.frame=pose.frame AND face.pose_idx = pose.pose_idx AND pose.frame = frame.frame AND NOT ((pose.frame = $2 AND pose.pose_idx = $3) OR (frame.shot = $4)) ORDER BY distance
-        LIMIT $5;
+        WITH search_results AS(
+            SELECT pose.*, {distance} AS distance, frame.shot AS shot, face.cluster_id AS face_cluster_id FROM pose, frame, face
+            WHERE pose.video_id = $1 AND frame.video_id = $1 AND face.video_id = $1 AND face.frame=pose.frame AND face.pose_idx = pose.pose_idx AND pose.frame = frame.frame AND NOT ((pose.frame = $2 AND pose.pose_idx = $3) OR (frame.shot = $4)) ORDER BY distance
+            LIMIT $5
+        )
+        SELECT * from search_results where search_results.distance < {max_distance}
         """,
         video_id,
         frame,

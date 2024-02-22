@@ -21,6 +21,9 @@ load_dotenv()
 VIDEO_SRC_FOLDER = os.getenv("VIDEO_SRC_FOLDER")
 CACHE_FOLDER = os.getenv("CACHE_FOLDER")
 
+MAX_COSINE_DISTANCE = 0.05
+MAX_EUCLIDEAN_DISTANCE = 37
+
 try:
     assert VIDEO_SRC_FOLDER
 except AssertionError:
@@ -226,35 +229,69 @@ async def faces_by_frame(video_id: UUID, frame: int, request: Request):
     )
 
 
-@mime_api.get("/poses/similar/{metric}/{video_id}/{frame}/{pose_idx}/")
+@mime_api.get("/poses/similar/{metric_and_max}/{video_id}/{frame}/{pose_idx}/")
 async def get_nearest_poses(
-    metric: str, video_id: UUID, frame: int, pose_idx: int, request: Request
+    metric_and_max: str, video_id: UUID, frame: int, pose_idx: int, request: Request
 ):
+    metric, max_distance = metric_and_max.split("|")
+
     embedding = "norm"
-    if metric == "poem_embedding":
+    if metric == "view_invariant":
         metric = "cosine"
         embedding = "poem_embedding"
+
+    # max_distance = None
+    # if metric == "cosine":
+    #     max_distance = MAX_COSINE_DISTANCE
+    # elif metric == "euclidean":
+    #     max_distance = MAX_EUCLIDEAN_DISTANCE
+
     frame_data = await request.app.state.db.get_nearest_poses(
-        video_id, frame, pose_idx, metric, embedding
+        video_id, frame, pose_idx, metric, embedding, float(max_distance)
     )
+
+    print("length of frame data:", len(frame_data))
+
     return Response(
         content=json.dumps(frame_data, cls=MimeJSONEncoder),
         media_type="application/json",
     )
 
 
-@mime_api.get("/poses/similar/{metric}/{video_id}/{frame}/{pose_idx}/{shot}/")
+@mime_api.get("/poses/similar/{metric_and_max}/{video_id}/{frame}/{pose_idx}/{shot}/")
 async def get_nearest_poses_othershot(
-    metric: str, video_id: UUID, frame: int, pose_idx: int, shot: int, request: Request
+    metric_and_max: str,
+    video_id: UUID,
+    frame: int,
+    pose_idx: int,
+    shot: int,
+    request: Request,
 ):
+    metric, max_distance = metric_and_max.split("|")
+
     embedding = "norm"
-    if metric == "poem_embedding":
+    if metric == "view_invariant":
         metric = "cosine"
         embedding = "poem_embedding"
 
+    # max_distance = None
+    # if metric == "cosine":
+    #     max_distance = MAX_COSINE_DISTANCE
+    # elif metric == "euclidean":
+    #     max_distance = MAX_EUCLIDEAN_DISTANCE
+
     frame_data = await request.app.state.db.get_nearest_poses(
-        video_id, frame, pose_idx, metric, embedding, avoid_shot=shot
+        video_id,
+        frame,
+        pose_idx,
+        metric,
+        embedding,
+        float(max_distance),
+        avoid_shot=shot,
     )
+
+    print("length of frame data:", len(frame_data))
+
     return Response(
         content=json.dumps(frame_data, cls=MimeJSONEncoder),
         media_type="application/json",
