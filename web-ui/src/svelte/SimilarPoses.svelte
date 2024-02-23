@@ -16,7 +16,7 @@
     currentPose,
     currentVideo,
     similarPoseFrames,
-    maxDistances,
+    searchThresholds,
   } from "@svelte/stores";
 
   let avoidShotInResults: boolean = false;
@@ -61,17 +61,17 @@
   async function getPoseData(
     thisPose: PoseRecord,
     similarityMetric: string,
-    maxDistances,
+    searchThresholds,
     avoidShot: boolean,
   ) {
     if (thisPose === null) return [];
 
     const response = avoidShot
       ? await fetch(
-          `${API_BASE}/poses/similar/${similarityMetric}|${maxDistances[similarityMetric]}/${thisPose.video_id}/${thisPose.frame}/${thisPose.pose_idx}/${thisPose.shot}/`,
+          `${API_BASE}/poses/similar/${searchThresholds["total_results"]}/${similarityMetric}|${searchThresholds[similarityMetric]}/${thisPose.video_id}/${thisPose.frame}/${thisPose.pose_idx}/${thisPose.shot}/`,
         )
       : await fetch(
-          `${API_BASE}/poses/similar/${similarityMetric}|${maxDistances[similarityMetric]}/${thisPose.video_id}/${thisPose.frame}/${thisPose.pose_idx}/`,
+          `${API_BASE}/poses/similar/${searchThresholds["total_results"]}/${similarityMetric}|${searchThresholds[similarityMetric]}/${thisPose.video_id}/${thisPose.frame}/${thisPose.pose_idx}/`,
         );
     return await response.json();
   }
@@ -79,7 +79,7 @@
   $: getPoseData(
     $currentPose,
     similarityMetric,
-    $maxDistances,
+    $searchThresholds,
     avoidShotInResults,
   ).then((data) => updatePoseData(data));
 </script>

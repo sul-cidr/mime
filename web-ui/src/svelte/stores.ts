@@ -11,5 +11,5 @@ export const currentMoveletPose: Writable<MoveletPoseRecord> = writable();
 export const similarMoveletFrames: Writable<{ [frameno: number]: number }> =
   writable({});
 export const videoTableData: Writable<JSON> = writable();
-export const maxDistances: Writable<{ [metric: string]: number }> =
-  writable({"cosine": .05, "euclidean": 37, "view_invariant": .1});
+export const searchThresholds: Writable<{ [metric: string]: number }> =
+  writable({"cosine": .05, "euclidean": 37, "view_invariant": .1, "total_results": 500});

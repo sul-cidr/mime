@@ -4,7 +4,7 @@
     currentFrame,
     currentPose,
     currentMoveletPose,
-    maxDistances,
+    searchThresholds,
   } from "@svelte/stores";
   import { formatSeconds } from "@utils";
   import Icon from "@svelte/Icon.svelte";
@@ -35,15 +35,30 @@
       <dd>{(interest * 100).toFixed(2)}%</dd>
     </dl>
 
-    <div class="grid w-1/3 gap-2 p-4">
-      <h4>Max search distances</h4>
+    <div class="grid w-1/3 gap-1 p-4">
+      <h4>Search settings</h4>
+      <div class="flex justify-between">
+        Total Results (1-10000)
+        <label>
+          <input
+            type="number"
+            name="total-results"
+            bind:value={$searchThresholds["total_results"]}
+            size="5"
+            min="1"
+            max="10000"
+            step="10"
+          />
+        </label>
+      </div>
+      <h5>Max search distances</h5>
       <div class="flex justify-between">
         Cosine (.01-.1)
         <label>
           <input
             type="number"
             name="max-cosine-distance"
-            bind:value={$maxDistances["cosine"]}
+            bind:value={$searchThresholds["cosine"]}
             size="4"
             min=".01"
             max=".1"
@@ -57,7 +72,7 @@
           <input
             type="number"
             name="max-euclidean-distance"
-            bind:value={$maxDistances["euclidean"]}
+            bind:value={$searchThresholds["euclidean"]}
             size="4"
             min="1"
             max="100"
@@ -66,12 +81,12 @@
         </label>
       </div>
       <div class="flex justify-between">
-        View-invariant (.01-.1)
+        View Invariant (.01-.1)
         <label>
           <input
             type="number"
-            name="max-invarian-distance"
-            bind:value={$maxDistances["view_invariant"]}
+            name="max-invariant-distance"
+            bind:value={$searchThresholds["view_invariant"]}
             size="4"
             min=".01"
             max=".1"

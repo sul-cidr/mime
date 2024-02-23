@@ -93,5 +93,6 @@ type MoveletRecord = {
   hidden: boolean | undefined;
   distance?: number;
   cluster_id: number;
+  face_cluster_id: number | null;
   time: string | undefined;
 };
