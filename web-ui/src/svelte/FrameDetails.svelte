@@ -15,6 +15,13 @@
   export let hoveredPoseIdx: number | undefined;
   export let shot: number | 0;
   export let interest: number | 0;
+
+  const updateSearchThresholds = (event) => {
+    const input = event.target.form.querySelectorAll("input");
+    input.forEach((item) => {
+      $searchThresholds[item.name] = item.value;
+    });
+  };
 </script>
 
 <div class="card variant-ghost-secondary w-full">
@@ -35,65 +42,72 @@
       <dd>{(interest * 100).toFixed(2)}%</dd>
     </dl>
 
-    <div class="grid w-1/3 gap-1 p-4">
+    <div class="grid w-1/3 gap-1 p-4 search-settings">
       <h4>Search settings</h4>
-      <div class="flex justify-between">
-        Total Results (1-10000)
-        <label>
-          <input
-            type="number"
-            name="total-results"
-            bind:value={$searchThresholds["total_results"]}
-            size="5"
-            min="1"
-            max="10000"
-            step="10"
-          />
-        </label>
-      </div>
-      <h5>Max search distances</h5>
-      <div class="flex justify-between">
-        Cosine (.01-.1)
-        <label>
-          <input
-            type="number"
-            name="max-cosine-distance"
-            bind:value={$searchThresholds["cosine"]}
-            size="4"
-            min=".01"
-            max=".1"
-            step=".01"
-          />
-        </label>
-      </div>
-      <div class="flex justify-between">
-        Euclidean (1-100)
-        <label>
-          <input
-            type="number"
-            name="max-euclidean-distance"
-            bind:value={$searchThresholds["euclidean"]}
-            size="4"
-            min="1"
-            max="100"
-            step="1"
-          />
-        </label>
-      </div>
-      <div class="flex justify-between">
-        View Invariant (.01-.1)
-        <label>
-          <input
-            type="number"
-            name="max-invariant-distance"
-            bind:value={$searchThresholds["view_invariant"]}
-            size="4"
-            min=".01"
-            max=".1"
-            step=".01"
-          />
-        </label>
-      </div>
+      <form>
+        <div class="flex justify-between search-options">
+          Max matches [1-10000]
+          <label>
+            <input
+              type="number"
+              name="total_results"
+              value={$searchThresholds["total_results"]}
+              size="5"
+              min="1"
+              max="10000"
+              step="10"
+            />
+          </label>
+        </div>
+        <p>Max distance thresholds:</p>
+        <div class="flex justify-between search-options">
+          Cosine [.01-.1]
+          <label>
+            <input
+              type="number"
+              name="cosine"
+              value={$searchThresholds["cosine"]}
+              size="4"
+              min=".01"
+              max=".1"
+              step=".01"
+            />
+          </label>
+        </div>
+        <div class="flex justify-between search-options">
+          Euclidean [1-100]
+          <label>
+            <input
+              type="number"
+              name="euclidean"
+              value={$searchThresholds["euclidean"]}
+              size="4"
+              min="1"
+              max="100"
+              step="1"
+            />
+          </label>
+        </div>
+        <div class="flex justify-between search-options">
+          View Invariant [.01-.1]
+          <label>
+            <input
+              type="number"
+              name="view_invariant"
+              value={$searchThresholds["view_invariant"]}
+              size="4"
+              min=".01"
+              max=".1"
+              step=".01"
+            />
+          </label>
+        </div>
+        <button
+          type="button"
+          class="btn-sm px-2 variant-ghost"
+          on:click|preventDefault={updateSearchThresholds}>Apply</button
+        >
+      </form>
     </div>
   </div>
 
@@ -150,3 +164,16 @@
     </ul>
   </div>
 </div>
+
+<style>
+  .search-settings {
+    border: 1px solid black;
+    margin-right: 1em;
+  }
+  .search-options {
+    font-weight: bold;
+  }
+  .search-options label {
+    font-weight: normal;
+  }
+</style>
