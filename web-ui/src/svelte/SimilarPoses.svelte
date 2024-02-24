@@ -158,7 +158,7 @@
                     class="object-contain h-full w-full"
                     src={`${API_BASE}/frame/resize/${$currentPose.video_id}/${
                       $currentPose.frame
-                    }/${getExtent($currentPose.keypointsopp).join(
+                    }/${getExtent($currentPose.keypoints).join(
                       ",",
                     )}|${getNormDims($currentPose.norm).join(",")}/`}
                     alt={`Frame ${$currentPose.frame}, Pose: ${
@@ -214,9 +214,9 @@
                         class="object-contain h-full w-full"
                         src={`${API_BASE}/frame/resize/${pose.video_id}/${
                           pose.frame
-                        }/${getExtent(pose.keypointsopp).join(
-                          ",",
-                        )}|${getNormDims(pose.norm).join(",")}/`}
+                        }/${getExtent(pose.keypoints).join(",")}|${getNormDims(
+                          pose.norm,
+                        ).join(",")}/`}
                         alt={`Frame ${pose.frame}, Pose: ${pose.pose_idx + 1}`}
                       />
                     </Html>

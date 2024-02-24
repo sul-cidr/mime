@@ -174,7 +174,7 @@ async def get_nearest_poses(
     return await self._pool.fetch(
         f"""
         WITH search_results AS(
-            SELECT pose.*, {distance} AS distance, frame.shot AS shot, face.cluster_id AS face_cluster_id FROM pose, frame, face
+            SELECT pose.video_id, pose.frame, pose.pose_idx, pose.norm, pose.keypoints, {distance} AS distance, frame.shot AS shot, face.cluster_id AS face_cluster_id FROM pose, frame, face
             WHERE pose.video_id = $1 AND frame.video_id = $1 AND face.video_id = $1 AND face.frame = pose.frame AND face.pose_idx = pose.pose_idx AND pose.frame = frame.frame AND NOT ((pose.frame = $2 AND pose.pose_idx = $3) OR frame.shot = $4) ORDER BY distance
             LIMIT $5
         )
@@ -225,7 +225,7 @@ async def get_nearest_movelets(
     return await self._pool.fetch(
         f"""
         WITH search_results AS(
-            SELECT movelet.*, {distance} AS distance, frame.shot AS shot, face.cluster_id AS face_cluster_id FROM movelet, frame, face
+            SELECT movelet.video_id, movelet.start_frame, movelet.end_frame, movelet.pose_idx, movelet.track_id, movelet.norm, movelet.prev_norm, {distance} AS distance, frame.shot AS shot, face.cluster_id AS face_cluster_id FROM movelet, frame, face
             WHERE movelet.video_id = $1 AND frame.video_id = $1 AND face.video_id = $1 AND face.frame = movelet.start_frame AND face.pose_idx = movelet.pose_idx AND movelet.start_frame = frame.frame AND NOT ((movelet.start_frame <= $2 AND movelet.end_frame >= $2) OR frame.shot = $4 OR (movelet.start_frame = $2 AND movelet.track_id = $3))
             ORDER BY distance
             LIMIT $5

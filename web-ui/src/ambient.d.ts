@@ -4,8 +4,10 @@ type FixedLengthArray<
   R extends readonly T[] = [],
 > = R["length"] extends N ? R : Tuple<T, N, readonly [T, ...R]>;
 
-type CocoSkeletonWithConfidence = FixedLengthArray<number, 51>;
-type CocoSkeletonNoConfidence = FixedLengthArray<number, 34>;
+type Coco13SkeletonWithConfidence = FixedLengthArray<number, 39>;
+type Coco13SkeletonNoConfidence = FixedLengthArray<number, 26>;
+type Coco17SkeletonWithConfidence = FixedLengthArray<number, 51>;
+type Coco17SkeletonNoConfidence = FixedLengthArray<number, 34>;
 type SmplSkeletonWithConfidence = FixedLengthArray<number, 135>;
 type SmplSkeletonNoConfidence = FixedLengthArray<number, 90>;
 type FaceLandmarks = FixedLengthArray<number, 10>;
@@ -29,11 +31,12 @@ type PoseRecord = {
   video_id: number;
   frame: number;
   pose_idx: number;
-  keypointsopp: CocoSkeletonWithConfidence;
+  keypoints: Coco13SkeletonNoConfidence;
+  keypointsopp: Coco17SkeletonWithConfidence;
   bbox: FixedLengthArray<number, 4>; // bbox format for PifPaf is x0, y0, width, height
   score: number;
   track_id: number | null;
-  norm: CocoSkeletonNoConfidence;
+  norm: Coco13SkeletonNoConfidence;
   face_bbox: FixedLengthArray<number, 4> | undefined; // copied from FaceRecord
   face_landmarks: FaceLandmarks | undefined; // if match is found
   keypoints4dh: SmplSkeletonWithConfidence;
@@ -88,8 +91,8 @@ type MoveletRecord = {
   start_frame: number;
   end_frame: number;
   pose_idx: number;
-  prev_norm: CocoSkeletonNoConfidence;
-  norm: CocoSkeletonNoConfidence;
+  prev_norm: Coco13SkeletonNoConfidence;
+  norm: Coco13SkeletonNoConfidence;
   hidden: boolean | undefined;
   distance?: number;
   cluster_id: number;
