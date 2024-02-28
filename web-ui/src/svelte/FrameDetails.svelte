@@ -18,8 +18,8 @@
 
   const updateSearchThresholds = (event) => {
     const input = event.target.form.querySelectorAll("input");
-    input.forEach((item) => {
-      $searchThresholds[item.name] = item.value;
+    input.forEach((item: HTMLInputElement) => {
+      $searchThresholds[item.name] = parseFloat(item.value);
     });
   };
 </script>
@@ -105,7 +105,7 @@
         <button
           type="button"
           class="btn-sm px-2 variant-ghost"
-          on:click|preventDefault={updateSearchThresholds}>Apply</button
+          on:click={updateSearchThresholds}>Apply</button
         >
       </form>
     </div>

@@ -1,18 +1,18 @@
 // Not currently used, but worth keeping around for a bit
-const shiftToOrigin = (
-  keypoints: CocoSkeletonWithConfidence,
-  bbox: FixedLengthArray<number, 4>,
-) => {
-  let newKeypoints: CocoSkeletonWithConfidence = [...keypoints];
+// const shiftToOrigin = (
+//   keypoints: CocoSkeletonWithConfidence,
+//   bbox: FixedLengthArray<number, 4>,
+// ) => {
+//   let newKeypoints: CocoSkeletonWithConfidence = [...keypoints];
 
-  for (let x: number = 0; x < keypoints.length; x += 3) {
-    newKeypoints[x] -= bbox[0];
-  }
-  for (let y: number = 1; y < keypoints.length; y += 3) {
-    newKeypoints[y] -= bbox[1];
-  }
-  return newKeypoints;
-};
+//   for (let x: number = 0; x < keypoints.length; x += 3) {
+//     newKeypoints[x] -= bbox[0];
+//   }
+//   for (let y: number = 1; y < keypoints.length; y += 3) {
+//     newKeypoints[y] -= bbox[1];
+//   }
+//   return newKeypoints;
+// };
 
 export const getNormDims = (keypoints: CocoSkeletonNoConfidence) => {
   let x_values: Array<number> = [];

@@ -10,6 +10,12 @@ type Coco17SkeletonWithConfidence = FixedLengthArray<number, 51>;
 type Coco17SkeletonNoConfidence = FixedLengthArray<number, 34>;
 type SmplSkeletonWithConfidence = FixedLengthArray<number, 135>;
 type SmplSkeletonNoConfidence = FixedLengthArray<number, 90>;
+type CocoSkeletonWithConfidence =
+  | Coco13SkeletonWithConfidence
+  | Coco17SkeletonWithConfidence;
+type CocoSkeletonNoConfidence =
+  | Coco13SkeletonNoConfidence
+  | Coco17SkeletonNoConfidence;
 type FaceLandmarks = FixedLengthArray<number, 10>;
 type FaceEmbedding = FixedLengthArray<number, 4096>;
 
@@ -47,10 +53,6 @@ type PoseRecord = {
   face_cluster_id: number | null;
   pose_interest: number | 0; // this is actually the avg for all poses in the frame :-/
 };
-
-interface MoveletPoseRecord extends PoseRecord {
-  track_id: number;
-}
 
 type FaceRecord = {
   video_id: number;

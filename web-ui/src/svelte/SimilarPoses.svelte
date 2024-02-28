@@ -59,9 +59,9 @@
   };
 
   async function getPoseData(
-    thisPose: PoseRecord,
+    thisPose: PoseRecord | null,
     similarityMetric: string,
-    searchThresholds,
+    searchThresholds: { [id: string]: number },
     avoidShot: boolean,
   ) {
     if (thisPose === null) return [];

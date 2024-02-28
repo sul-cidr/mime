@@ -64,9 +64,9 @@
   const goToFrame = (e: any) => ($currentFrame = e.originalTarget.value);
 
   async function getMoveletData(
-    thisMoveletPose: MoveletPoseRecord,
+    thisMoveletPose: PoseRecord | null,
     similarityMetric: string,
-    searchThresholds,
+    searchThresholds: { [id: string]: number },
     avoidShot: boolean,
   ) {
     if (thisMoveletPose === null) return [];
@@ -80,7 +80,7 @@
     return await response.json();
   }
 
-  async function getMoveletFromPose(thisMoveletPose: MoveletPoseRecord) {
+  async function getMoveletFromPose(thisMoveletPose: PoseRecord | null) {
     if (thisMoveletPose === null) return null;
     const response = await fetch(
       `${API_BASE}/movelets/pose/${thisMoveletPose.video_id}/${thisMoveletPose.frame}/${thisMoveletPose.track_id}/`,
@@ -143,7 +143,7 @@
           <div class="w-full aspect-[5/6] frame-display py-[30px] px-[10px]">
             <LayerCake>
               <Canvas zIndex={1}>
-                <Movelet moveletData={$currentMovelet} normalizedPose={true} />
+                <Movelet moveletData={$currentMovelet} />
                 <!-- <Pose poseData={$currentMoveletPose.norm} normalizedPose={true} /> -->
               </Canvas>
             </LayerCake>
@@ -156,7 +156,7 @@
                 )}
               </li>
               <li>
-                Face group: {$currentMoveletPose.face_cluster_id}
+                Face group: {$currentMoveletPose?.face_cluster_id}
               </li>
             </ul>
             <span
@@ -184,7 +184,7 @@
               <div
                 class="w-full aspect-[5/6] frame-display py-[30px] px-[10px]"
               >
-                <Movelet moveletData={movelet} normalizedPose={true} />
+                <Movelet moveletData={movelet} />
               </div>
               <footer class="p-2">
                 <ul>

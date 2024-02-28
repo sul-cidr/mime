@@ -139,6 +139,7 @@
         <li class="ambassador-box">
           cluster {index}
           <img
+            alt={`Representative blended face image for cluster ${index}`}
             src={`${API_BASE}/face_cluster_image/${videoName}/${index}/`}
             class="ambassador-image"
           />
