@@ -21,9 +21,6 @@ load_dotenv()
 VIDEO_SRC_FOLDER = os.getenv("VIDEO_SRC_FOLDER")
 CACHE_FOLDER = os.getenv("CACHE_FOLDER")
 
-MAX_COSINE_DISTANCE = 0.05
-MAX_EUCLIDEAN_DISTANCE = 37
-
 try:
     assert VIDEO_SRC_FOLDER
 except AssertionError:
@@ -121,7 +118,7 @@ async def get_frame_region_resized(
 
 
 @mime_api.get("/pose_cluster_image/{video_name}/{cluster_id}/")
-async def get_pose_cluster_image(video_name: str, cluster_id: int, request: Request):
+async def get_pose_cluster_image(video_name: str, cluster_id: int):
     image_path = f"/app/pose_cluster_images/{video_name}/{cluster_id}.png"
     img = iio.imread(image_path)
     return Response(
@@ -131,7 +128,7 @@ async def get_pose_cluster_image(video_name: str, cluster_id: int, request: Requ
 
 
 @mime_api.get("/face_cluster_image/{video_name}/{cluster_id}/")
-async def get_face_cluster_image(video_name: str, cluster_id: int, request: Request):
+async def get_face_cluster_image(video_name: str, cluster_id: int):
     image_path = f"/app/face_cluster_images/{video_name}/{cluster_id}.png"
     img = iio.imread(image_path)
     return Response(
@@ -166,7 +163,7 @@ async def face(video_id: UUID, frameno: int, track_id: int, request: Request):
 async def poses(video_id: UUID, request: Request):
     frame_data = Path(CACHE_FOLDER, str(video_id), "pose_data_by_frame.json")
     if frame_data.exists():
-        with frame_data.open("r") as _fh:
+        with frame_data.open("r", encoding="utf-8") as _fh:
             frame_data = _fh.read()
     else:
         frame_data = await request.app.state.db.get_pose_data_by_frame(video_id)
