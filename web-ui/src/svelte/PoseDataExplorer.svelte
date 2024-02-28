@@ -6,7 +6,7 @@
 
   import PosesByFrameChart from "@svelte/PosesByFrameChart.svelte";
   import PoseDataFilters from "@/src/svelte/PoseDataFilters.svelte";
-  import { currentFrame, currentVideo } from "@svelte/stores";
+  import { currentVideo } from "@svelte/stores";
 
   export let videoId: string;
   let data: Array<FrameRecord> | undefined;

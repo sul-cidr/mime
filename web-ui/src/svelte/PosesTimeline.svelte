@@ -36,12 +36,12 @@
 
   // Unsuccessful attempt to display each cluster's "ambassador" pose image as
   // a y-axis tick to the left of the plot.
-  const formatPoseTick = (d: number) => {
-    const poseImage = new Image();
-    poseImage.src = `${API_BASE}/pose_cluster_image/${videoName}/${d}`;
-    poseImage.classList.add("ambassador-pose");
-    return poseImage;
-  };
+  // const formatPoseTick = (d: number) => {
+  //   const poseImage = new Image();
+  //   poseImage.src = `${API_BASE}/pose_cluster_image/${videoName}/${d}`;
+  //   poseImage.classList.add("ambassador-pose");
+  //   return poseImage;
+  // };
 
   const updatePosesData = (data: Array<MoveletRecord>) => {
     if (data) {
@@ -151,6 +151,7 @@
         <li class="ambassador-box">
           cluster {index}
           <img
+            alt={`Representative average pose armature for cluster ${index}`}
             src={`${API_BASE}/pose_cluster_image/${videoName}/${index}/`}
             class="ambassador-image"
           />

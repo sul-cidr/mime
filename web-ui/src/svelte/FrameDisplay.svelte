@@ -67,7 +67,6 @@
                 fill="none"
                 stroke-width="1"
                 class:selected={hoveredPoseIdx === i}
-                on:click={() => console.log(`bbox ${i}`)}
                 on:mouseover={() => (hoveredPoseIdx = i)}
                 on:mouseout={() => (hoveredPoseIdx = undefined)}
                 pointer-events="visible"
@@ -83,9 +82,10 @@
                   fill="none"
                   stroke-width="1"
                   class:selected={hoveredPoseIdx === i}
-                  on:click={() => console.log(`bbox ${i}`)}
                   on:mouseover={() => (hoveredPoseIdx = i)}
+                  on:focus={() => (hoveredPoseIdx = i)}
                   on:mouseout={() => (hoveredPoseIdx = undefined)}
+                  on:blur={() => (hoveredPoseIdx = undefined)}
                   pointer-events="visible"
                   style="cursor: pointer"
                 />

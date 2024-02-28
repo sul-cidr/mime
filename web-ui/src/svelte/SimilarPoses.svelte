@@ -16,6 +16,7 @@
     currentPose,
     currentVideo,
     similarPoseFrames,
+    searchThresholds,
   } from "@svelte/stores";
 
   let avoidShotInResults: boolean = false;
@@ -25,6 +26,7 @@
 
   const simStep = 5;
   let simPager = {
+    page: 0,
     offset: 0,
     limit: simStep,
     size: 50,
@@ -44,31 +46,45 @@
     poses.forEach((pose) => {
       $similarPoseFrames[pose["frame"]] = 1;
     });
-    simPager.size = poses.length;
+
+    // This is necessary to make the pager reset reactively
+    simPager = {
+      page: 0,
+      offset: 0,
+      limit: simStep,
+      size: poses.length,
+      amounts: [simStep],
+    };
+    simPager = simPager;
   };
 
   async function getPoseData(
-    thisPose: PoseRecord,
+    thisPose: PoseRecord | null,
     similarityMetric: string,
+    searchThresholds: { [id: string]: number },
     avoidShot: boolean,
   ) {
     if (thisPose === null) return [];
+
     const response = avoidShot
       ? await fetch(
-          `${API_BASE}/poses/similar/${similarityMetric}/${thisPose.video_id}/${thisPose.frame}/${thisPose.pose_idx}/${thisPose.shot}/`,
+          `${API_BASE}/poses/similar/${searchThresholds["total_results"]}/${similarityMetric}|${searchThresholds[similarityMetric]}/${thisPose.video_id}/${thisPose.frame}/${thisPose.pose_idx}/${thisPose.shot}/`,
         )
       : await fetch(
-          `${API_BASE}/poses/similar/${similarityMetric}/${thisPose.video_id}/${thisPose.frame}/${thisPose.pose_idx}/`,
+          `${API_BASE}/poses/similar/${searchThresholds["total_results"]}/${similarityMetric}|${searchThresholds[similarityMetric]}/${thisPose.video_id}/${thisPose.frame}/${thisPose.pose_idx}/`,
         );
     return await response.json();
   }
 
-  $: getPoseData($currentPose, similarityMetric, avoidShotInResults).then(
-    (data) => updatePoseData(data),
-  );
+  $: getPoseData(
+    $currentPose,
+    similarityMetric,
+    $searchThresholds,
+    avoidShotInResults,
+  ).then((data) => updatePoseData(data));
 </script>
 
-{#if Object.keys($similarPoseFrames).length}
+{#if $currentPose}
   <section
     class="variant-ghost-secondary px-4 pt-4 pb-8 flex flex-col gap-4 items-center"
   >
@@ -86,10 +102,15 @@
             name="similarity-metric"
             value="euclidean">Euclidean</RadioItem
           >
+          <!-- <RadioItem
+            bind:group={similarityMetric}
+            name="similarity-metric"
+            value="innerproduct">Inner Product</RadioItem
+          > -->
           <RadioItem
             bind:group={similarityMetric}
             name="similarity-metric"
-            value="poem_embedding">View Invariant</RadioItem
+            value="view_invariant">View Invariant</RadioItem
           >
         </RadioGroup>
       </div>
@@ -125,7 +146,7 @@
     </div>
     {#if poses}
       <div class="flex gap-4">
-        <div class="card variant-ghost-tertiary drop-shadow-lg">
+        <div class="card stretch-vert variant-ghost-tertiary drop-shadow-lg">
           <header class="p-2">
             Frame {$currentPose.frame}, Pose: {$currentPose.pose_idx + 1}
           </header>
@@ -137,7 +158,7 @@
                     class="object-contain h-full w-full"
                     src={`${API_BASE}/frame/resize/${$currentPose.video_id}/${
                       $currentPose.frame
-                    }/${getExtent($currentPose.keypointsopp).join(
+                    }/${getExtent($currentPose.keypoints).join(
                       ",",
                     )}|${getNormDims($currentPose.norm).join(",")}/`}
                     alt={`Frame ${$currentPose.frame}, Pose: ${
@@ -179,7 +200,7 @@
 
         {#each poses as pose, p}
           {#if p >= simPager.offset * simPager.limit && p < simPager.offset * simPager.limit + simPager.limit}
-            <div class="card drop-shadow-lg">
+            <div class="card stretch-vert drop-shadow-lg">
               <header class="p-2">
                 Frame {pose.frame}, Pose: {pose.pose_idx + 1}
               </header>
@@ -193,9 +214,9 @@
                         class="object-contain h-full w-full"
                         src={`${API_BASE}/frame/resize/${pose.video_id}/${
                           pose.frame
-                        }/${getExtent(pose.keypointsopp).join(
-                          ",",
-                        )}|${getNormDims(pose.norm).join(",")}/`}
+                        }/${getExtent(pose.keypoints).join(",")}|${getNormDims(
+                          pose.norm,
+                        ).join(",")}/`}
                         alt={`Frame ${pose.frame}, Pose: ${pose.pose_idx + 1}`}
                       />
                     </Html>
@@ -256,5 +277,8 @@
   .frame-display {
     background: radial-gradient(circle at 50% -250%, #333, #111827, #333);
     box-shadow: inset 0px 0px 30px 0px #666;
+  }
+  .stretch-vert {
+    display: inline-grid;
   }
 </style>

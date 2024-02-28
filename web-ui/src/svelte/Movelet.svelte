@@ -3,9 +3,6 @@
   import Pose from "@svelte/Pose.svelte";
 
   export let moveletData: MoveletRecord;
-
-  export let scaleFactor = 1;
-  export let normalizedPose = true; // Movelets are always normalized
 </script>
 
 <LayerCake>

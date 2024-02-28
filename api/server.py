@@ -118,7 +118,7 @@ async def get_frame_region_resized(
 
 
 @mime_api.get("/pose_cluster_image/{video_name}/{cluster_id}/")
-async def get_pose_cluster_image(video_name: str, cluster_id: int, request: Request):
+async def get_pose_cluster_image(video_name: str, cluster_id: int):
     image_path = f"/app/pose_cluster_images/{video_name}/{cluster_id}.png"
     img = iio.imread(image_path)
     return Response(
@@ -128,7 +128,7 @@ async def get_pose_cluster_image(video_name: str, cluster_id: int, request: Requ
 
 
 @mime_api.get("/face_cluster_image/{video_name}/{cluster_id}/")
-async def get_face_cluster_image(video_name: str, cluster_id: int, request: Request):
+async def get_face_cluster_image(video_name: str, cluster_id: int):
     image_path = f"/app/face_cluster_images/{video_name}/{cluster_id}.png"
     img = iio.imread(image_path)
     return Response(
@@ -163,7 +163,7 @@ async def face(video_id: UUID, frameno: int, track_id: int, request: Request):
 async def poses(video_id: UUID, request: Request):
     frame_data = Path(CACHE_FOLDER, str(video_id), "pose_data_by_frame.json")
     if frame_data.exists():
-        with frame_data.open("r") as _fh:
+        with frame_data.open("r", encoding="utf-8") as _fh:
             frame_data = _fh.read()
     else:
         frame_data = await request.app.state.db.get_pose_data_by_frame(video_id)
@@ -226,38 +226,69 @@ async def faces_by_frame(video_id: UUID, frame: int, request: Request):
     )
 
 
-@mime_api.get("/poses/similar/{metric}/{video_id}/{frame}/{pose_idx}/")
 async def get_nearest_poses(
-    metric: str, video_id: UUID, frame: int, pose_idx: int, request: Request
+    max_results: int,
+    metric_and_max: str,
+    video_id: UUID,
+    frame: int,
+    pose_idx: int,
+    request: Request,
+    avoid_shot: int = -1,
 ):
+    metric, max_distance = metric_and_max.split("|")
+
     embedding = "norm"
-    if metric == "poem_embedding":
+    if metric == "view_invariant":
         metric = "cosine"
         embedding = "poem_embedding"
+
     frame_data = await request.app.state.db.get_nearest_poses(
-        video_id, frame, pose_idx, metric, embedding
+        video_id,
+        frame,
+        pose_idx,
+        metric,
+        embedding,
+        float(max_distance),
+        avoid_shot,
+        max_results,
     )
+
     return Response(
         content=json.dumps(frame_data, cls=MimeJSONEncoder),
         media_type="application/json",
     )
 
 
-@mime_api.get("/poses/similar/{metric}/{video_id}/{frame}/{pose_idx}/{shot}/")
-async def get_nearest_poses_othershot(
-    metric: str, video_id: UUID, frame: int, pose_idx: int, shot: int, request: Request
+@mime_api.get(
+    "/poses/similar/{max_results}/{metric_and_max}/{video_id}/{frame}/{pose_idx}/"
+)
+async def get_nearest_poses_all(
+    max_results: int,
+    metric_and_max: str,
+    video_id: UUID,
+    frame: int,
+    pose_idx: int,
+    request: Request,
 ):
-    embedding = "norm"
-    if metric == "poem_embedding":
-        metric = "cosine"
-        embedding = "poem_embedding"
-
-    frame_data = await request.app.state.db.get_nearest_poses(
-        video_id, frame, pose_idx, metric, embedding, avoid_shot=shot
+    return await get_nearest_poses(
+        max_results, metric_and_max, video_id, frame, pose_idx, request
     )
-    return Response(
-        content=json.dumps(frame_data, cls=MimeJSONEncoder),
-        media_type="application/json",
+
+
+@mime_api.get(
+    "/poses/similar/{max_results}/{metric_and_max}/{video_id}/{frame}/{pose_idx}/{shot}/"
+)
+async def get_nearest_poses_except_shot(
+    max_results: int,
+    metric_and_max: str,
+    video_id: UUID,
+    frame: int,
+    pose_idx: int,
+    shot: int,
+    request: Request,
+):
+    return await get_nearest_poses(
+        max_results, metric_and_max, video_id, frame, pose_idx, request, shot
     )
 
 
@@ -274,16 +305,62 @@ async def get_movelet_from_pose(
     )
 
 
-@mime_api.get("/movelets/similar/{metric}/{video_id}/{frame}/{track_id}/")
 async def get_nearest_movelets(
-    metric: str, video_id: UUID, frame: int, track_id: int, request: Request
+    max_results: int,
+    metric_and_max: str,
+    video_id: UUID,
+    frame: int,
+    track_id: int,
+    request: Request,
+    avoid_shot: int = -1,
 ):
+    metric, max_distance = metric_and_max.split("|")
+
     movelet_data = await request.app.state.db.get_nearest_movelets(
-        video_id, frame, track_id, metric
+        video_id, frame, track_id, metric, float(max_distance), avoid_shot, max_results
     )
     return Response(
         content=json.dumps(movelet_data, cls=MimeJSONEncoder),
         media_type="application/json",
+    )
+
+
+@mime_api.get(
+    "/movelets/similar/{max_results}/{metric_and_max}/{video_id}/{frame}/{track_id}/"
+)
+async def get_nearest_movelets_all(
+    max_results: int,
+    metric_and_max: str,
+    video_id: UUID,
+    frame: int,
+    track_id: int,
+    request: Request,
+):
+    return await get_nearest_movelets(
+        max_results, metric_and_max, video_id, frame, track_id, request
+    )
+
+
+@mime_api.get(
+    "/movelets/similar/{max_results}/{metric_and_max}/{video_id}/{frame}/{track_id}/{shot}/"
+)
+async def get_nearest_movelets_except_shot(
+    max_results: int,
+    metric_and_max: str,
+    video_id: UUID,
+    frame: int,
+    track_id: int,
+    shot: int,
+    request: Request,
+):
+    return await get_nearest_movelets(
+        max_results,
+        metric_and_max,
+        video_id,
+        frame,
+        track_id,
+        request,
+        shot,
     )
 
 

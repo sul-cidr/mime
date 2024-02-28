@@ -155,6 +155,7 @@ async def get_nearest_poses(
     pose_idx: int,
     metric="cosine",
     embedding="norm",
+    max_distance="Infinity",
     avoid_shot=-1,
     limit=500,
 ) -> list:
@@ -167,14 +168,17 @@ async def get_nearest_poses(
     distance = {
         "cosine": f"{embedding} <=> ({sub_query})",
         "euclidean": f"{embedding} <-> ({sub_query})",
-        "innerproduct": f"{embedding} <#> ({sub_query})",
+        "innerproduct": f"({embedding} <#> ({sub_query}) * -1",
     }[metric]
 
     return await self._pool.fetch(
         f"""
-        SELECT pose.*, {distance} AS distance, frame.shot AS shot, face.cluster_id AS face_cluster_id FROM pose, frame, face
-        WHERE pose.video_id = $1 AND frame.video_id = $1 AND face.video_id = $1 AND face.frame=pose.frame AND face.pose_idx = pose.pose_idx AND pose.frame = frame.frame AND NOT ((pose.frame = $2 AND pose.pose_idx = $3) OR (frame.shot = $4)) ORDER BY distance
-        LIMIT $5;
+        WITH search_results AS(
+            SELECT pose.video_id, pose.frame, pose.pose_idx, pose.norm, pose.keypoints, {distance} AS distance, frame.shot AS shot, face.cluster_id AS face_cluster_id FROM pose, frame, face
+            WHERE pose.video_id = $1 AND frame.video_id = $1 AND face.video_id = $1 AND face.frame = pose.frame AND face.pose_idx = pose.pose_idx AND pose.frame = frame.frame AND NOT ((pose.frame = $2 AND pose.pose_idx = $3) OR frame.shot = $4) ORDER BY distance
+            LIMIT $5
+        )
+        SELECT * from search_results where search_results.distance < {max_distance}
         """,
         video_id,
         frame,
@@ -196,7 +200,14 @@ async def get_movelet_from_pose(
 
 
 async def get_nearest_movelets(
-    self, video_id: UUID, frame: int, track_id: int, metric="cosine", limit=500
+    self,
+    video_id: UUID,
+    frame: int,
+    track_id: int,
+    metric="cosine",
+    max_distance="Infinity",
+    avoid_shot=-1,
+    limit=500,
 ) -> list:
     sub_query = """
         SELECT motion
@@ -213,13 +224,17 @@ async def get_nearest_movelets(
 
     return await self._pool.fetch(
         f"""
-        SELECT *, {distance} AS distance FROM movelet
-        WHERE video_id = $1 AND NOT (start_frame <= $2 AND end_frame >= $2 AND track_id = $3)
-        ORDER BY distance
-        LIMIT $4;
+        WITH search_results AS(
+            SELECT movelet.video_id, movelet.start_frame, movelet.end_frame, movelet.pose_idx, movelet.track_id, movelet.norm, movelet.prev_norm, {distance} AS distance, frame.shot AS shot, face.cluster_id AS face_cluster_id FROM movelet, frame, face
+            WHERE movelet.video_id = $1 AND frame.video_id = $1 AND face.video_id = $1 AND face.frame = movelet.start_frame AND face.pose_idx = movelet.pose_idx AND movelet.start_frame = frame.frame AND NOT ((movelet.start_frame <= $2 AND movelet.end_frame >= $2) OR frame.shot = $4 OR (movelet.start_frame = $2 AND movelet.track_id = $3))
+            ORDER BY distance
+            LIMIT $5
+        )
+        SELECT * from search_results where search_results.distance < {max_distance}
         """,
         video_id,
         frame,
         track_id,
+        avoid_shot,
         limit,
     )

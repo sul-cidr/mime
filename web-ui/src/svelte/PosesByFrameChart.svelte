@@ -49,20 +49,20 @@
     (d) => !["frame", "time"].includes(d),
   );
 
-  let hiddenSeries: Array<string> = [];
+  let hiddenSeries: Array<string> = ["avgScore"];
 
-  let groupedData: Array<Object>;
+  let groupedData: Array<any>;
   let xTicks: Array<number>;
 
   let brushMin: number;
   let brushMax: number;
-  let groupedBrushedData: Array<Object>;
+  let groupedBrushedData: Array<any>;
 
   let brushFaded = true;
 
   let maxValue: number = 0;
 
-  let framesArray: Array<FrameRecord>;
+  let framesArray: Array<any>;
 
   /* Series whose values are always normalized between 0 and 1 in the DB (e.g.,
    * movement and avg pose confidence score) can be scaled to between 0 and the
@@ -107,7 +107,7 @@
     similarMoveletFrames: { [frameno: number]: number },
     startFrame = 1,
     endFrame = $currentVideo.frame_count,
-  ): Array<FrameRecord> => {
+  ) => {
     // fill with zero values for unrepresented frames
     const framesInRange = data
       .filter(
@@ -119,7 +119,7 @@
       );
     const timeSeries = [];
     let i = startFrame;
-    framesInRange.forEach((frame: FrameRecord) => {
+    framesInRange.forEach((frame: Record<string, any>) => {
       while (i < frame.frame) {
         timeSeries.push({
           frame: i,
@@ -135,7 +135,7 @@
         });
         i++;
       }
-      let thisFrame = frame;
+      let thisFrame: Record<string, any> = frame;
       // XXX Using maxValue in this way leads to nonsensical "Similar:" values
       // in the tooltips for frames with matching poses. Either the tooltip
       // code should be customized to hide these, or we shouldn't use this
@@ -143,7 +143,7 @@
       thisFrame["sim_pose"] = i in similarPoseFrames ? maxValue : 0;
       thisFrame["sim_move"] = i in similarMoveletFrames ? maxValue : 0;
       if (!normalizedSeriesAlreadyScaled) {
-        seriesToFit.forEach((series: string) => {
+        seriesToFit.forEach((series) => {
           thisFrame[series] = scaleToFit(frame[series]);
         });
       }
@@ -198,8 +198,6 @@
       $seriesNames.splice($seriesNames.indexOf("sim_move", 1));
     }
   }
-
-  const bob = 1;
 
   $: maxValue = getMaxValue(timelineData);
 
