@@ -84,7 +84,7 @@
         <PoseDataFilters {data} bind:filteredData />
       </div>
     </div>
-    <div class="flex justify-between">
+    <div class="flex">
       <button
         type="button"
         class="btn-sm px-2 variant-ghost"

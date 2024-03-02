@@ -1,15 +1,16 @@
 <script lang="ts">
   import { onDestroy, onMount } from "svelte";
-  import { currentVideo, currentPose } from "@svelte/stores";
+  import { currentPose, currentVideo, webcamImage } from "@svelte/stores";
+  import {
+    blaze33ToCoco13Coords,
+    getPoseExtent,
+    shiftNormalizeRescalePoseCoords,
+  } from "../lib/poseutils";
   import {
     PoseLandmarker,
     FilesetResolver,
     DrawingUtils,
   } from "@mediapipe/tasks-vision";
-
-  // XXX This is shared between the Python and JS code, so should be set
-  // somewhere accessible to both
-  const POSE_MAX_DIM = 100;
 
   export let parent: any;
 
@@ -26,6 +27,8 @@
   let drawingUtils = null;
 
   let currentPoseLandmarks = null;
+
+  let croppedImage = null;
 
   const startup = async () => {
     videoElement = document.getElementById("webcam") as HTMLVideoElement;
@@ -132,7 +135,11 @@
 
     // Run prediction on the next frame
     if (webcamRunning === true) {
-      window.requestAnimationFrame(predictWebcam);
+      if ("requestVideoFrameCallback" in HTMLVideoElement.prototype) {
+        videoElement.requestVideoFrameCallback(predictWebcam);
+      } else {
+        window.requestAnimationFrame(predictWebcam);
+      }
     }
   };
 
@@ -144,21 +151,7 @@
   };
 
   const setSearchPose = () => {
-    // XXX Most of these conversions should be kept in a utils code file,
-    // probably poseutils.tx.
-    // Note that they're also a direct re-implementation of some of the Python
-    // utils in pose_functions.py
-
-    const blaze33ToCoco17Coords = [
-      0, 2, 5, 7, 8, 11, 12, 13, 14, 15, 16, 23, 24, 25, 26, 26, 28,
-    ];
-    const blaze33ToCoco13Coords = [
-      0, 11, 12, 13, 14, 15, 16, 23, 24, 25, 26, 26, 28,
-    ];
     const coco13Pose = blaze33ToCoco13Coords.map(
-      (i) => currentPoseLandmarks[0][i],
-    );
-    const coco17Pose = blaze33ToCoco17Coords.map(
       (i) => currentPoseLandmarks[0][i],
     );
 
@@ -169,43 +162,37 @@
       projCoco13Pose.push([c.x * videoWidth, c.y * videoHeight]);
     });
 
-    let xmin = null;
-    let xmax = null;
-    let ymin = null;
-    let ymax = null;
+    let [xmin, ymin, poseWidth, poseHeight] = getPoseExtent(projCoco13Pose);
 
-    projCoco13Pose.forEach((c) => {
-      xmin = xmin === null ? c[0] : Math.min(xmin, c[0]);
-      xmax = xmax === null ? c[0] : Math.max(xmax, c[0]);
-      ymin = ymin === null ? c[1] : Math.min(ymin, c[1]);
-      ymax = ymax === null ? c[1] : Math.max(ymax, c[1]);
-    });
-    const poseWidth = xmax - xmin;
-    const poseHeight = ymax - ymin;
+    const widthScaleFactor = videoElement.videoWidth / videoElement.width;
+    const heightScaleFactor = videoElement.videoHeight / videoElement.height;
 
-    const scaleFactor = POSE_MAX_DIM / Math.max(poseWidth, poseHeight);
+    let cropCanvas = document.createElement("canvas");
+    let cropCtx = cropCanvas.getContext("2d");
+    cropCanvas.width = poseWidth;
+    cropCanvas.height = poseHeight;
 
-    let xRecenter = 0;
-    let yRecenter = 0;
+    cropCtx.drawImage(
+      videoElement,
+      xmin * widthScaleFactor,
+      ymin * heightScaleFactor,
+      poseWidth * widthScaleFactor,
+      poseHeight * heightScaleFactor,
+      0,
+      0,
+      poseWidth,
+      poseHeight,
+    );
 
-    if (poseWidth >= poseHeight) {
-      yRecenter = Math.round((POSE_MAX_DIM - scaleFactor * poseHeight) / 2);
-    } else {
-      xRecenter = Math.round((POSE_MAX_DIM - scaleFactor * poseWidth) / 2);
-    }
+    croppedImage = cropCanvas.toDataURL("image/png");
+    $webcamImage = croppedImage;
 
-    let normCoco13Pose = [];
+    const searchPose = shiftNormalizeRescalePoseCoords(
+      projCoco13Pose,
+      $currentVideo.id,
+    );
 
-    projCoco13Pose.forEach((c) => {
-      normCoco13Pose.push([
-        Math.round((c[0] - xmin) * scaleFactor + xRecenter),
-        Math.round((c[1] - ymin) * scaleFactor + yRecenter),
-      ]);
-    });
-
-    // XXX Next: try to use this data to create a PoseRecord that can be
-    // assigned to $currentPose (without crashing the rest of the app) and
-    // then used as the basis of a similar poses search.
+    $currentPose = searchPose;
   };
 
   onMount(async () => {
@@ -221,17 +208,27 @@
     <header class="card-header font-bold">
       <h3>Use the webcam to search for a pose</h3>
     </header>
-    <div class="flex flex-row justify-center w-full">
+    <div class="flex flex-row justify-center">
+      <div class="flex">
+        <button
+          type="button"
+          class="btn-sm px-2 variant-ghost"
+          on:click={startStopWebcam}>Pause/Unpause</button
+        >
+        <button
+          type="button"
+          class="btn-sm px-2 variant-ghost"
+          disabled={!currentPoseLandmarks}
+          on:click={setSearchPose}>Search pose</button
+        >
+      </div>
+      <span class="divider-vertical !border-l-8 !border-double"></span>
       <button
         type="button"
         class="btn-sm px-2 variant-ghost"
-        on:click={startStopWebcam}>Pause/Unpause</button
-      >
-      <button
-        type="button"
-        class="btn-sm px-2 variant-ghost"
-        disabled={!currentPoseLandmarks}
-        on:click={setSearchPose}>Search pose</button
+        on:click={() => {
+          shutdown(true);
+        }}>Close</button
       >
     </div>
     <div class="vidcontainer">
@@ -240,15 +237,6 @@
       {/if}
       <video id="webcam" autoplay playsinline />
       <canvas class="output_canvas" id="output_canvas" />
-    </div>
-    <div class="flex flex-row justify-center w-full">
-      <button
-        type="button"
-        class="btn-sm px-2 variant-ghost"
-        on:click={() => {
-          shutdown(true);
-        }}>Close</button
-      >
     </div>
   </div>
 </div>

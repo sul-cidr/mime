@@ -135,7 +135,9 @@
     </div>
     {#if movelets}
       <div class="flex gap-4">
-        <div class="card stretch-vert variant-ghost-tertiary drop-shadow-lg">
+        <div
+          class="card flex flex-col justify-between variant-ghost-tertiary drop-shadow-lg"
+        >
           <header class="p-2">
             Frames {$currentMovelet.start_frame} - {$currentMovelet.end_frame},
             Track: {$currentMovelet.track_id}
@@ -177,7 +179,7 @@
 
         {#each movelets as movelet, m}
           {#if m >= simPager.offset * simPager.limit && m < simPager.offset * simPager.limit + simPager.limit}
-            <div class="card stretch-vert drop-shadow-lg">
+            <div class="card flex flex-col justify-between drop-shadow-lg">
               <header class="p-2">
                 Frames {movelet.start_frame} - {movelet.end_frame}, Track: {movelet.track_id}
               </header>
@@ -240,8 +242,5 @@
   .frame-display {
     background: radial-gradient(circle at 50% -250%, #333, #111827, #333);
     box-shadow: inset 0px 0px 30px 0px #666;
-  }
-  .stretch-vert {
-    display: inline-grid;
   }
 </style>
