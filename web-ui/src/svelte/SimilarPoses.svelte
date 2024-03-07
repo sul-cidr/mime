@@ -114,13 +114,11 @@
             name="similarity-metric"
             value="innerproduct">Inner Product</RadioItem
           > -->
-          {#if !$currentPose.from_webcam}
-            <RadioItem
-              bind:group={similarityMetric}
-              name="similarity-metric"
-              value="view_invariant">View Invariant</RadioItem
-            >
-          {/if}
+          <RadioItem
+            bind:group={similarityMetric}
+            name="similarity-metric"
+            value="view_invariant">View Invariant</RadioItem
+          >
         </RadioGroup>
       </div>
       <div class="flex items-center space-x-1">

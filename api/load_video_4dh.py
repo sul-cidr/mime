@@ -12,7 +12,7 @@ import cv2
 import numpy as np
 from rich.logging import RichHandler
 
-import lib.pose_normalization as pose_normalization
+import lib.pose_utils as pose_utils
 from mime_db import MimeDb
 
 
@@ -30,8 +30,8 @@ def get_video_metadata(video_file):
 
 
 def normalize_pose_data(pose, key="keypoints"):
-    normalized_coords = pose_normalization.extract_trustworthy_coords(
-        pose_normalization.shift_normalize_rescale_pose_coords(pose, key)
+    normalized_coords = pose_utils.extract_trustworthy_coords(
+        pose_utils.shift_normalize_rescale_pose_coords(pose, key)
     )
     return normalized_coords
 

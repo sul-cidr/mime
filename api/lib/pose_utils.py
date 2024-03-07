@@ -1,7 +1,113 @@
+import csv
+import os
+import subprocess
+
 import numpy as np
+
+# Duplicated in api/make_poem_input.py
+CSV_HEADERS = [
+    "image/width",
+    "image/height",
+    "image/object/part/NOSE_TIP/center/x",
+    "image/object/part/NOSE_TIP/center/y",
+    "image/object/part/NOSE_TIP/score",
+    "image/object/part/LEFT_SHOULDER/center/x",
+    "image/object/part/LEFT_SHOULDER/center/y",
+    "image/object/part/LEFT_SHOULDER/score",
+    "image/object/part/RIGHT_SHOULDER/center/x",
+    "image/object/part/RIGHT_SHOULDER/center/y",
+    "image/object/part/RIGHT_SHOULDER/score",
+    "image/object/part/LEFT_ELBOW/center/x",
+    "image/object/part/LEFT_ELBOW/center/y",
+    "image/object/part/LEFT_ELBOW/score",
+    "image/object/part/RIGHT_ELBOW/center/x",
+    "image/object/part/RIGHT_ELBOW/center/y",
+    "image/object/part/RIGHT_ELBOW/score",
+    "image/object/part/LEFT_WRIST/center/x",
+    "image/object/part/LEFT_WRIST/center/y",
+    "image/object/part/LEFT_WRIST/score",
+    "image/object/part/RIGHT_WRIST/center/x",
+    "image/object/part/RIGHT_WRIST/center/y",
+    "image/object/part/RIGHT_WRIST/score",
+    "image/object/part/LEFT_HIP/center/x",
+    "image/object/part/LEFT_HIP/center/y",
+    "image/object/part/LEFT_HIP/score",
+    "image/object/part/RIGHT_HIP/center/x",
+    "image/object/part/RIGHT_HIP/center/y",
+    "image/object/part/RIGHT_HIP/score",
+    "image/object/part/LEFT_KNEE/center/x",
+    "image/object/part/LEFT_KNEE/center/y",
+    "image/object/part/LEFT_KNEE/score",
+    "image/object/part/RIGHT_KNEE/center/x",
+    "image/object/part/RIGHT_KNEE/center/y",
+    "image/object/part/RIGHT_KNEE/score",
+    "image/object/part/LEFT_ANKLE/center/x",
+    "image/object/part/LEFT_ANKLE/center/y",
+    "image/object/part/LEFT_ANKLE/score",
+    "image/object/part/RIGHT_ANKLE/center/x",
+    "image/object/part/RIGHT_ANKLE/center/y",
+    "image/object/part/RIGHT_ANKLE/score",
+]
 
 # Default dimension (length, width, maybe depth, eventually) of single pose viz
 POSE_MAX_DIM = 100
+
+
+def get_poem_embedding(pose_coords):
+    # Write the coords to a CSV on the server
+
+    if not os.path.isdir("poem_files/camera_pose"):
+        os.makedirs("poem_files/camera_pose")
+
+    # Input file to Pr_VIPE code
+    with open(
+        "poem_files/camera_pose/input.csv", "w", newline="", encoding="utf-8"
+    ) as poem_file:
+        poemwriter = csv.writer(poem_file)
+        poemwriter.writerow(CSV_HEADERS)
+
+        posenorm = np.array(pose_coords)
+
+        # Fake these values - it shouldn't make a difference (hopefully)
+        video_width = 1024
+        video_height = 768
+
+        posenorm = posenorm / 100
+        pose_data = (
+            np.array(
+                [[posenorm[x], posenorm[x + 1], 1] for x in range(0, len(posenorm), 2)]
+            )
+            .flatten()
+            .tolist()
+        )
+        rowdata = [video_width] + [video_height] + pose_data
+
+        poemwriter.writerow(rowdata)
+
+    # Run the POEM embedding generator on the CSV, producing a new CSV
+    subprocess.run(
+        [
+            "/usr/local/bin/python3",
+            "-m",
+            "poem.pr_vipe.infer",
+            "--input_csv=/app/poem_files/camera_pose/input.csv",
+            "--output_dir=/app/poem_files/camera_pose/",
+            "--checkpoint_path=/app/lib/poem/checkpoints/checkpoint_Pr-VIPE_2M/model.ckpt-02013963",
+        ]
+    )
+
+    # Read the new CSV with the embedding and return the contents
+
+    with open(
+        "poem_files/camera_pose/unnormalized_embeddings.csv",
+        "r",
+        newline="",
+        encoding="utf-8",
+    ) as poem_file:
+        poem_line = poem_file.readline().strip().split(",")
+        poem_embed = [float(c) for c in poem_line]
+
+        return poem_embed
 
 
 def unflatten_pose_data(prediction, key="keypoints"):
