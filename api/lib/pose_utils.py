@@ -72,7 +72,7 @@ def get_poem_embedding(pose_coords):
         video_width = 1024
         video_height = 768
 
-        posenorm = posenorm / 100
+        posenorm = np.round(posenorm / 100, 2)
         pose_data = (
             np.array(
                 [[posenorm[x], posenorm[x + 1], 1] for x in range(0, len(posenorm), 2)]
@@ -93,7 +93,8 @@ def get_poem_embedding(pose_coords):
             "--input_csv=/app/poem_files/camera_pose/input.csv",
             "--output_dir=/app/poem_files/camera_pose/",
             "--checkpoint_path=/app/lib/poem/checkpoints/checkpoint_Pr-VIPE_2M/model.ckpt-02013963",
-        ]
+        ],
+        cwd="/app/lib",
     )
 
     # Read the new CSV with the embedding and return the contents

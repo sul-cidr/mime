@@ -56,9 +56,9 @@ export const shiftNormalizeRescalePoseCoords = (projCoco13Pose: any[], videoId: 
   let yRecenter = 0;
 
   if (poseWidth >= poseHeight) {
-    yRecenter = Math.round((POSE_MAX_DIM - scaleFactor * poseHeight) / 2);
+    yRecenter = Math.round((POSE_MAX_DIM - (scaleFactor * poseHeight)) / 2);
   } else {
-    xRecenter = Math.round((POSE_MAX_DIM - scaleFactor * poseWidth) / 2);
+    xRecenter = Math.round((POSE_MAX_DIM - (scaleFactor * poseWidth)) / 2);
   }
 
   let normCoco13Pose = [];

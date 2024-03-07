@@ -203,7 +203,9 @@
   });
 </script>
 
-<div class="w-modal-wide card variant-glass-primary flex flex-row items-center">
+<div
+  class="w-modal-wide card variant-glass-primary pb-4 flex flex-row items-center"
+>
   <div class="flex flex-col items-center w-full">
     <header class="card-header font-bold">
       <h3>Use the webcam to search for a pose</h3>

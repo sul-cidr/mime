@@ -116,7 +116,7 @@
               <button
                 type="button"
                 class="btn-sm px-2 variant-ghost"
-                on:click={() => (showSearchSettings = false)}>Hide</button
+                on:click={() => (showSearchSettings = false)}>Close</button
               >
             </div>
           </div>
