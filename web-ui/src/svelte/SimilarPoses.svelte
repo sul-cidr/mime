@@ -281,6 +281,7 @@
         <SlideToggle
           name="avoid-shot-toggle"
           bind:checked={avoidShotInResults}
+          bind:disabled={$currentPose.from_webcam}
           size="sm"
         >
           Exclude current shot
