@@ -15,6 +15,9 @@ export const currentMoveletPose: Writable<PoseRecord | null> =
 export const similarMoveletFrames: Writable<{ [frameno: number]: number }> =
   writable({});
 export const videoTableData: Writable<JSON> = writable();
+
+export const searchAllVideos: Writable<boolean> = writable(false);
+
 export const searchThresholds: Writable<{ [metric: string]: number }> =
   writable({
     cosine: 0.05,

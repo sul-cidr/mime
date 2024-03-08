@@ -230,7 +230,7 @@ async def faces_by_frame(video_id: UUID, frame: int, request: Request):
 async def get_nearest_poses(
     max_results: int,
     metric_and_max: str,
-    video_id: UUID,
+    video_param: UUID | str,
     frame: int,
     pose_idx: int,
     request: Request,
@@ -244,7 +244,7 @@ async def get_nearest_poses(
         embedding = "poem_embedding"
 
     frame_data = await request.app.state.db.get_nearest_poses(
-        video_id,
+        video_param,
         frame,
         pose_idx,
         metric,
@@ -263,7 +263,7 @@ async def get_nearest_poses(
 async def search_nearest_poses(
     max_results: int,
     metric_and_max: str,
-    video_id: UUID,
+    video_param: UUID | str,
     pose_coords: list,
     request: Request,
 ):
@@ -278,7 +278,7 @@ async def search_nearest_poses(
         query_pose = get_poem_embedding(pose_coords)
 
     frame_data = await request.app.state.db.search_by_pose(
-        video_id,
+        video_param,
         query_pose,
         metric,
         embedding,
@@ -292,51 +292,51 @@ async def search_nearest_poses(
     )
 
 
-@mime_api.get("/poses/similar/{max_results}/{metric_and_max}/{video_id}/{coords}/")
+@mime_api.get("/poses/similar/{max_results}/{metric_and_max}/{video_param}/{coords}/")
 async def get_nearest_poses_from_query(
     max_results: int,
     metric_and_max: str,
-    video_id: UUID,
+    video_param: UUID | str,
     coords: str,
     request: Request,
 ):
     pose_coords = list(map(int, coords.split(",")))
 
     return await search_nearest_poses(
-        max_results, metric_and_max, video_id, pose_coords, request
+        max_results, metric_and_max, video_param, pose_coords, request
     )
 
 
 @mime_api.get(
-    "/poses/similar/{max_results}/{metric_and_max}/{video_id}/{frame}/{pose_idx}/"
+    "/poses/similar/{max_results}/{metric_and_max}/{video_param}/{frame}/{pose_idx}/"
 )
 async def get_nearest_poses_all(
     max_results: int,
     metric_and_max: str,
-    video_id: UUID,
+    video_param: UUID | str,
     frame: int,
     pose_idx: int,
     request: Request,
 ):
     return await get_nearest_poses(
-        max_results, metric_and_max, video_id, frame, pose_idx, request
+        max_results, metric_and_max, video_param, frame, pose_idx, request
     )
 
 
 @mime_api.get(
-    "/poses/similar/{max_results}/{metric_and_max}/{video_id}/{frame}/{pose_idx}/{shot}/"
+    "/poses/similar/{max_results}/{metric_and_max}/{video_param}/{frame}/{pose_idx}/{shot}/"
 )
 async def get_nearest_poses_except_shot(
     max_results: int,
     metric_and_max: str,
-    video_id: UUID,
+    video_param: UUID | str,
     frame: int,
     pose_idx: int,
     shot: int,
     request: Request,
 ):
     return await get_nearest_poses(
-        max_results, metric_and_max, video_id, frame, pose_idx, request, shot
+        max_results, metric_and_max, video_param, frame, pose_idx, request, shot
     )
 
 
