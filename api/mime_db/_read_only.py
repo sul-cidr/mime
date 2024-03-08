@@ -150,13 +150,18 @@ async def get_track_frames(self, video_id: UUID) -> list:
 
 async def search_by_pose(
     self,
-    video_id: UUID,
+    video_param: UUID | str,
     pose_coords: list,
     metric="cosine",
     embedding="norm",
     max_distance="Infinity",
     limit=500,
 ) -> list:
+    if isinstance(video_param, UUID):
+        pose_subquery = f"pose.video_id = '{video_param}'"
+    else:
+        pose_subquery = "TRUE"
+
     distance = {
         "cosine": f"{embedding} <=> '{pose_coords}'",
         "euclidean": f"{embedding} <-> '{pose_coords}'",
@@ -166,20 +171,19 @@ async def search_by_pose(
     return await self._pool.fetch(
         f"""
     WITH search_results AS(
-        SELECT pose.video_id, pose.frame, pose.pose_idx, pose.norm, pose.keypoints, {distance} AS distance, frame.shot AS shot, face.cluster_id AS face_cluster_id FROM pose, frame, face
-        WHERE pose.video_id = $1 AND frame.video_id = $1 AND face.video_id = $1 AND face.frame = pose.frame AND face.pose_idx = pose.pose_idx AND pose.frame = frame.frame ORDER BY distance
-        LIMIT $2
+        SELECT pose.video_id, video.video_name, pose.frame, pose.pose_idx, pose.norm, pose.keypoints, {distance} AS distance, frame.shot AS shot, face.cluster_id AS face_cluster_id FROM pose, frame, face, video
+        WHERE {pose_subquery} AND video.id = pose.video_id AND frame.video_id = pose.video_id AND face.video_id = pose.video_id AND face.frame = pose.frame AND face.pose_idx = pose.pose_idx AND pose.frame = frame.frame ORDER BY distance
+        LIMIT $1
     )
     SELECT * from search_results where search_results.distance < {max_distance}
     """,
-        video_id,
         limit,
     )
 
 
 async def get_nearest_poses(
     self,
-    video_id: UUID,
+    video_param: UUID | str,
     frame: int,
     pose_idx: int,
     metric="cosine",
@@ -188,28 +192,36 @@ async def get_nearest_poses(
     avoid_shot=-1,
     limit=500,
 ) -> list:
-    sub_query = f"""
-        SELECT {embedding}
-        FROM pose
-        WHERE video_id = $1 AND frame = $2 AND pose_idx = $3
+    if isinstance(video_param, UUID):
+        pose_subquery = f"pose.video_id = '{video_param}'"
+        distance_subquery = f"""
+            SELECT {embedding}
+            FROM pose
+            WHERE video_id = '{video_param}' AND frame = $1 AND pose_idx = $2
         """
+    else:
+        pose_subquery = "TRUE"
+        distance_subquery = f"""
+            SELECT {embedding}
+            FROM pose
+            WHERE video_id = '{video_param.split("|")[1]}' AND frame = $1 AND pose_idx = $2
+            """
 
     distance = {
-        "cosine": f"{embedding} <=> ({sub_query})",
-        "euclidean": f"{embedding} <-> ({sub_query})",
-        "innerproduct": f"({embedding} <#> ({sub_query}) * -1",
+        "cosine": f"{embedding} <=> ({distance_subquery})",
+        "euclidean": f"{embedding} <-> ({distance_subquery})",
+        "innerproduct": f"({embedding} <#> ({distance_subquery}) * -1",
     }[metric]
 
     return await self._pool.fetch(
         f"""
         WITH search_results AS(
-            SELECT pose.video_id, pose.frame, pose.pose_idx, pose.norm, pose.keypoints, {distance} AS distance, frame.shot AS shot, face.cluster_id AS face_cluster_id FROM pose, frame, face
-            WHERE pose.video_id = $1 AND frame.video_id = $1 AND face.video_id = $1 AND face.frame = pose.frame AND face.pose_idx = pose.pose_idx AND pose.frame = frame.frame AND NOT ((pose.frame = $2 AND pose.pose_idx = $3) OR frame.shot = $4) ORDER BY distance
-            LIMIT $5
+            SELECT pose.video_id, video.video_name, pose.frame, pose.pose_idx, pose.norm, pose.keypoints, {distance} AS distance, frame.shot AS shot, face.cluster_id AS face_cluster_id FROM pose, frame, face, video
+            WHERE {pose_subquery} AND video.id = pose.video_id AND frame.video_id = pose.video_id AND face.video_id = pose.video_id AND face.frame = pose.frame AND face.pose_idx = pose.pose_idx AND pose.frame = frame.frame AND NOT ((pose.frame = $1 AND pose.pose_idx = $2) OR frame.shot = $3) ORDER BY distance
+            LIMIT $4
         )
         SELECT * from search_results where search_results.distance < {max_distance}
         """,
-        video_id,
         frame,
         pose_idx,
         avoid_shot,

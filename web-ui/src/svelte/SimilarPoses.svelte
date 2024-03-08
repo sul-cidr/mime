@@ -17,6 +17,7 @@
     currentPose,
     currentVideo,
     similarPoseFrames,
+    searchAllVideos,
     searchThresholds,
     webcamImage,
   } from "@svelte/stores";
@@ -46,7 +47,8 @@
     poses = data;
     $similarPoseFrames = {};
     poses.forEach((pose) => {
-      $similarPoseFrames[pose["frame"]] = 1;
+      if (pose.video_id == $currentVideo.id)
+        $similarPoseFrames[pose["frame"]] = 1;
     });
 
     // This is necessary to make the pager reset reactively
@@ -63,6 +65,7 @@
   async function getPoseData(
     thisPose: PoseRecord | null,
     similarityMetric: string,
+    searchAllVideos: boolean,
     searchThresholds: { [id: string]: number },
     avoidShot: boolean,
   ) {
@@ -70,10 +73,15 @@
 
     let query = "";
 
+    let videoParam: any = thisPose.video_id;
+    if (searchAllVideos) {
+      videoParam = `ALL|${thisPose.video_id}`;
+    }
+
     if (thisPose.from_webcam) {
-      query = `${API_BASE}/poses/similar/${searchThresholds["total_results"]}/${similarityMetric}|${searchThresholds[similarityMetric]}/${thisPose.video_id}/${similarityMetric === "global" ? thisPose.global3d_coco13 : thisPose.norm}/`;
+      query = `${API_BASE}/poses/similar/${searchThresholds["total_results"]}/${similarityMetric}|${searchThresholds[similarityMetric]}/${videoParam}/${similarityMetric === "global" ? thisPose.global3d_coco13 : thisPose.norm}/`;
     } else {
-      query = `${API_BASE}/poses/similar/${searchThresholds["total_results"]}/${similarityMetric}|${searchThresholds[similarityMetric]}/${thisPose.video_id}/${thisPose.frame}/${thisPose.pose_idx}/${avoidShot ? thisPose.shot : -1}/`;
+      query = `${API_BASE}/poses/similar/${searchThresholds["total_results"]}/${similarityMetric}|${searchThresholds[similarityMetric]}/${videoParam}/${thisPose.frame}/${thisPose.pose_idx}/${avoidShot ? thisPose.shot : -1}/`;
     }
 
     const response = await fetch(query);
@@ -83,6 +91,7 @@
   $: getPoseData(
     $currentPose,
     similarityMetric,
+    $searchAllVideos,
     $searchThresholds,
     avoidShotInResults,
   ).then((data) => updatePoseData(data));
@@ -258,23 +267,32 @@
                 </LayerCake>
               </div>
               <footer class="p-2">
-                <ul>
-                  <li>Time: {formatSeconds(pose.frame / $currentVideo.fps)}</li>
-                  <li>Distance: {pose.distance?.toFixed(5)}</li>
-                  <li>
-                    Face group: {pose.face_cluster_id}
-                  </li>
-                </ul>
-                <span
-                  ><strong
-                    ><button
-                      class="btn-sm variant-filled"
-                      type="button"
-                      value={pose.frame}
-                      on:click={goToFrame}>Go to frame {pose.frame}</button
-                    ></strong
-                  ></span
-                >
+                {#if pose.video_id == $currentVideo.id}
+                  <ul>
+                    <li>
+                      Time: {formatSeconds(pose.frame / $currentVideo.fps)}
+                    </li>
+                    <li>Distance: {pose.distance?.toFixed(5)}</li>
+                    <li>
+                      Face group: {pose.face_cluster_id}
+                    </li>
+                  </ul>
+                  <span
+                    ><strong
+                      ><button
+                        class="btn-sm variant-filled"
+                        type="button"
+                        value={pose.frame}
+                        on:click={goToFrame}>Go to frame {pose.frame}</button
+                      ></strong
+                    ></span
+                  >
+                {:else}
+                  <ul>
+                    <li>{pose.video_name}</li>
+                    <li>Distance: {pose.distance?.toFixed(5)}</li>
+                  </ul>
+                {/if}
               </footer>
             </div>
           {/if}

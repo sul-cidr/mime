@@ -36,6 +36,7 @@ type VideoRecord = {
 
 type PoseRecord = {
   video_id: number;
+  video_name: string;
   frame: number;
   pose_idx: number;
   keypoints: Coco13SkeletonNoConfidence;
