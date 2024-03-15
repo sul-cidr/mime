@@ -67,6 +67,7 @@ class MimeDb:
         get_video_by_name,
         get_video_id,
         get_video_shot_boundaries,
+        search_by_pose,
     )
 
     _pool: asyncpg.Pool

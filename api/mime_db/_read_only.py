@@ -148,6 +148,36 @@ async def get_track_frames(self, video_id: UUID) -> list:
     )
 
 
+async def search_by_pose(
+    self,
+    video_id: UUID,
+    pose_coords: list,
+    metric="cosine",
+    embedding="norm",
+    max_distance="Infinity",
+    # avoid_shot=-1,
+    limit=500,
+) -> list:
+    distance = {
+        "cosine": f"{embedding} <=> '{pose_coords}'",
+        "euclidean": f"{embedding} <-> '{pose_coords}'",
+        "innerproduct": f"({embedding} <#> '{pose_coords}' * -1",
+    }[metric]
+
+    return await self._pool.fetch(
+        f"""
+    WITH search_results AS(
+        SELECT pose.video_id, pose.frame, pose.pose_idx, pose.norm, pose.keypoints, {distance} AS distance, frame.shot AS shot, face.cluster_id AS face_cluster_id FROM pose, frame, face
+        WHERE pose.video_id = $1 AND frame.video_id = $1 AND face.video_id = $1 AND face.frame = pose.frame AND face.pose_idx = pose.pose_idx AND pose.frame = frame.frame ORDER BY distance
+        LIMIT $2
+    )
+    SELECT * from search_results where search_results.distance < {max_distance}
+    """,
+        video_id,
+        limit,
+    )
+
+
 async def get_nearest_poses(
     self,
     video_id: UUID,

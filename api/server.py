@@ -15,6 +15,7 @@ from fastapi_utils.timing import add_timing_middleware
 
 from lib.json_encoder import MimeJSONEncoder
 from lib.pose_drawing import pad_and_excerpt_image
+from lib.pose_utils import get_poem_embedding
 from mime_db import MimeDb
 
 load_dotenv()
@@ -256,6 +257,53 @@ async def get_nearest_poses(
     return Response(
         content=json.dumps(frame_data, cls=MimeJSONEncoder),
         media_type="application/json",
+    )
+
+
+async def search_nearest_poses(
+    max_results: int,
+    metric_and_max: str,
+    video_id: UUID,
+    pose_coords: list,
+    request: Request,
+):
+    metric, max_distance = metric_and_max.split("|")
+
+    query_pose = pose_coords
+
+    embedding = "norm"
+    if metric == "view_invariant":
+        metric = "cosine"
+        embedding = "poem_embedding"
+        query_pose = get_poem_embedding(pose_coords)
+
+    frame_data = await request.app.state.db.search_by_pose(
+        video_id,
+        query_pose,
+        metric,
+        embedding,
+        float(max_distance),
+        max_results,
+    )
+
+    return Response(
+        content=json.dumps(frame_data, cls=MimeJSONEncoder),
+        media_type="application/json",
+    )
+
+
+@mime_api.get("/poses/similar/{max_results}/{metric_and_max}/{video_id}/{coords}/")
+async def get_nearest_poses_from_query(
+    max_results: int,
+    metric_and_max: str,
+    video_id: UUID,
+    coords: str,
+    request: Request,
+):
+    pose_coords = list(map(int, coords.split(",")))
+
+    return await search_nearest_poses(
+        max_results, metric_and_max, video_id, pose_coords, request
     )
 
 

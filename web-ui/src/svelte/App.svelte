@@ -1,7 +1,11 @@
 <script lang="ts">
-  import { TabGroup, Tab } from "@skeletonlabs/skeleton";
-  import { AppShell } from "@skeletonlabs/skeleton";
-  import { AppBar } from "@skeletonlabs/skeleton";
+  import {
+    AppBar,
+    AppShell,
+    Modal,
+    Tab,
+    TabGroup,
+  } from "@skeletonlabs/skeleton";
 
   import VideosTable from "@svelte/VideosTable.svelte";
   import PoseDataExplorer from "@svelte/PoseDataExplorer.svelte";
@@ -31,6 +35,8 @@
   $: $currentVideo, ($currentFrame = null);
   $: poseplotFrame = `<iframe src="/poseplot/${$currentVideo?.video_name}/index.html" width="100%" height="1200px" title="Pose Cluster Explorer" />`;
 </script>
+
+<Modal />
 
 <AppShell>
   <svelte:fragment slot="header">

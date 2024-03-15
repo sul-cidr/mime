@@ -137,7 +137,7 @@ async def main() -> None:
 
     for pose in video_poses:
         posenorm = np.array(pose["norm"])
-        posenorm = posenorm / 100
+        posenorm = np.round(posenorm / 100, 2)
         pose_data = (
             np.array(
                 [[posenorm[x], posenorm[x + 1], 1] for x in range(0, len(posenorm), 2)]
