@@ -27,6 +27,9 @@
   let drawingUtils = null;
 
   let currentPoseLandmarks = null;
+  let timerButtonClass = "";
+  let cameraFlashClass = "";
+  let timerCountdown = 5;
 
   let croppedImage = null;
 
@@ -97,7 +100,7 @@
   };
 
   const shutdown = (triggerClose = false) => {
-    videoElement.srcObject.getTracks().forEach((track) => {
+    videoElement.srcObject?.getTracks().forEach((track) => {
       track.stop();
     });
     if (triggerClose) {
@@ -151,6 +154,8 @@
   };
 
   const setSearchPose = () => {
+    cameraFlashClass = "webcam_capturing";
+
     const coco13Pose = blaze33ToCoco13Coords.map(
       (i) => currentPoseLandmarks[0][i],
     );
@@ -193,6 +198,24 @@
     );
 
     $currentPose = searchPose;
+
+    setTimeout(() => {
+      cameraFlashClass = "";
+    }, 1000);
+  };
+
+  const waitThenCapture = () => {
+    timerButtonClass = "timer_button_flash";
+    setTimeout(() => {
+      if (timerCountdown === 0) {
+        setSearchPose();
+        timerCountdown = 5;
+        timerButtonClass = "";
+      } else {
+        timerCountdown -= 1;
+        waitThenCapture();
+      }
+    }, 1000);
   };
 
   onMount(async () => {
@@ -214,26 +237,37 @@
       <div class="flex">
         <button
           type="button"
+          title="Pause/resume pose estimation on webcam"
           class="btn-sm px-2 variant-ghost"
           on:click={startStopWebcam}>Pause/Unpause</button
         >
+        <span class="divider-vertical !border-l-8 !border-double"></span>
         <button
           type="button"
+          title="Use current pose for search"
           class="btn-sm px-2 variant-ghost"
           disabled={!currentPoseLandmarks}
           on:click={setSearchPose}>Search pose</button
+        >
+        <button
+          type="button"
+          title="Capture search pose after 5 seconds"
+          class="btn-sm px-2 variant-ghost {timerButtonClass}"
+          disabled={!currentPoseLandmarks}
+          on:click={waitThenCapture}>⏲ {timerCountdown} sec</button
         >
       </div>
       <span class="divider-vertical !border-l-8 !border-double"></span>
       <button
         type="button"
+        title="Close the camera controls"
         class="btn-sm px-2 variant-ghost"
         on:click={() => {
           shutdown(true);
         }}>Close</button
       >
     </div>
-    <div class="vidcontainer">
+    <div class="vidcontainer {cameraFlashClass}">
       {#if !webcamRunning && !currentPoseLandmarks}
         <div class="waiting-msg">Waiting for webcam...</div>
       {/if}
@@ -246,6 +280,7 @@
 <style>
   .vidcontainer {
     position: relative;
+    border: 5px solid #aaaaaa00;
   }
 
   .vidcontainer canvas,
@@ -254,10 +289,14 @@
   }
 
   #webcam {
-    border: 1px solid black;
     transform: rotateY(180deg);
     -webkit-transform: rotateY(180deg);
     -moz-transform: rotateY(180deg);
+    border: 1px solid black;
+  }
+
+  .webcam_capturing {
+    border: 5px solid red;
   }
 
   #output_canvas {
@@ -265,5 +304,9 @@
     transform: rotateY(180deg);
     -webkit-transform: rotateY(180deg);
     -moz-transform: rotateY(180deg);
+  }
+
+  .timer_button_flash {
+    background: red;
   }
 </style>
