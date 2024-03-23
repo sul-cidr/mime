@@ -108,6 +108,10 @@ default:
   docker compose exec -T api sh -c "LOG_LEVEL=$LOG_LEVEL /app/cluster_video_faces.py --video-name \"\$VIDEO_SRC_FOLDER/$1\" --n_clusters $2"
 
 # Provide path to video file relative to $VIDEO_SRC_FOLDER
+@detect-labeled-faces path: && refresh-db-views
+  docker compose exec -T api sh -c "LOG_LEVEL=$LOG_LEVEL /app/detect_labeled_faces_offline.py --video-path \"\$VIDEO_SRC_FOLDER/$1\""
+
+# Provide path to video file relative to $VIDEO_SRC_FOLDER
 @cluster-poses path n_clusters: && refresh-db-views
   docker compose exec -T api sh -c "LOG_LEVEL=$LOG_LEVEL /app/cluster_video_poses.py --video-name \"\$VIDEO_SRC_FOLDER/$1\" --n_clusters $2"
 
