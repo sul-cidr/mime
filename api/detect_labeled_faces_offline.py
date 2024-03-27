@@ -189,9 +189,9 @@ async def main() -> None:
 
     video_name = Path(args.video_path).name
 
-    faces_path = Path("app", "labeled_face_images", video_name)
+    faces_path = Path("api", "labeled_face_images", video_name)
     if not os.path.isdir(faces_path):
-        logging.error(f"No folder with labeled face images found be at {faces_path}")
+        logging.error(f"No folder with labeled face images found at {faces_path}")
         return
 
     face_files = [
@@ -207,11 +207,11 @@ async def main() -> None:
     backend_model = RetinaFace.build_model()
 
     cluster_id = 0
-    file_to_detection = {}
+    files_to_detections = []
     for f in face_files:
         face_image_path = Path(faces_path, f)
 
-        face_image = cv2.imread(face_image_path, cv2.IMREAD_COLOR)
+        face_image = cv2.imread(str(face_image_path), cv2.IMREAD_COLOR)
 
         img_objs = extract_face_regions(backend_model, face_image)
 
@@ -236,24 +236,26 @@ async def main() -> None:
             float_coords = [round(float(num), 2) for num in landmarks[part]]
             float_landmarks[part] = float_coords
 
-        file_to_detection[f] = {
-            "bbox": face_bbox,
-            "embedding": embedding,
-            "landmarks": float_landmarks,
-            "confidence": confidence,
-            "cluster_id": cluster_id,
-        }
+        files_to_detections.append(
+            {
+                f: {
+                    "bbox": face_bbox,
+                    "embedding": embedding,
+                    "landmarks": float_landmarks,
+                    "confidence": confidence,
+                    "cluster_id": cluster_id,
+                }
+            }
+        )
 
         cluster_id += 1
 
-    json.dump(
-        file_to_detection,
-        open(
-            Path("app", "labeled_face_images", "cluster_id_to_image.txt"),
-            "w",
-            encoding="utf-8",
-        ),
-    )
+    with open(
+        Path("api", "labeled_face_images", video_name, "cluster_id_to_image.json"),
+        "w",
+        encoding="utf-8",
+    ) as faces_json:
+        json.dump(files_to_detections, faces_json)
 
 
 if __name__ == "__main__":
