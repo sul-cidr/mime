@@ -138,6 +138,29 @@ async def get_face_cluster_image(video_name: str, cluster_id: int):
     )
 
 
+@mime_api.get("/labeled_face_image/{video_name}/{image_fn}/")
+async def get_labeled_face_image(video_name: str, image_fn: str):
+    image_path = f"/app/labeled_face_images/{video_name}/{image_fn}"
+    img = iio.imread(image_path)
+    return Response(
+        content=iio.imwrite("<bytes>", img, extension=".png"),
+        media_type="image/png",
+    )
+
+
+@mime_api.get("/labeled_face_data/{video_name}/")
+async def get_labeled_face_data(video_name: str):
+    json_path = f"/app/labeled_face_images/{video_name}/cluster_id_to_image.json"
+    # it probably isn't necessary to round-trip text-json-text, but maybe this
+    # provides some kind of santitization?
+    with open(json_path, "r", encoding="utf-8") as json_file:
+        json_data = json.load(json_file)
+    return Response(
+        content=json.dumps(json_data),
+        media_type="application/json",
+    )
+
+
 @mime_api.get("/frame_track_pose/{video_id}/{frameno}/{track_id}")
 async def pose(video_id: UUID, frameno: int, track_id: int, request: Request):
     pose_data = await request.app.state.db.get_pose_by_frame_and_track(
