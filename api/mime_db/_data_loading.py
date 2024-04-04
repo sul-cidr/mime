@@ -8,103 +8,9 @@ from uuid import UUID
 import joblib
 import numpy as np
 
-# This reduces the 45 PHALP coords to 26, just by merging pairs that are very
-# close together (e.g., left elbow front and left elbow back)
-phalp_to_reduced = [
-    [0, 15, 16, 17, 18, 38, 43],
-    [1, 37, 40],
-    [2, 33],
-    [3, 32],
-    [4, 31],
-    [5, 34],
-    [6, 35],
-    [7, 36],
-    [8, 39],
-    [9],
-    [10, 26],
-    [11, 24],
-    [12],
-    [13, 29],
-    [14, 21],
-    [19, 20],
-    [21],
-    [22, 23],
-    [25],
-    [27],
-    [28],
-    [30],
-    [36],
-    [41],
-    [42],
-    [44],
-]
-
-phalp_to_coco_17 = [
-    [0],
-    [16],
-    [15],
-    [18],
-    [17],
-    [5, 34],
-    [2, 33],
-    [6, 35],
-    [3, 32],
-    [7, 36],
-    [4, 31],
-    [28],
-    [27],
-    [13, 29],
-    [10, 26],
-    [14, 30],
-    [11, 25],
-]
-
-phalp_to_coco_13 = [
-    [0],
-    [5, 34],
-    [2, 33],
-    [6, 35],
-    [3, 32],
-    [7, 36],
-    [4, 31],
-    [28],
-    [27],
-    [13, 29],
-    [10, 26],
-    [14, 30],
-    [11, 25],
-]
-
-openpifpaf_to_coco_13 = [
-    [0],
-    [5],
-    [6],
-    [7],
-    [8],
-    [9],
-    [10],
-    [11],
-    [12],
-    [13],
-    [14],
-    [15],
-    [16],
-]
+from lib import pose_normalization
 
 CONF_THRESH_4DH = 0.85  # This is .8 in the PHALP software
-
-
-def merge_coords(all_coords, guide_to_merge, has_confidence=False):
-    new_coords = []
-    for to_merge in guide_to_merge:
-        x_avg = sum([all_coords[i][0] for i in to_merge]) / len(to_merge)
-        y_avg = sum([all_coords[i][1] for i in to_merge]) / len(to_merge)
-        conf = 1.0
-        if has_confidence:
-            conf = sum([all_coords[i][2] for i in to_merge]) / len(to_merge)
-        new_coords.append([x_avg, y_avg, conf])
-
-    return np.array(new_coords)
 
 
 async def add_video(self, video_name: str, video_metadata: dict) -> UUID:
@@ -151,13 +57,13 @@ async def load_openpifpaf_predictions(
     for frame in frames:
         assert frame.keys() == {"frame", "predictions"}
 
-        if not len(frame["predictions"]):
+        if len(frame["predictions"]) == 0:
             continue
 
         for pose_id, pose in enumerate(frame["predictions"]):
             joints = np.array(pose["keypoints"])
-            coco13_joints = merge_coords(
-                joints, openpifpaf_to_coco_13, has_confidence=True
+            coco13_joints = pose_normalization.merge_coords(
+                joints, pose_normalization.openpifpaf_to_coco_13, has_confidence=True
             ).flatten()
 
             poses.append(
@@ -203,7 +109,7 @@ async def load_4dh_predictions(self, video_id: UUID, pkl_path: Path, clear=True)
 
     poses = []
     for _, frame in frames.items():
-        if not len(frame["2d_joints"]):
+        if len(frame["2d_joints"]) == 0:
             continue
 
         # XXX TODO we only want the pose data about the tracked poses in each frame;
@@ -235,12 +141,22 @@ async def load_4dh_predictions(self, video_id: UUID, pkl_path: Path, clear=True)
                 max(img_width, img_height) - min(img_width, img_height)
             ) / 2
 
-            coco17_joints = merge_coords(joints_2d, phalp_to_coco_17).flatten()
+            coco17_joints = pose_normalization.merge_coords(
+                joints_2d, pose_normalization.phalp_to_coco_17
+            ).flatten()
 
-            coco13_joints = merge_coords(joints_2d, phalp_to_coco_13).flatten()
+            coco13_joints = pose_normalization.merge_coords(
+                joints_2d, pose_normalization.phalp_to_coco_13
+            ).flatten()
 
             all_phalp_keypoints = np.array(
                 [[coord[0], coord[1], 1.0] for coord in joints_2d]
+            ).flatten()
+
+            # De-rotate/ormalize 3D keypoints by multiplying them by the
+            # "global orientation" rotation matrix
+            global3d_phalp = np.matmul(
+                frame["3d_joints"][pose_idx], frame["smpl"][pose_idx]["global_orient"]
             ).flatten()
 
             poses.append(
@@ -251,6 +167,7 @@ async def load_4dh_predictions(self, video_id: UUID, pkl_path: Path, clear=True)
                     "keypoints": coco13_joints,
                     "keypointsopp": coco17_joints,
                     "keypoints4dh": all_phalp_keypoints,
+                    "global3d_phalp": global3d_phalp,
                     "bbox": np.array(frame["bbox"][pose_idx]),
                     "score": frame["conf"][pose_idx],
                     "category": frame["class_name"][pose_idx],
@@ -263,8 +180,8 @@ async def load_4dh_predictions(self, video_id: UUID, pkl_path: Path, clear=True)
     await self._pool.executemany(
         """
         INSERT INTO pose (
-            video_id, frame, pose_idx, keypoints, keypointsopp, keypoints4dh, bbox, score, category, track_id)
-            VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+            video_id, frame, pose_idx, keypoints, keypointsopp, keypoints4dh, global3d_phalp, bbox, score, category, track_id)
+            VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
         ;
         """,
         data,

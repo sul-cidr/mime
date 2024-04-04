@@ -44,86 +44,80 @@
       <dd>{(interest * 100).toFixed(2)}%</dd>
     </dl>
 
-    {#if showSearchSettings}
-      <div class="grid w-1/3 gap-1 p-4 search-settings">
-        <form>
-          <div class="flex justify-between search-options">
-            Max matches [1-10000]
-            <label>
-              <input
-                type="number"
-                name="total_results"
-                value={$searchThresholds["total_results"]}
-                size="5"
-                min="1"
-                max="10000"
-                step="10"
-              />
-            </label>
-          </div>
-          <p>Max distance thresholds:</p>
-          <div class="flex justify-between search-options">
-            Cosine [.01-.1]
-            <label>
-              <input
-                type="number"
-                name="cosine"
-                value={$searchThresholds["cosine"]}
-                size="4"
-                min=".01"
-                max=".1"
-                step=".01"
-              />
-            </label>
-          </div>
-          <div class="flex justify-between search-options">
-            Euclidean [1-100]
-            <label>
-              <input
-                type="number"
-                name="euclidean"
-                value={$searchThresholds["euclidean"]}
-                size="4"
-                min="1"
-                max="100"
-                step="1"
-              />
-            </label>
-          </div>
-          <div class="flex justify-between search-options">
-            View Invariant [.01-.3]
-            <label>
-              <input
-                type="number"
-                name="view_invariant"
-                value={$searchThresholds["view_invariant"]}
-                size="4"
-                min=".01"
-                max=".3"
-                step=".01"
-              />
-            </label>
-          </div>
-          <div class="flex flex-row justify-between">
-            <div>
-              <button
-                type="button"
-                class="btn-sm px-2 variant-ghost"
-                on:click={updateSearchThresholds}>Apply</button
-              >
-            </div>
-            <div>
-              <button
-                type="button"
-                class="btn-sm px-2 variant-ghost"
-                on:click={() => (showSearchSettings = false)}>Close</button
-              >
-            </div>
-          </div>
-        </form>
-      </div>
-    {:else}
-      <div class="flex">
+    <div class="grid w-1/3 gap-1 p-4 search-settings">
+      <h4>Search settings</h4>
+      <form>
+        <div class="flex justify-between search-options">
+          Max matches [1-10000]
+          <label>
+            <input
+              type="number"
+              name="total_results"
+              value={$searchThresholds["total_results"]}
+              size="5"
+              min="1"
+              max="10000"
+              step="10"
+            />
+          </label>
+        </div>
+        <p>Max distance thresholds:</p>
+        <div class="flex justify-between search-options">
+          Cosine [.01-.1]
+          <label>
+            <input
+              type="number"
+              name="cosine"
+              value={$searchThresholds["cosine"]}
+              size="4"
+              min=".01"
+              max=".1"
+              step=".01"
+            />
+          </label>
+        </div>
+        <div class="flex justify-between search-options">
+          Euclidean [1-100]
+          <label>
+            <input
+              type="number"
+              name="euclidean"
+              value={$searchThresholds["euclidean"]}
+              size="4"
+              min="1"
+              max="100"
+              step="1"
+            />
+          </label>
+        </div>
+        <div class="flex justify-between search-options">
+          View Invariant [.01-.2]
+          <label>
+            <input
+              type="number"
+              name="view_invariant"
+              value={$searchThresholds["view_invariant"]}
+              size="4"
+              min=".01"
+              max=".2"
+              step=".01"
+            />
+          </label>
+        </div>
+        <div class="flex justify-between search-options">
+          3D (de-rotated) [.01-.2]
+          <label>
+            <input
+              type="number"
+              name="global"
+              value={$searchThresholds["global"]}
+              size="4"
+              min=".01"
+              max=".2"
+              step=".01"
+            />
+          </label>
+        </div>
         <button
           type="button"
           class="btn px-2 py-2 variant-ghost h-fit"

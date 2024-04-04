@@ -242,6 +242,9 @@ async def get_nearest_poses(
     if metric == "view_invariant":
         metric = "cosine"
         embedding = "poem_embedding"
+    elif metric == "global":
+        metric = "cosine"
+        embedding = "global3d_coco13"
 
     frame_data = await request.app.state.db.get_nearest_poses(
         video_id,

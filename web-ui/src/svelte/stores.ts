@@ -19,6 +19,7 @@ export const searchThresholds: Writable<{ [metric: string]: number }> =
   writable({
     cosine: 0.05,
     euclidean: 37,
-    view_invariant: 2.0,
+    view_invariant: 0.1,
+    global: 0.1,
     total_results: 500,
   });
