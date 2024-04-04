@@ -133,6 +133,11 @@
             name="similarity-metric"
             value="global">3D Cosine</RadioItem
           >
+          <RadioItem
+            bind:group={similarityMetric}
+            name="similarity-metric"
+            value="global">3D de-rotated</RadioItem
+          >
         </RadioGroup>
       </div>
       <div class="flex items-center space-x-1">
