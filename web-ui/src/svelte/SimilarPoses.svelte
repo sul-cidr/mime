@@ -7,6 +7,7 @@
   } from "@skeletonlabs/skeleton";
   import { LayerCake, Canvas, Html } from "layercake";
   import Pose from "@svelte/Pose.svelte";
+  import Pose3D from "@svelte/Pose3D.svelte";
   import { formatSeconds } from "@utils";
   import { getExtent, getNormDims } from "../lib/poseutils";
 
@@ -163,6 +164,8 @@
             ? "card flex flex-col justify-start variant-ghost-tertiary drop-shadow-lg"
             : "card flex flex-col justify-between variant-ghost-tertiary drop-shadow-lg"}
         >
+        <Pose3D pose={$currentPose} />
+        <div class="card stretch-vert variant-ghost-tertiary drop-shadow-lg">
           <header class="p-2">
             {#if !$currentPose.from_webcam}
               Frame {$currentPose.frame}, Pose: {$currentPose.pose_idx + 1}
