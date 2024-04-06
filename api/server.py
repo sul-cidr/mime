@@ -279,6 +279,9 @@ async def search_nearest_poses(
         metric = "cosine"
         embedding = "poem_embedding"
         query_pose = get_poem_embedding(pose_coords)
+    elif metric == "global":
+        metric = "cosine"
+        embedding = "global3d_coco13"
 
     frame_data = await request.app.state.db.search_by_pose(
         video_id,
@@ -303,7 +306,12 @@ async def get_nearest_poses_from_query(
     coords: str,
     request: Request,
 ):
-    pose_coords = list(map(int, coords.split(",")))
+    metric, _ = metric_and_max.split("|")
+
+    if metric == "global":
+        pose_coords = list(map(float, coords.split(",")))
+    else:
+        pose_coords = list(map(int, coords.split(",")))
 
     return await search_nearest_poses(
         max_results, metric_and_max, video_id, pose_coords, request

@@ -86,30 +86,33 @@ export const blaze33ToCoco13Coords = [
   0, 11, 12, 13, 14, 15, 16, 23, 24, 25, 26, 27, 28,
 ];
 
-export const getPoseExtent = (projCoco13Pose: any[]) => {
+export const getPoseExtent = (coco13Pose: any[]) => {
   let xmin = null;
   let xmax = null;
   let ymin = null;
   let ymax = null;
+  let zmin = null;
+  let zmax = null;
 
-  projCoco13Pose.forEach((c) => {
-    xmin = xmin === null ? c[0] : Math.min(xmin, c[0]);
-    xmax = xmax === null ? c[0] : Math.max(xmax, c[0]);
-    ymin = ymin === null ? c[1] : Math.min(ymin, c[1]);
-    ymax = ymax === null ? c[1] : Math.max(ymax, c[1]);
+  coco13Pose.forEach((c) => {
+    xmin = xmin === null ? c.x : Math.min(xmin, c.x);
+    xmax = xmax === null ? c.x : Math.max(xmax, c.x);
+    ymin = ymin === null ? c.y : Math.min(ymin, c.y);
+    ymax = ymax === null ? c.y : Math.max(ymax, c.y);
+    zmin = zmin === null ? c.z : Math.min(zmin, c.z);
+    zmax = zmax === null ? c.z : Math.max(zmax, c.z);
   });
   const poseWidth = xmax - xmin;
   const poseHeight = ymax - ymin;
+  const poseDepth = zmax - zmin;
 
-  return [xmin, ymin, poseWidth, poseHeight];
+  return {x: xmin, y: ymin, z: zmin, w: poseWidth, h: poseHeight, d: poseDepth};
 }
 
-export const shiftNormalizeRescalePoseCoords = (projCoco13Pose: any[], videoId: number) => {
+export const shiftNormalizeRescalePoseCoords = (projCoco13Pose: any[], videoId: number, xmin: number, ymin: number, poseWidth:number, poseHeight:number) => {
   // Expects an array of 13 2D coordinate pairs in the image domain
   // [[x, y], ...]
   // Returns a PoseRecord object with the normalized coords filled in.
-
-  let [xmin, ymin, poseWidth, poseHeight] = getPoseExtent(projCoco13Pose);
 
   const scaleFactor = POSE_MAX_DIM / Math.max(poseWidth, poseHeight);
 
@@ -125,8 +128,8 @@ export const shiftNormalizeRescalePoseCoords = (projCoco13Pose: any[], videoId: 
   let normCoco13Pose = [];
 
   projCoco13Pose.forEach((c) => {
-    normCoco13Pose.push(Math.round((c[0] - xmin) * scaleFactor + xRecenter));
-    normCoco13Pose.push(Math.round((c[1] - ymin) * scaleFactor + yRecenter));
+    normCoco13Pose.push(Math.round((c.x - xmin) * scaleFactor + xRecenter));
+    normCoco13Pose.push(Math.round((c.y - ymin) * scaleFactor + yRecenter));
   });
 
   const searchPose: PoseRecord = {

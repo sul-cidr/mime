@@ -102,9 +102,9 @@ async def main() -> None:
         "vector(39)",
         video_id,
         lambda pose: tuple(
-            pose_normalization.merge_coords(
+            pose_utils.merge_coords(
                 np.array(pose["global3d_phalp"]).reshape(-1, 3),
-                pose_normalization.phalp_to_coco_13,
+                pose_utils.phalp_to_coco_13,
                 is_3d=True,
             )
             .flatten()

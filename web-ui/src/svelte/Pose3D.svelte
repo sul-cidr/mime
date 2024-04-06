@@ -66,8 +66,6 @@
     const minZ = Math.min(...allZ);
     const maxZ = Math.max(...allZ);
 
-    console.log(minX, maxX, minY, maxY, minZ, maxZ);
-
     renderer = new THREE.WebGLRenderer({
       antialias: true,
       alpha: true,
@@ -79,8 +77,6 @@
     const poseWidth = maxX - minX;
     const poseHeight = maxY - minY;
     const poseDepth = maxZ - minZ;
-
-    console.log(poseWidth, poseHeight, poseDepth);
 
     const fov = 90;
     const aspect = 1;

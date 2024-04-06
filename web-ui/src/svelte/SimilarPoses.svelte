@@ -71,7 +71,7 @@
     let query = "";
 
     if (thisPose.from_webcam) {
-      query = `${API_BASE}/poses/similar/${searchThresholds["total_results"]}/${similarityMetric}|${searchThresholds[similarityMetric]}/${thisPose.video_id}/${thisPose.norm}/`;
+      query = `${API_BASE}/poses/similar/${searchThresholds["total_results"]}/${similarityMetric}|${searchThresholds[similarityMetric]}/${thisPose.video_id}/${similarityMetric === "global" ? thisPose.global3d_coco13 : thisPose.norm}/`;
     } else {
       if (avoidShot) {
         query = `${API_BASE}/poses/similar/${searchThresholds["total_results"]}/${similarityMetric}|${searchThresholds[similarityMetric]}/${thisPose.video_id}/${thisPose.frame}/${thisPose.pose_idx}/${thisPose.shot}/`;

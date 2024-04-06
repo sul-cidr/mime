@@ -8,7 +8,7 @@ from uuid import UUID
 import joblib
 import numpy as np
 
-from lib import pose_normalization
+from lib import pose_utils
 
 CONF_THRESH_4DH = 0.85  # This is .8 in the PHALP software
 
@@ -62,8 +62,8 @@ async def load_openpifpaf_predictions(
 
         for pose_id, pose in enumerate(frame["predictions"]):
             joints = np.array(pose["keypoints"])
-            coco13_joints = pose_normalization.merge_coords(
-                joints, pose_normalization.openpifpaf_to_coco_13, has_confidence=True
+            coco13_joints = pose_utils.merge_coords(
+                joints, pose_utils.openpifpaf_to_coco_13, has_confidence=True
             ).flatten()
 
             poses.append(
@@ -141,12 +141,12 @@ async def load_4dh_predictions(self, video_id: UUID, pkl_path: Path, clear=True)
                 max(img_width, img_height) - min(img_width, img_height)
             ) / 2
 
-            coco17_joints = pose_normalization.merge_coords(
-                joints_2d, pose_normalization.phalp_to_coco_17
+            coco17_joints = pose_utils.merge_coords(
+                joints_2d, pose_utils.phalp_to_coco_17
             ).flatten()
 
-            coco13_joints = pose_normalization.merge_coords(
-                joints_2d, pose_normalization.phalp_to_coco_13
+            coco13_joints = pose_utils.merge_coords(
+                joints_2d, pose_utils.phalp_to_coco_13
             ).flatten()
 
             all_phalp_keypoints = np.array(
