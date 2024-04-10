@@ -118,12 +118,12 @@
           <RadioItem
             bind:group={similarityMetric}
             name="similarity-metric"
-            value="view_invariant">View Invariant</RadioItem
+            value="view_invariant">2D+ Cosine</RadioItem
           >
           <RadioItem
             bind:group={similarityMetric}
             name="similarity-metric"
-            value="global">3D de-rotated</RadioItem
+            value="global">3D Cosine</RadioItem
           >
         </RadioGroup>
       </div>
