@@ -136,7 +136,7 @@
           <RadioItem
             bind:group={similarityMetric}
             name="similarity-metric"
-            value="global">3D de-rotated</RadioItem
+            value="global">3D Cosine</RadioItem
           >
         </RadioGroup>
       </div>
