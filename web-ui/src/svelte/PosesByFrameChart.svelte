@@ -16,9 +16,9 @@
     currentFrame,
     currentVideo,
     currentPose,
-    currentMovelet,
+    currentActionPose,
     seriesNames,
-    similarMoveletFrames,
+    similarActionFrames,
     similarPoseFrames,
   } from "@svelte/stores";
 
@@ -104,7 +104,7 @@
   const fillEmptyFrames = (
     data: Array<FrameRecord>,
     similarPoseFrames: { [frameno: number]: number },
-    similarMoveletFrames: { [frameno: number]: number },
+    similarActionFrames: { [frameno: number]: number },
     startFrame = 1,
     endFrame = $currentVideo.frame_count,
   ) => {
@@ -131,7 +131,7 @@
           movement: 0,
           interest: 0,
           sim_pose: 0,
-          sim_move: 0,
+          sim_action: 0,
         });
         i++;
       }
@@ -141,7 +141,7 @@
       // code should be customized to hide these, or we shouldn't use this
       // method at all for highlighting matching frames.
       thisFrame["sim_pose"] = i in similarPoseFrames ? maxValue : 0;
-      thisFrame["sim_move"] = i in similarMoveletFrames ? maxValue : 0;
+      thisFrame["sim_action"] = i in similarActionFrames ? maxValue : 0;
       if (!normalizedSeriesAlreadyScaled) {
         seriesToFit.forEach((series) => {
           thisFrame[series] = scaleToFit(frame[series]);
@@ -161,7 +161,7 @@
         movement: 0,
         interest: 0,
         sim_pose: 0,
-        sim_move: 0,
+        sim_action: 0,
       });
       i++;
     }
@@ -185,17 +185,17 @@
     }
   }
 
-  $: if ($currentMovelet) {
+  $: if ($currentActionPose) {
     if (
-      Object.keys($similarMoveletFrames).length &&
-      !$seriesNames.includes("sim_move")
+      Object.keys($similarActionFrames).length &&
+      !$seriesNames.includes("sim_action")
     ) {
-      $seriesNames.push("sim_move");
+      $seriesNames.push("sim_action");
     } else if (
-      !Object.keys($similarMoveletFrames).length &&
-      $seriesNames.includes("sim_move")
+      !Object.keys($similarActionFrames).length &&
+      $seriesNames.includes("sim_action")
     ) {
-      $seriesNames.splice($seriesNames.indexOf("sim_move", 1));
+      $seriesNames.splice($seriesNames.indexOf("sim_action", 1));
     }
   }
 
@@ -204,7 +204,7 @@
   $: framesArray = fillEmptyFrames(
     timelineData,
     $similarPoseFrames,
-    $similarMoveletFrames,
+    $similarActionFrames,
   );
 
   $: {
@@ -261,7 +261,7 @@
         dataset={timelineData}
         hiddenKeys={[
           "sim_pose",
-          "sim_move",
+          "sim_action",
           "isShot",
           "avgScore",
           "movement",

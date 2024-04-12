@@ -14,7 +14,7 @@
   import FacesTimeline from "@svelte/FacesTimeline.svelte";
   import FrameViewer from "@svelte/FrameViewer.svelte";
   import PosesTimeline from "./PosesTimeline.svelte";
-  import SimilarMovelets from "@svelte/SimilarMovelets.svelte";
+  import SimilarActions from "@svelte/SimilarActions.svelte";
   import SimilarPoses from "@svelte/SimilarPoses.svelte";
   import Icon from "@svelte/Icon.svelte";
   import {
@@ -22,8 +22,8 @@
     currentFrame,
     currentPose,
     similarPoseFrames,
-    similarMoveletFrames,
-    currentMoveletPose,
+    similarActionFrames,
+    currentActionPose,
   } from "@svelte/stores";
   import { tooltip } from "@svelte/actions/tooltip";
 
@@ -188,8 +188,8 @@
             {#if $currentFrame}
               <FrameViewer />
             {/if}
-            {#if $similarMoveletFrames && $currentMoveletPose}
-              <SimilarMovelets />
+            {#if $similarActionFrames && $currentActionPose}
+              <SimilarActions />
             {/if}
             {#if $similarPoseFrames && $currentPose}
               <SimilarPoses {toggle3DPoseModal} />
@@ -205,8 +205,8 @@
             {#if $currentFrame}
               <FrameViewer />
             {/if}
-            {#if $similarMoveletFrames && $currentMoveletPose}
-              <SimilarMovelets />
+            {#if $similarActionFrames && $currentActionPose}
+              <SimilarActions />
             {/if}
             {#if $similarPoseFrames && $currentPose}
               <SimilarPoses />
@@ -222,8 +222,8 @@
             {#if $currentFrame}
               <FrameViewer />
             {/if}
-            {#if $similarMoveletFrames && $currentMoveletPose}
-              <SimilarMovelets />
+            {#if $similarActionFrames && $currentActionPose}
+              <SimilarActions />
             {/if}
             {#if $similarPoseFrames && $currentPose}
               <SimilarPoses />

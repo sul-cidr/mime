@@ -4,8 +4,7 @@
     currentVideo,
     currentFrame,
     currentPose,
-    currentMoveletPose,
-    searchAllVideos,
+    currentActionPose,
     searchThresholds,
   } from "@svelte/stores";
   import { formatSeconds } from "@utils";
@@ -186,10 +185,10 @@
               <button
                 class="button px-2 variant-filled"
                 on:click={() => {
-                  $currentMoveletPose = pose;
+                  $currentActionPose = pose;
                 }}
               >
-                similar movelets
+                similar actions
               </button>
             {/if}
             <button
