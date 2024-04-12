@@ -229,17 +229,6 @@ async def get_nearest_poses(
     )
 
 
-async def get_action_from_pose(
-    self, video_id: UUID, frame: int, track_id: int
-) -> asyncpg.Record:
-    return await self._pool.fetchrow(
-        "SELECT ava_action, action_labels FROM pose WHERE video_id = $1 AND frame = $2 AND track_id = $3;",
-        video_id,
-        frame,
-        track_id,
-    )
-
-
 async def get_nearest_actions(
     self,
     video_id: UUID,

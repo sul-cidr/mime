@@ -68,23 +68,12 @@
     avoidShot: boolean,
   ) {
     if (thisActionPose === null) return [];
-    const response = avoidShot
-      ? await fetch(
-          `${API_BASE}/actions/similar/${searchThresholds["total_results"]}/${similarityMetric}|${searchThresholds[similarityMetric]}/${thisActionPose.video_id}/${thisActionPose.frame}/${thisActionPose.track_id}/${thisActionPose.shot}/`,
-        )
-      : await fetch(
-          `${API_BASE}/actions/similar/${searchThresholds["total_results"]}/${similarityMetric}|${searchThresholds[similarityMetric]}/${thisActionPose.video_id}/${thisActionPose.frame}/${thisActionPose.track_id}/`,
-        );
+    const response = await fetch(
+      `${API_BASE}/actions/similar/${searchThresholds["total_results"]}/${similarityMetric}|${searchThresholds[similarityMetric]}/${thisActionPose.video_id}/${thisActionPose.frame}/${thisActionPose.track_id}/${avoidShot ? thisActionPose.shot : -1}/`,
+    );
+
     return await response.json();
   }
-
-  //   async function getActionFromPose(thisActionPose: PoseRecord | null) {
-  //     if (thisActionPose === null) return null;
-  //     const response = await fetch(
-  //       `${API_BASE}/action/pose/${thisActionPose.video_id}/${thisActionPose.frame}/${thisActionPose.track_id}/`,
-  //     );
-  //     return await response.json();
-  //   }
 
   $: getActionData(
     $currentActionPose,
@@ -92,10 +81,6 @@
     $searchThresholds,
     avoidShotInResults,
   ).then((data) => updateActionData(data));
-
-  //   $: getActionFromPose($currentActionPose).then((data) =>
-  //     updateCurrentAction(data),
-  //   );
 </script>
 
 {#if $currentActionPose}
@@ -138,7 +123,7 @@
     {#if actionPoses}
       <div class="flex gap-4">
         <div
-          class="card flex flex-col justify-between variant-ghost-tertiary drop-shadow-lg"
+          class="card flex flex-col justify-start variant-ghost-tertiary drop-shadow-lg"
         >
           <header class="p-2">
             Frame {$currentActionPose.frame}, Pose: {$currentActionPose.pose_idx +
@@ -178,6 +163,7 @@
                   $currentActionPose.frame / $currentVideo.fps,
                 )}
               </li>
+              <li>Query pose</li>
               <li>
                 <ul>
                   {#each $currentActionPose.action_labels as action, a}
