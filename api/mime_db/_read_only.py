@@ -155,7 +155,6 @@ async def search_by_pose(
     metric="cosine",
     embedding="norm",
     max_distance="Infinity",
-    # avoid_shot=-1,
     limit=500,
 ) -> list:
     distance = {

@@ -70,13 +70,9 @@
     avoidShot: boolean,
   ) {
     if (thisMoveletPose === null) return [];
-    const response = avoidShot
-      ? await fetch(
-          `${API_BASE}/movelets/similar/${searchThresholds["total_results"]}/${similarityMetric}|${searchThresholds[similarityMetric]}/${thisMoveletPose.video_id}/${thisMoveletPose.frame}/${thisMoveletPose.track_id}/${thisMoveletPose.shot}/`,
-        )
-      : await fetch(
-          `${API_BASE}/movelets/similar/${searchThresholds["total_results"]}/${similarityMetric}|${searchThresholds[similarityMetric]}/${thisMoveletPose.video_id}/${thisMoveletPose.frame}/${thisMoveletPose.track_id}/`,
-        );
+    const response = await fetch(
+      `${API_BASE}/movelets/similar/${searchThresholds["total_results"]}/${similarityMetric}|${searchThresholds[similarityMetric]}/${thisMoveletPose.video_id}/${thisMoveletPose.frame}/${thisMoveletPose.track_id}/${avoidShot ? thisMoveletPose.shot : -1}/`,
+    );
     return await response.json();
   }
 

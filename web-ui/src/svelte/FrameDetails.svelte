@@ -168,7 +168,7 @@
                 $currentPose = pose;
               }}
             >
-              sim pose
+              similar poses
             </button>
             {#if pose.track_id !== null}
               <button
@@ -177,7 +177,7 @@
                   $currentMoveletPose = pose;
                 }}
               >
-                sim movelet
+                similar movelets
               </button>
             {/if}
             <button
