@@ -53,6 +53,8 @@ type PoseRecord = {
   face_landmarks: FaceLandmarks | undefined; // if match is found
   keypoints4dh: SmplSkeletonWithConfidence | undefined;
   norm4dh: SmplSkeletonNoConfidence | undefined;
+  ava_action: FixedLengthArray<number, 60> | undefined;
+  action_labels: string[3] | undefined;
   hidden: boolean | undefined;
   distance?: number;
   shot: number | 0;
@@ -60,6 +62,11 @@ type PoseRecord = {
   pose_interest: number | 0; // this is actually the avg for all poses in the frame :-/
   from_webcam: boolean | false;
 };
+
+type ActionRecord = {
+  ava_action: FixedLengthArray<number, 60> | undefined;
+  action_labels: string[3] | undefined;
+}
 
 type FaceRecord = {
   video_id: number;
