@@ -75,6 +75,10 @@ default:
 @calculate-pose-interest path: && refresh-db-views
   docker compose exec -T api sh -c "LOG_LEVEL=$LOG_LEVEL /app/calculate_pose_interest.py --video-name \"$1\""
 
+# Load LART action recognition data (per-pose, per-frame) for a video to the DB
+@load-actions path clear="false":
+  docker compose exec -T api sh -c "LOG_LEVEL=$LOG_LEVEL /app/load_action_data.py --pkl-path \"\$VIDEO_SRC_FOLDER/$1\" --clear \"$2\""
+
 # Video file is in $VIDEO_SRC_FOLDER; detected faces file will be [VIDEO_FILE_NAME].faces.ArcFace.jsonl
 @detect-faces path:
   docker compose exec -T api sh -c "LOG_LEVEL=$LOG_LEVEL /app/detect_faces_offline.py --video-path \"\$VIDEO_SRC_FOLDER/$1\""
