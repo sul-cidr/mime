@@ -229,6 +229,45 @@ async def get_nearest_poses(
     )
 
 
+async def get_action_from_pose(
+    self, video_id: UUID, frame: int, track_id: int
+) -> asyncpg.Record:
+    return await self._pool.fetchrow(
+        "SELECT ava_action, action_labels FROM pose WHERE video_id = $1 AND frame = $2 AND track_id = $3;",
+        video_id,
+        frame,
+        track_id,
+    )
+
+
+async def get_nearest_actions(
+    self,
+    video_id: UUID,
+    frame: int,
+    track_id: int,
+    max_distance="Infinity",
+    avoid_shot=-1,
+    limit=500,
+) -> list:
+    return await self._pool.fetch(
+        """
+        WITH search_results AS(
+            SELECT pose.video_id, pose.frame, pose.pose_idx, pose.track_id, pose.norm, pose.keypoints, ava_action <=> (SELECT ava_action FROM pose WHERE video_id = $1 AND frame = $2 AND track_id = $3) AS distance, pose.ava_action AS ava_action, pose.action_labels AS action_labels, frame.shot AS shot, face.cluster_id AS face_cluster_id FROM pose, frame, face
+            WHERE pose.video_id = $1 AND frame.video_id = $1 AND face.video_id = $1 AND face.frame = pose.frame AND face.pose_idx = pose.pose_idx AND pose.frame = frame.frame AND NOT (frame.shot = $4 OR (pose.frame = $2 AND pose.track_id = $3))
+            ORDER BY distance
+            LIMIT $5
+        )
+        SELECT * from search_results where search_results.distance < $6
+        """,
+        video_id,
+        frame,
+        track_id,
+        avoid_shot,
+        limit,
+        max_distance,
+    )
+
+
 async def get_movelet_from_pose(
     self, video_id: UUID, frame: int, track_id: int
 ) -> asyncpg.Record:
