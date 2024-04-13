@@ -191,7 +191,7 @@ async def load_4dh_predictions(self, video_id: UUID, pkl_path: Path, clear=True)
 
 
 async def add_shot_boundaries(self, video_id: UUID | None, frames_data) -> None:
-    data = [(video_id,) + tuple(face) for face in frames_data]
+    data = [(video_id,) + tuple(frame) for frame in frames_data]
 
     await self._pool.executemany(
         """

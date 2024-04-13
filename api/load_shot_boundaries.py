@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-"""CLI to run face detection on a video file and write the output to a JSON file."""
+"""CLI to load shot boundaries for a video file from a data (.pkl) file into the DB."""
 
 import argparse
 import asyncio
@@ -26,13 +26,6 @@ async def main() -> None:
         action="store_true",
         default=False,
         help="Enable debug logging",
-    )
-
-    parser.add_argument(
-        "--overwrite",
-        action="store_true",
-        default=False,
-        help="Overwrite existing file",
     )
 
     parser.add_argument("--video-path", action="store", required=True)
@@ -73,20 +66,30 @@ async def main() -> None:
         f"Loading shot boundary probabilities for {len(all_frames_probs)} frames"
     )
 
-    shot_number = 0
+    shot_number = 1
+    is_new_shot = False
+    is_shot_boundary = False
 
     for i, frame_prob in enumerate(all_frames_probs):
-        is_shot_boundary = False
         if frame_prob > SHOT_DETECT_THRESHOLD:
             is_shot_boundary = True
-            shot_number += 1
+        else:
+            is_shot_boundary = False
 
         frames_to_load.append(
-            [i, single_frame_probs[i], frame_prob, is_shot_boundary, shot_number]
+            [i + 1, single_frame_probs[i], frame_prob, is_shot_boundary, shot_number]
         )
         if len(frames_to_load) >= BATCH_SIZE or i == len(all_frames_probs) - 1:
             await db.add_shot_boundaries(video_id, frames_to_load)
             frames_to_load = []
+
+        if is_shot_boundary:
+            if not is_new_shot:
+                is_new_shot = True
+                shot_number += 1
+        else:
+            if is_new_shot:
+                is_new_shot = False
 
 
 if __name__ == "__main__":
