@@ -155,13 +155,12 @@
     </div>
     {#if poses}
       <div class="flex gap-4">
+        <Pose3D pose={$currentPose} />
         <div
           class={$currentPose.from_webcam
             ? "card flex flex-col justify-start variant-ghost-tertiary drop-shadow-lg"
             : "card flex flex-col justify-between variant-ghost-tertiary drop-shadow-lg"}
         >
-        <Pose3D pose={$currentPose} />
-        <div class="card stretch-vert variant-ghost-tertiary drop-shadow-lg">
           <header class="p-2">
             {#if !$currentPose.from_webcam}
               Frame {$currentPose.frame}, Pose: {$currentPose.pose_idx + 1}
