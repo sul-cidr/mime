@@ -149,16 +149,25 @@
       </Html>
     </LayerCake>
   </div>
-  <h3>Labeled faces</h3>
+  <h3>Face groupings in this performance</h3>
   <div class="ambassador-list">
     {#each Array(maxCluster + 1) as _, index (index)}
       <div class="ambassador-box">
-        {index}: {faceLabels[index].replace(".png", "")}
-        <img
-          alt={`Headshot of actor in role labeled ${faceLabels[index]}`}
-          src={`${API_BASE}/labeled_face_image/${videoName}/${faceLabels[index]}/`}
-          class="ambassador-image"
-        />
+        {#if Object.keys(faceLabels).length > 0}
+          {index}: {faceLabels[index].replace(".png", "")}
+          <img
+            alt={`Headshot of actor in role labeled ${faceLabels[index]}`}
+            src={`${API_BASE}/face_image/${videoName}/${faceLabels[index]}/`}
+            class="ambassador-image"
+          />
+        {:else}
+          Cluster {index}
+          <img
+            alt={`Averaged face image for cluster ${index}`}
+            src={`${API_BASE}/face_image/${videoName}/${index}.png/`}
+            class="ambassador-image"
+          />
+        {/if}
       </div>
     {/each}
   </div>

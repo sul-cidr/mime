@@ -63,7 +63,7 @@ async def main() -> None:
     video_id = await db.get_video_id(video_name)
 
     labeled_faces_path = Path(
-        "/app", "labeled_face_images", video_name, "cluster_id_to_image.json"
+        "/app", "face_images", video_name, "cluster_id_to_image.json"
     )
     if not os.path.isfile(labeled_faces_path):
         logging.error(

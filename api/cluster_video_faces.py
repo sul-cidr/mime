@@ -225,10 +225,10 @@ async def main() -> None:
         avg_background_img = np.mean(images_array, axis=0).astype(np.uint8)
         avg_pil_img = Image.fromarray(avg_background_img)
 
-        if not os.path.isdir(f"face_cluster_images/{video_name}"):
-            os.makedirs(f"face_cluster_images/{video_name}")
+        if not os.path.isdir(f"face_images/{video_name}"):
+            os.makedirs(f"face_images/{video_name}")
 
-        avg_pil_img.save(f"face_cluster_images/{video_name}/{cluster_id}.png")
+        avg_pil_img.save(f"face_images/{video_name}/{cluster_id}.png")
 
 
 if __name__ == "__main__":
