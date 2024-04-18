@@ -17,6 +17,7 @@
     currentVideo,
     similarPoseFrames,
     searchThresholds,
+    webcamImage,
   } from "@svelte/stores";
 
   let avoidShotInResults: boolean = false;
@@ -66,13 +67,19 @@
   ) {
     if (thisPose === null) return [];
 
-    const response = avoidShot
-      ? await fetch(
-          `${API_BASE}/poses/similar/${searchThresholds["total_results"]}/${similarityMetric}|${searchThresholds[similarityMetric]}/${thisPose.video_id}/${thisPose.frame}/${thisPose.pose_idx}/${thisPose.shot}/`,
-        )
-      : await fetch(
-          `${API_BASE}/poses/similar/${searchThresholds["total_results"]}/${similarityMetric}|${searchThresholds[similarityMetric]}/${thisPose.video_id}/${thisPose.frame}/${thisPose.pose_idx}/`,
-        );
+    let query = "";
+
+    if (thisPose.from_webcam) {
+      query = `${API_BASE}/poses/similar/${searchThresholds["total_results"]}/${similarityMetric}|${searchThresholds[similarityMetric]}/${thisPose.video_id}/${thisPose.norm}/`;
+    } else {
+      if (avoidShot) {
+        query = `${API_BASE}/poses/similar/${searchThresholds["total_results"]}/${similarityMetric}|${searchThresholds[similarityMetric]}/${thisPose.video_id}/${thisPose.frame}/${thisPose.pose_idx}/${thisPose.shot}/`;
+      } else {
+        query = `${API_BASE}/poses/similar/${searchThresholds["total_results"]}/${similarityMetric}|${searchThresholds[similarityMetric]}/${thisPose.video_id}/${thisPose.frame}/${thisPose.pose_idx}/`;
+      }
+    }
+
+    const response = await fetch(query);
     return await response.json();
   }
 
@@ -146,25 +153,41 @@
     </div>
     {#if poses}
       <div class="flex gap-4">
-        <div class="card stretch-vert variant-ghost-tertiary drop-shadow-lg">
+        <div
+          class={$currentPose.from_webcam
+            ? "card flex flex-col justify-start variant-ghost-tertiary drop-shadow-lg"
+            : "card flex flex-col justify-between variant-ghost-tertiary drop-shadow-lg"}
+        >
           <header class="p-2">
-            Frame {$currentPose.frame}, Pose: {$currentPose.pose_idx + 1}
+            {#if !$currentPose.from_webcam}
+              Frame {$currentPose.frame}, Pose: {$currentPose.pose_idx + 1}
+            {:else}
+              Pose from webcam
+            {/if}
           </header>
           <div class="w-full aspect-[5/6] frame-display py-[30px] px-[10px]">
             <LayerCake>
               {#if displayOption == "show_background" || displayOption == "show_both"}
                 <Html zIndex={0}>
-                  <img
-                    class="object-contain h-full w-full"
-                    src={`${API_BASE}/frame/resize/${$currentPose.video_id}/${
-                      $currentPose.frame
-                    }/${getExtent($currentPose.keypoints).join(
-                      ",",
-                    )}|${getNormDims($currentPose.norm).join(",")}/`}
-                    alt={`Frame ${$currentPose.frame}, Pose: ${
-                      $currentPose.pose_idx + 1
-                    }`}
-                  />
+                  {#if !$currentPose.from_webcam}
+                    <img
+                      class="object-contain h-full w-full"
+                      src={`${API_BASE}/frame/resize/${$currentPose.video_id}/${
+                        $currentPose.frame
+                      }/${getExtent($currentPose.keypoints).join(
+                        ",",
+                      )}|${getNormDims($currentPose.norm).join(",")}/`}
+                      alt={`Frame ${$currentPose.frame}, Pose: ${
+                        $currentPose.pose_idx + 1
+                      }`}
+                    />
+                  {:else}
+                    <img
+                      class="object-contain h-full w-full"
+                      src={$webcamImage}
+                      alt="Pose excerpt from webcam"
+                    />
+                  {/if}
                 </Html>
               {/if}
               {#if displayOption == "show_pose" || displayOption == "show_both"}
@@ -175,24 +198,27 @@
             </LayerCake>
           </div>
           <footer class="p-2">
-            <ul>
-              <li>
-                Time: {formatSeconds($currentPose.frame / $currentVideo.fps)}
-              </li>
-              <li>
-                Face group: {$currentPose.face_cluster_id}
-              </li>
-            </ul>
-            <span
-              ><strong
-                ><button
-                  class="btn-sm variant-filled"
-                  type="button"
-                  value={$currentPose.frame}
-                  on:click={goToFrame}>Go to frame {$currentPose.frame}</button
-                ></strong
-              ></span
-            >
+            {#if !$currentPose.from_webcam}
+              <ul>
+                <li>
+                  Time: {formatSeconds($currentPose.frame / $currentVideo.fps)}
+                </li>
+                <li>
+                  Face group: {$currentPose.face_cluster_id}
+                </li>
+              </ul>
+              <span
+                ><strong
+                  ><button
+                    class="btn-sm variant-filled"
+                    type="button"
+                    value={$currentPose.frame}
+                    on:click={goToFrame}
+                    >Go to frame {$currentPose.frame}</button
+                  ></strong
+                ></span
+              >
+            {/if}
           </footer>
         </div>
 
@@ -200,7 +226,7 @@
 
         {#each poses as pose, p}
           {#if p >= simPager.offset * simPager.limit && p < simPager.offset * simPager.limit + simPager.limit}
-            <div class="card stretch-vert drop-shadow-lg">
+            <div class="card flex flex-col justify-between drop-shadow-lg">
               <header class="p-2">
                 Frame {pose.frame}, Pose: {pose.pose_idx + 1}
               </header>
@@ -255,6 +281,7 @@
         <SlideToggle
           name="avoid-shot-toggle"
           bind:checked={avoidShotInResults}
+          bind:disabled={$currentPose.from_webcam}
           size="sm"
         >
           Exclude current shot
@@ -277,8 +304,5 @@
   .frame-display {
     background: radial-gradient(circle at 50% -250%, #333, #111827, #333);
     box-shadow: inset 0px 0px 30px 0px #666;
-  }
-  .stretch-vert {
-    display: inline-grid;
   }
 </style>

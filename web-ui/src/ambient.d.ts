@@ -38,20 +38,21 @@ type PoseRecord = {
   frame: number;
   pose_idx: number;
   keypoints: Coco13SkeletonNoConfidence;
-  keypointsopp: Coco17SkeletonWithConfidence;
+  keypointsopp: Coco17SkeletonWithConfidence | undefined;
   bbox: FixedLengthArray<number, 4>; // bbox format for PifPaf is x0, y0, width, height
   score: number;
   track_id: number | null;
   norm: Coco13SkeletonNoConfidence;
   face_bbox: FixedLengthArray<number, 4> | undefined; // copied from FaceRecord
   face_landmarks: FaceLandmarks | undefined; // if match is found
-  keypoints4dh: SmplSkeletonWithConfidence;
-  norm4dh: SmplSkeletonNoConfidence;
+  keypoints4dh: SmplSkeletonWithConfidence | undefined;
+  norm4dh: SmplSkeletonNoConfidence | undefined;
   hidden: boolean | undefined;
   distance?: number;
   shot: number | 0;
   face_cluster_id: number | null;
   pose_interest: number | 0; // this is actually the avg for all poses in the frame :-/
+  from_webcam: boolean | false;
 };
 
 type FaceRecord = {

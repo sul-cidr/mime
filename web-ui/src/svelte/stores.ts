@@ -4,6 +4,9 @@ export const currentVideo: Writable<VideoRecord> = writable();
 export const currentFrame: Writable<number | null> = writable();
 export const seriesNames: Writable<string[]> = writable([]);
 export const currentPose: Writable<PoseRecord | null> = writable();
+
+export const webcamImage: Writable<string> = writable();
+
 export const similarPoseFrames: Writable<{ [frameno: number]: number }> =
   writable({});
 export const currentMovelet: Writable<MoveletRecord | null> = writable();
@@ -16,6 +19,6 @@ export const searchThresholds: Writable<{ [metric: string]: number }> =
   writable({
     cosine: 0.05,
     euclidean: 37,
-    view_invariant: 0.1,
+    view_invariant: 2.0,
     total_results: 500,
   });
