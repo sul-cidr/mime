@@ -28,7 +28,7 @@ scipy = "*"
 scikit-learn = "*"
 six = ">=1.14.0"
 tensorflow = "*"
-tensorflow-probability = ">=0.10.1"
+tensorflow-probability = "==0.23"
 tf-slim = ">=1.1.0"
 umap-learn = "*"
 uvicorn = {extras = ["standard"], version = "*"}
