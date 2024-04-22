@@ -1,9 +1,11 @@
 <script lang="ts">
+  import { SlideToggle } from "@skeletonlabs/skeleton";
   import {
     currentVideo,
     currentFrame,
     currentPose,
     currentMoveletPose,
+    searchAllVideos,
     searchThresholds,
   } from "@svelte/stores";
   import { formatSeconds } from "@utils";
@@ -31,19 +33,29 @@
     <h3>Details for frame #{$currentFrame}</h3>
   </header>
   <div class="flex">
-    <dl class="grid grid-cols-2 gap-2 p-4 [&>dt]:font-bold w-2/3">
-      <dt>#Tracked Poses:</dt>
-      <dd>{trackCt}</dd>
-      <dt>#Detected Faces:</dt>
-      <dd>{faceCt}</dd>
-      <dt>Time:</dt>
-      <dd>{formatSeconds(($currentFrame || 0) / $currentVideo.fps)}</dd>
-      <dt>Shot:</dt>
-      <dd>{shot}</dd>
-      <dt>Interest:</dt>
-      <dd>{(interest * 100).toFixed(2)}%</dd>
-    </dl>
-
+    <div class="flex flex-col w-2/3">
+      <dl class="grid grid-cols-2 gap-1 p-4 [&>dt]:font-bold">
+        <dt>#Tracked Poses:</dt>
+        <dd>{trackCt}</dd>
+        <dt>#Detected Faces:</dt>
+        <dd>{faceCt}</dd>
+        <dt>Time:</dt>
+        <dd>{formatSeconds(($currentFrame || 0) / $currentVideo.fps)}</dd>
+        <dt>Shot:</dt>
+        <dd>{shot}</dd>
+        <dt>Interest:</dt>
+        <dd>{(interest * 100).toFixed(2)}%</dd>
+      </dl>
+      <div class="flex pl-4">
+        <SlideToggle
+          name="search-all-toggle"
+          bind:checked={$searchAllVideos}
+          size="sm"
+        >
+          Search all videos
+        </SlideToggle>
+      </div>
+    </div>
     {#if showSearchSettings}
       <div class="grid w-1/3 gap-1 p-4 search-settings">
         <form>
@@ -152,7 +164,7 @@
       {#each poses as pose, i}
         <!-- svelte-ignore a11y-mouse-events-have-key-events -->
         <li
-          class="px-4 py-1 flex items-center gap-2 justify-between cursor-pointer"
+          class="py-1 px-2 flex items-center gap-2 justify-between cursor-pointer"
           class:variant-ghost={hoveredPoseIdx === i}
           on:mouseover={() => (hoveredPoseIdx = i)}
           on:mouseout={() => (hoveredPoseIdx = undefined)}

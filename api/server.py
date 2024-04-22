@@ -227,14 +227,14 @@ async def faces_by_frame(video_id: UUID, frame: int, request: Request):
     )
 
 
-# compares a known pose from the DB to others in the same video (c.f. "search_nearest_")
+# compares a known pose from the DB to others in the DB (c.f. "search_nearest_")
 @mime_api.get(
-    "/poses/similar/{max_results}/{metric_and_max}/{video_id}/{frame}/{pose_idx}/{avoid_shot}/"
+    "/poses/similar/{max_results}/{metric_and_max}/{video_param}/{frame}/{pose_idx}/{avoid_shot}/"
 )
 async def get_nearest_poses(
     max_results: int,
     metric_and_max: str,
-    video_id: UUID,
+    video_param: UUID | str,
     frame: int,
     pose_idx: int,
     avoid_shot: int,
@@ -251,7 +251,7 @@ async def get_nearest_poses(
         embedding = "global3d_coco13"
 
     frame_data = await request.app.state.db.get_nearest_poses(
-        video_id,
+        video_param,
         frame,
         pose_idx,
         metric,
@@ -267,12 +267,12 @@ async def get_nearest_poses(
     )
 
 
-# searches a video for similar poses to pose coords from webcam or other source
-@mime_api.get("/poses/similar/{max_results}/{metric_and_max}/{video_id}/{coords}/")
+# searches the DB for similar poses to pose coords from webcam or other source
+@mime_api.get("/poses/similar/{max_results}/{metric_and_max}/{video_param}/{coords}/")
 async def search_nearest_poses(
     max_results: int,
     metric_and_max: str,
-    video_id: UUID,
+    video_param: UUID | str,
     coords: str,
     request: Request,
 ):
@@ -295,7 +295,7 @@ async def search_nearest_poses(
         embedding = "global3d_coco13"
 
     frame_data = await request.app.state.db.search_by_pose(
-        video_id,
+        video_param,
         query_pose,
         metric,
         embedding,
