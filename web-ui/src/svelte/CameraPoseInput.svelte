@@ -11,6 +11,7 @@
     FilesetResolver,
     DrawingUtils,
   } from "@mediapipe/tasks-vision";
+  import Pose from "./Pose.svelte";
 
   export let parent: any;
 
@@ -160,33 +161,34 @@
       (i) => currentPoseLandmarks[0][i],
     );
 
-    // It's easier to work with pose coords when they're re-projected into the
-    // image space.
+    // Project the pose coords into the image space for 2D and view-
+    // invariant searching.
     let projCoco13Pose = [];
     coco13Pose.forEach((c) => {
-      projCoco13Pose.push([c.x * videoWidth, c.y * videoHeight]);
+      projCoco13Pose.push({ x: c.x * videoWidth, y: c.y * videoHeight });
     });
 
-    let [xmin, ymin, poseWidth, poseHeight] = getPoseExtent(projCoco13Pose);
+    let projExtent = getPoseExtent(projCoco13Pose);
 
     const widthScaleFactor = videoElement.videoWidth / videoElement.width;
     const heightScaleFactor = videoElement.videoHeight / videoElement.height;
 
+    // Crop the image to contain just the pose
     let cropCanvas = document.createElement("canvas");
     let cropCtx = cropCanvas.getContext("2d");
-    cropCanvas.width = poseWidth;
-    cropCanvas.height = poseHeight;
+    cropCanvas.width = projExtent.w;
+    cropCanvas.height = projExtent.h;
 
     cropCtx.drawImage(
       videoElement,
-      xmin * widthScaleFactor,
-      ymin * heightScaleFactor,
-      poseWidth * widthScaleFactor,
-      poseHeight * heightScaleFactor,
+      projExtent.x * widthScaleFactor,
+      projExtent.y * heightScaleFactor,
+      projExtent.w * widthScaleFactor,
+      projExtent.h * heightScaleFactor,
       0,
       0,
-      poseWidth,
-      poseHeight,
+      projExtent.w,
+      projExtent.h,
     );
 
     croppedImage = cropCanvas.toDataURL("image/png");
@@ -195,7 +197,47 @@
     const searchPose = shiftNormalizeRescalePoseCoords(
       projCoco13Pose,
       $currentVideo.id,
+      projExtent.x,
+      projExtent.y,
+      projExtent.w,
+      projExtent.h,
     );
+
+    let globalExtent = getPoseExtent(coco13Pose);
+
+    // For 3D searching, the coordinates should be adjusted so that 0,0,0 is
+    // roughly in the middle of the cuboid defined by the pose
+    const cuboidScaleFactor =
+      1 / Math.max(...[globalExtent.w, globalExtent.h, globalExtent.d]);
+
+    let positive3dPose = [];
+    coco13Pose.forEach((p) => {
+      positive3dPose.push({
+        x: p.x - globalExtent.x,
+        y: p.y - globalExtent.y,
+        z: p.z - globalExtent.z,
+      });
+    });
+
+    let rescaled3dPose = [];
+    positive3dPose.forEach((p) => {
+      rescaled3dPose.push({
+        x: p.x * cuboidScaleFactor,
+        y: p.y * cuboidScaleFactor,
+        z: p.z * cuboidScaleFactor,
+      });
+    });
+
+    const midX = (globalExtent.w * cuboidScaleFactor) / 2;
+    const midY = (globalExtent.h * cuboidScaleFactor) / 2;
+    const midZ = (globalExtent.d * cuboidScaleFactor) / 2;
+
+    let proj3dCoords = [];
+    rescaled3dPose.forEach((p) => {
+      proj3dCoords.push(p.x - midX, midY - p.y, midZ - p.z);
+    });
+
+    searchPose.global3d_coco13 = proj3dCoords;
 
     $currentPose = searchPose;
 

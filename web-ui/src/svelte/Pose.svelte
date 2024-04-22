@@ -1,67 +1,9 @@
 <script lang="ts">
-  // The body part numberings and armature connectors for the 17-keypoint COCO pose format are defined in
-  // https://github.com/openpifpaf/openpifpaf/blob/main/src/openpifpaf/plugins/coco/constants.py
-  // Note that the body part numbers in the connector (skeleton) definitions begin with 1, for some reason, not 0
-  const COCO_17_SKELETON = [
-    [16, 14],
-    [14, 12],
-    [17, 15],
-    [15, 13],
-    [12, 13],
-    [6, 12],
-    [7, 13],
-    [6, 7],
-    [6, 8],
-    [7, 9],
-    [8, 10],
-    [9, 11],
-    [2, 3],
-    [1, 2],
-    [1, 3],
-    [2, 4],
-    [3, 5],
-    [4, 6],
-    [5, 7],
-  ];
-
-  const COCO_13_SKELETON = [
-    [12, 10],
-    [10, 8],
-    [13, 11],
-    [11, 9],
-    [8, 9],
-    [2, 8],
-    [3, 9],
-    [2, 3],
-    [2, 4],
-    [3, 5],
-    [4, 6],
-    [5, 7],
-    [1, 2],
-    [1, 3],
-  ];
-
-  const COCO_COLORS = [
-    "orangered",
-    "orange",
-    "blue",
-    "lightblue",
-    "darkgreen",
-    "red",
-    "lightgreen",
-    "pink",
-    "plum",
-    "purple",
-    "brown",
-    "saddlebrown",
-    "mediumorchid",
-    "gray",
-    "salmon",
-    "chartreuse",
-    "lightgray",
-    "darkturquoise",
-    "goldenrod",
-  ];
+  import {
+    COCO_13_SKELETON,
+    COCO_17_SKELETON,
+    COCO_COLORS,
+  } from "../lib/poseutils";
 
   const SMPL_COLOR = "white";
 

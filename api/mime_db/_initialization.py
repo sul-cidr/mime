@@ -3,7 +3,7 @@ import logging
 
 async def initialize_db(conn, drop=False) -> None:
     if drop:
-        logging.warn("Dropping database tables...")
+        logging.warning("Dropping database tables...")
         await conn.execute("DROP TABLE IF EXISTS video CASCADE;")
         await conn.execute("DROP TABLE IF EXISTS pose CASCADE;")
         await conn.execute("DROP TABLE IF EXISTS movelet CASCADE;")
@@ -51,6 +51,7 @@ async def initialize_db(conn, drop=False) -> None:
             keypoints vector(39) NOT NULL,
             keypointsopp vector(51) DEFAULT NULL,
             keypoints4dh vector(135) DEFAULT NULL,
+            global3d_phalp vector(135) DEFAULT NULL,
             bbox FLOAT[4] NOT NULL,
             score FLOAT NOT NULL,
             category INTEGER,
@@ -180,5 +181,5 @@ async def initialize_db(conn, drop=False) -> None:
 # XXX Maybe shouldn't call this file _initialization if this will be here
 async def remove_video(self, video_id) -> None:
     async with self._pool.acquire() as conn:
-        logging.warn("Removing database entries associated with video")
+        logging.warning("Removing database entries associated with video")
         await conn.execute("DELETE FROM video WHERE id=$1", video_id)

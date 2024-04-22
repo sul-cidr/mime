@@ -91,7 +91,7 @@
             </label>
           </div>
           <div class="flex justify-between search-options">
-            View Invariant [.01-.3]
+            2D+ Cosine [.01-.3]
             <label>
               <input
                 type="number"
@@ -100,6 +100,20 @@
                 size="4"
                 min=".01"
                 max=".3"
+                step=".01"
+              />
+            </label>
+          </div>
+          <div class="flex justify-between search-options">
+            3D Cosine [.01-.2]
+            <label>
+              <input
+                type="number"
+                name="global"
+                value={$searchThresholds["global"]}
+                size="4"
+                min=".01"
+                max=".2"
                 step=".01"
               />
             </label>
@@ -154,7 +168,7 @@
                 $currentPose = pose;
               }}
             >
-              sim pose
+              similar poses
             </button>
             {#if pose.track_id !== null}
               <button
@@ -163,7 +177,7 @@
                   $currentMoveletPose = pose;
                 }}
               >
-                sim movelet
+                similar movelets
               </button>
             {/if}
             <button

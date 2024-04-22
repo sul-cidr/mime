@@ -6,6 +6,7 @@ type FixedLengthArray<
 
 type Coco13SkeletonWithConfidence = FixedLengthArray<number, 39>;
 type Coco13SkeletonNoConfidence = FixedLengthArray<number, 26>;
+type Coco13Skeleton3D = FixedLengthArray<number, 39>;
 type Coco17SkeletonWithConfidence = FixedLengthArray<number, 51>;
 type Coco17SkeletonNoConfidence = FixedLengthArray<number, 34>;
 type SmplSkeletonWithConfidence = FixedLengthArray<number, 135>;
@@ -38,7 +39,8 @@ type PoseRecord = {
   frame: number;
   pose_idx: number;
   keypoints: Coco13SkeletonNoConfidence;
-  keypointsopp: Coco17SkeletonWithConfidence | undefined;
+  keypointsopp: Coco17SkeletonWithConfidence;
+  global3d_coco13: Coco13Skeleton3D;
   bbox: FixedLengthArray<number, 4>; // bbox format for PifPaf is x0, y0, width, height
   score: number;
   track_id: number | null;

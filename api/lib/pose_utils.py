@@ -52,6 +52,107 @@ CSV_HEADERS = [
 # Default dimension (length, width, maybe depth, eventually) of single pose viz
 POSE_MAX_DIM = 100
 
+# This reduces the 45 PHALP coords to 26, just by merging pairs that are very
+# close together (e.g., left elbow front and left elbow back)
+phalp_to_reduced = [
+    [0, 15, 16, 17, 18, 38, 43],
+    [1, 37, 40],
+    [2, 33],
+    [3, 32],
+    [4, 31],
+    [5, 34],
+    [6, 35],
+    [7, 36],
+    [8, 39],
+    [9],
+    [10, 26],
+    [11, 24],
+    [12],
+    [13, 29],
+    [14, 21],
+    [19, 20],
+    [21],
+    [22, 23],
+    [25],
+    [27],
+    [28],
+    [30],
+    [36],
+    [41],
+    [42],
+    [44],
+]
+
+phalp_to_coco_17 = [
+    [0],
+    [16],
+    [15],
+    [18],
+    [17],
+    [5, 34],
+    [2, 33],
+    [6, 35],
+    [3, 32],
+    [7, 36],
+    [4, 31],
+    [28],
+    [27],
+    [13, 29],
+    [10, 26],
+    [14, 30],
+    [11, 25],
+]
+
+phalp_to_coco_13 = [
+    [0],
+    [5, 34],
+    [2, 33],
+    [6, 35],
+    [3, 32],
+    [7, 36],
+    [4, 31],
+    [28],
+    [27],
+    [13, 29],
+    [10, 26],
+    [14, 30],
+    [11, 25],
+]
+
+openpifpaf_to_coco_13 = [
+    [0],
+    [5],
+    [6],
+    [7],
+    [8],
+    [9],
+    [10],
+    [11],
+    [12],
+    [13],
+    [14],
+    [15],
+    [16],
+]
+
+
+def merge_coords(all_coords, guide_to_merge, has_confidence=False, is_3d=False):
+    new_coords = []
+    for to_merge in guide_to_merge:
+        x_avg = sum(all_coords[i][0] for i in to_merge) / len(to_merge)
+        y_avg = sum(all_coords[i][1] for i in to_merge) / len(to_merge)
+        conf = 1.0
+        # 3D pose keypoints don't have confidence values (for now)
+        if is_3d:
+            z_avg = sum(all_coords[i][2] for i in to_merge) / len(to_merge)
+            new_coords.append([x_avg, y_avg, z_avg])
+        else:
+            if has_confidence:
+                conf = sum(all_coords[i][2] for i in to_merge) / len(to_merge)
+            new_coords.append([x_avg, y_avg, conf])
+
+    return np.array(new_coords)
+
 
 def get_poem_embedding(pose_coords):
     # Write the coords to a CSV on the server
@@ -163,7 +264,7 @@ def shift_pose_to_origin(prediction, key):
     NOTE: This only returns the modified 'keypoints' portion of the prediction.
     """
     pose_coords = unflatten_pose_data(prediction, key)
-    min_x, min_y, max_x, max_y = get_pose_extent(prediction, key)
+    min_x, min_y, _, _ = get_pose_extent(prediction, key)
 
     for i, coords in enumerate(pose_coords):
         # Coordinates with confidence values of 0 are not modified; these should not

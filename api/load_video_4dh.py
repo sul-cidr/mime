@@ -95,6 +95,23 @@ async def main() -> None:
         ),
     )
 
+    # Normalize 3D pose data and annotate database records
+    logging.info("Normalizing 3D pose data, and annotating db records...")
+    await db.annotate_pose(
+        "global3d_coco13",
+        "vector(39)",
+        video_id,
+        lambda pose: tuple(
+            pose_utils.merge_coords(
+                np.array(pose["global3d_phalp"]).reshape(-1, 3),
+                pose_utils.phalp_to_coco_13,
+                is_3d=True,
+            )
+            .flatten()
+            .tolist()
+        ),
+    )
+
     # This is for when we want to merge the full 45-point PHALP set into a set of
     # normalized COCO points for pose similarity and clustering calculations
     # Normalize pose data and annotate database records

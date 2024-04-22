@@ -7,6 +7,7 @@
   } from "@skeletonlabs/skeleton";
   import { LayerCake, Canvas, Html } from "layercake";
   import Pose from "@svelte/Pose.svelte";
+  import Pose3D from "@svelte/Pose3D.svelte";
   import { formatSeconds } from "@utils";
   import { getExtent, getNormDims } from "../lib/poseutils";
 
@@ -70,13 +71,9 @@
     let query = "";
 
     if (thisPose.from_webcam) {
-      query = `${API_BASE}/poses/similar/${searchThresholds["total_results"]}/${similarityMetric}|${searchThresholds[similarityMetric]}/${thisPose.video_id}/${thisPose.norm}/`;
+      query = `${API_BASE}/poses/similar/${searchThresholds["total_results"]}/${similarityMetric}|${searchThresholds[similarityMetric]}/${thisPose.video_id}/${similarityMetric === "global" ? thisPose.global3d_coco13 : thisPose.norm}/`;
     } else {
-      if (avoidShot) {
-        query = `${API_BASE}/poses/similar/${searchThresholds["total_results"]}/${similarityMetric}|${searchThresholds[similarityMetric]}/${thisPose.video_id}/${thisPose.frame}/${thisPose.pose_idx}/${thisPose.shot}/`;
-      } else {
-        query = `${API_BASE}/poses/similar/${searchThresholds["total_results"]}/${similarityMetric}|${searchThresholds[similarityMetric]}/${thisPose.video_id}/${thisPose.frame}/${thisPose.pose_idx}/`;
-      }
+      query = `${API_BASE}/poses/similar/${searchThresholds["total_results"]}/${similarityMetric}|${searchThresholds[similarityMetric]}/${thisPose.video_id}/${thisPose.frame}/${thisPose.pose_idx}/${avoidShot ? thisPose.shot : -1}/`;
     }
 
     const response = await fetch(query);
@@ -117,7 +114,12 @@
           <RadioItem
             bind:group={similarityMetric}
             name="similarity-metric"
-            value="view_invariant">View Invariant</RadioItem
+            value="view_invariant">2D+ Cosine</RadioItem
+          >
+          <RadioItem
+            bind:group={similarityMetric}
+            name="similarity-metric"
+            value="global">3D Cosine</RadioItem
           >
         </RadioGroup>
       </div>
@@ -153,6 +155,7 @@
     </div>
     {#if poses}
       <div class="flex gap-4">
+        <Pose3D pose={$currentPose} />
         <div
           class={$currentPose.from_webcam
             ? "card flex flex-col justify-start variant-ghost-tertiary drop-shadow-lg"
