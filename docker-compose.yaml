@@ -37,6 +37,16 @@ services:
     environment:
       PUBLIC_API_BASE: /api
 
+  web-ui-mk2:
+    container_name: mime-web-ui-mk2
+    build: ./web-ui-mk2
+
+    volumes:
+      - ./web-ui-mk2:/app2:Z
+
+    environment:
+      PUBLIC_API_BASE: /api
+
   db:
     container_name: mime-db
     image: ankane/pgvector
