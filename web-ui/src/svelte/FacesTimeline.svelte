@@ -16,6 +16,7 @@
 
   let facesData: Array<FaceRecord> | undefined;
   let shotsData: Array<ShotRecord> | undefined;
+  let faceLabels = {};
 
   let maxCluster: number = 0;
 
@@ -48,6 +49,12 @@
     }
   };
 
+  const updateLabeledFacesData = (data) => {
+    for (let i = 0; i < data.length; i += 1) {
+      faceLabels[i] = Object.keys(data[i])[0];
+    }
+  };
+
   const updateShotsData = (data: Array<ShotRecord>) => {
     if (data) {
       shotsData = data;
@@ -64,6 +71,16 @@
   async function getShotBoundaries(videoId: string) {
     const response = await fetch(`${API_BASE}/shots/${videoId}/`);
     return await response.json();
+  }
+
+  async function getLabeledFacesData(videoName: string) {
+    const response = await fetch(`${API_BASE}/labeled_face_data/${videoName}/`);
+    return await response.json();
+  }
+
+  $: {
+    faceLabels = {};
+    getLabeledFacesData(videoName).then((data) => updateLabeledFacesData(data));
   }
 
   $: {
@@ -132,20 +149,27 @@
       </Html>
     </LayerCake>
   </div>
-  <h3>Face cluster averages</h3>
-  <div>
-    <ul>
-      {#each Array(maxCluster + 1) as _, index (index)}
-        <li class="ambassador-box">
-          cluster {index}
+  <h3>Face groupings in this performance</h3>
+  <div class="ambassador-list">
+    {#each Array(maxCluster + 1) as _, index (index)}
+      <div class="ambassador-box">
+        {#if Object.keys(faceLabels).length > 0}
+          {index}: {faceLabels[index].replace(".png", "")}
           <img
-            alt={`Representative blended face image for cluster ${index}`}
-            src={`${API_BASE}/face_cluster_image/${videoName}/${index}/`}
+            alt={`Headshot of actor in role labeled ${faceLabels[index]}`}
+            src={`${API_BASE}/face_image/${videoName}/${faceLabels[index]}/`}
             class="ambassador-image"
           />
-        </li>
-      {/each}
-    </ul>
+        {:else}
+          Cluster {index}
+          <img
+            alt={`Averaged face image for cluster ${index}`}
+            src={`${API_BASE}/face_image/${videoName}/${index}.png/`}
+            class="ambassador-image"
+          />
+        {/if}
+      </div>
+    {/each}
   </div>
 {:else}
   Loading faces data... <ProgressBar />
@@ -160,9 +184,15 @@
     padding-left: 10px;
     padding-right: 10px;
   }
+  .ambassador-list {
+    display: flex;
+    justify-content: space-evenly;
+  }
+
   .ambassador-box {
-    display: inline-block;
-    list-style-position: inside;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     border: 1px solid black;
     margin: 0.75em;
     padding: 5px;

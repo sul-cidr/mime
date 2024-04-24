@@ -381,27 +381,6 @@ async def assign_frame_interest(self, frame_interest) -> None:
         return
 
 
-async def assign_face_clusters(self, video_id, cluster_id, faces_data) -> None:
-    async with self._pool.acquire() as conn:
-        await conn.execute(
-            "ALTER TABLE face ADD COLUMN IF NOT EXISTS cluster_id INTEGER DEFAULT NULL;"
-        )
-        async with conn.transaction():
-            for pose_face in faces_data:
-                await conn.execute(
-                    """
-                        UPDATE face
-                        SET cluster_id = $1
-                        WHERE video_id = $2 AND frame = $3 AND pose_idx = $4
-                        ;
-                    """,
-                    cluster_id,
-                    video_id,
-                    pose_face["frame"],
-                    pose_face["pose_idx"],
-                )
-
-
 async def assign_face_clusters_by_track(self, face_clusters) -> None:
     async with self._pool.acquire() as conn:
         await conn.execute(
