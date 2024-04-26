@@ -6,6 +6,7 @@
     SlideToggle,
   } from "@skeletonlabs/skeleton";
   import { LayerCake, Canvas, Html } from "layercake";
+  import { Canvas as Canvas3D } from "@threlte/core";
   import Pose from "@svelte/Pose.svelte";
   import Pose3D from "@svelte/Pose3D.svelte";
   import { formatSeconds } from "@utils";
@@ -164,7 +165,14 @@
     </div>
     {#if poses}
       <div class="flex gap-4">
-        <Pose3D pose={$currentPose} />
+        <div class="card stretch-vert variant-ghost-tertiary drop-shadow-lg">
+          <header class="p-2">3D Pose</header>
+          <div>
+            <Canvas3D size={{width: 300, height: 300}}>
+              <Pose3D pose={$currentPose} />
+            </Canvas3D>
+          </div>
+        </div>
         <div
           class={$currentPose.from_webcam
             ? "card flex flex-col justify-start variant-ghost-tertiary drop-shadow-lg"
