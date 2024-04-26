@@ -1,4 +1,4 @@
-import { Writable, writable } from "svelte/store";
+import { type Writable, writable } from "svelte/store";
 
 export const currentVideo: Writable<VideoRecord> = writable();
 export const currentFrame: Writable<number | null> = writable();
@@ -10,8 +10,7 @@ export const webcamImage: Writable<string> = writable();
 export const similarPoseFrames: Writable<{ [frameno: number]: number }> =
   writable({});
 export const currentMovelet: Writable<MoveletRecord | null> = writable();
-export const currentMoveletPose: Writable<PoseRecord | null> =
-  writable();
+export const currentMoveletPose: Writable<PoseRecord | null> = writable();
 export const similarMoveletFrames: Writable<{ [frameno: number]: number }> =
   writable({});
 export const videoTableData: Writable<JSON> = writable();
