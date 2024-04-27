@@ -1,8 +1,8 @@
 <script lang="ts">
   import * as THREE from "three";
   import { T } from "@threlte/core";
-  import { OrbitControls } from '@threlte/extras'
-
+  import { Gizmo, OrbitControls } from '@threlte/extras'
+  
   import { COCO_13_SKELETON, COCO_COLORS } from "../lib/poseutils";
 
   export let pose: PoseRecord;
@@ -30,16 +30,18 @@
         poseCoords.slice(i, i + 3).map((point) => Math.round(point * 100)),
       );
     }
-    console.log(posePoints);
+
     // Draw lines connecting the armature points
     poseLines = COCO_13_SKELETON.map(([from, to]) => {
       let fromX, fromY, fromZ, toX, toY, toZ;
       [fromX, fromY, fromZ] = posePoints[from! - 1]!;
       [toX, toY, toZ] = posePoints[to! - 1]!;
 
-      return [new THREE.Vector3(fromX, fromY, fromZ), new THREE.Vector3(toX, toY, toZ)];
+      let geom = new THREE.BufferGeometry();
+      const points = new Float32Array( [fromX, fromY, fromZ, toX, toY, toZ]);
+      geom.setAttribute("position", new THREE.BufferAttribute(points, 3));
+      return geom;
     });
-    console.log(poseLines);
   };
 
   $: updatePose(pose);
@@ -56,14 +58,10 @@
   </T.Mesh>
 {/each}
 {#each poseLines as poseLine, i}
-  <T.Line>
-    <T.BufferGeometry
-      on:create={({ ref }) => {
-        ref.setFromPoints(poseLine);
-      }}
-    />
-    <T.LineBasicMaterial color={COCO_COLORS[i]}
-    />
+  <T.Line
+    geometry={poseLine}
+  >
+    <T.LineBasicMaterial color={COCO_COLORS[i]} attach="material" />
   </T.Line>
 {/each}
 <T.PerspectiveCamera
@@ -77,17 +75,23 @@
     ref.lookAt(0, 0, 0);
   }}
 >
-<OrbitControls
-  {enableDamping}
-  {autoRotate}
-  {rotateSpeed}
-  {zoomToCursor}
-  {zoomSpeed}
-  {minPolarAngle}
-  {maxPolarAngle}
-  {enableZoom}
-/>
+  <OrbitControls
+    {enableDamping}
+    {autoRotate}
+    {rotateSpeed}
+    {zoomToCursor}
+    {zoomSpeed}
+    {minPolarAngle}
+    {maxPolarAngle}
+    {enableZoom}
+  />
 </T.PerspectiveCamera>
+<Gizmo
+  horizontalPlacement="left"
+  size={56}
+  paddingX={10}
+  paddingY={10}
+/>
 <T.DirectionalLight color={0xffffff}
   position={[0, 0, 2]}
 />
