@@ -20,8 +20,6 @@
   let enableZoom: boolean = true
 
   const updatePose = (pose: PoseRecord) => {
-    console.log("updating pose");
-
     posePoints = [];
     poseLines = [];
     const poseCoords = pose.global3d_coco13;
