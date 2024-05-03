@@ -3,7 +3,7 @@
   import Pose from "./Pose.svelte";
 
   import { API_BASE } from "@config";
-  import { currentVideo, currentFrame } from "@svelte/stores";
+  import { currentVideo, currentFrame, currentPose } from "@svelte/stores";
 
   const { id: videoId, width: frameWidth, height: frameHeight } = $currentVideo;
 
@@ -69,6 +69,7 @@
                 class:selected={hoveredPoseIdx === i}
                 on:mouseover={() => (hoveredPoseIdx = i)}
                 on:mouseout={() => (hoveredPoseIdx = undefined)}
+                on:click={() => $currentPose = poses[i]}
                 pointer-events="visible"
                 style="cursor: pointer"
               />
