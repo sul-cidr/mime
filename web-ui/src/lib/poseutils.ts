@@ -59,6 +59,22 @@ export const COCO_COLORS = [
   "goldenrod",
 ];
 
+export const COCO_13_DEFAULT = [
+  [0, 50, 0],
+  [11, 35, 0],
+  [-11, 35, 0],
+  [14, 15, 0],
+  [-14, 15, 0],
+  [15, -4, 0],
+  [-15, -4, 0],
+  [7, 0, 0],
+  [-7, 0, 0],
+  [7, -25, 0],
+  [-7, -25, 0],
+  [7, -50, -0],
+  [-7, -50, -0],
+];
+
 // Not currently used, but worth keeping around for a bit
 // const shiftToOrigin = (
 //   keypoints: CocoSkeletonWithConfidence,
@@ -106,10 +122,24 @@ export const getPoseExtent = (coco13Pose: any[]) => {
   const poseHeight = ymax - ymin;
   const poseDepth = zmax - zmin;
 
-  return {x: xmin, y: ymin, z: zmin, w: poseWidth, h: poseHeight, d: poseDepth};
-}
+  return {
+    x: xmin,
+    y: ymin,
+    z: zmin,
+    w: poseWidth,
+    h: poseHeight,
+    d: poseDepth,
+  };
+};
 
-export const shiftNormalizeRescalePoseCoords = (projCoco13Pose: any[], videoId: number, xmin: number, ymin: number, poseWidth:number, poseHeight:number) => {
+export const shiftNormalizeRescalePoseCoords = (
+  projCoco13Pose: any[],
+  videoId: number,
+  xmin: number,
+  ymin: number,
+  poseWidth: number,
+  poseHeight: number,
+) => {
   // Expects an array of 13 2D coordinate pairs in the image domain
   // [[x, y], ...]
   // Returns a PoseRecord object with the normalized coords filled in.
@@ -120,9 +150,9 @@ export const shiftNormalizeRescalePoseCoords = (projCoco13Pose: any[], videoId: 
   let yRecenter = 0;
 
   if (poseWidth >= poseHeight) {
-    yRecenter = Math.round((POSE_MAX_DIM - (scaleFactor * poseHeight)) / 2);
+    yRecenter = Math.round((POSE_MAX_DIM - scaleFactor * poseHeight) / 2);
   } else {
-    xRecenter = Math.round((POSE_MAX_DIM - (scaleFactor * poseWidth)) / 2);
+    xRecenter = Math.round((POSE_MAX_DIM - scaleFactor * poseWidth) / 2);
   }
 
   let normCoco13Pose = [];
@@ -155,8 +185,7 @@ export const shiftNormalizeRescalePoseCoords = (projCoco13Pose: any[], videoId: 
   };
 
   return searchPose;
-
-}
+};
 
 export const getNormDims = (keypoints: CocoSkeletonNoConfidence) => {
   let x_values: Array<number> = [];
