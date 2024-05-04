@@ -1,13 +1,13 @@
 <script lang="ts">
   import * as THREE from "three";
   import { T } from "@threlte/core";
-  import { Gizmo, OrbitControls } from '@threlte/extras'
+  import { Gizmo, interactivity, OrbitControls } from '@threlte/extras'
   
-  import { COCO_13_SKELETON, COCO_COLORS } from "../lib/poseutils";
+  import { COCO_13_DEFAULT, COCO_13_SKELETON, COCO_COLORS } from "../lib/poseutils";
 
-  export let pose: PoseRecord;
+  let activePoint = null;
 
-  let posePoints = [];
+  let posePoints = COCO_13_DEFAULT;
   let poseLines = [];
 
   let autoRotate: boolean = false;
@@ -18,6 +18,8 @@
   let minPolarAngle: number = 0;
   let maxPolarAngle: number = Math.PI;
   let enableZoom: boolean = true;
+
+  interactivity();
 
   const updatePose = (posePoints) => {
     // Draw lines connecting the armature points
@@ -35,30 +37,31 @@
 
   }
 
-  const updatePoseData = (pose: PoseRecord) => {
-    posePoints = [];
-    const poseCoords = pose.global3d_coco13;
-    for (let i = 0; i < poseCoords.length; i += 3) {
-      posePoints.push(
-        poseCoords.slice(i, i + 3).map((point) => Math.round(point * 100)),
-      );
-    }
-
-    updatePose(posePoints);
-
-  };
-
-  $: updatePoseData(pose);
+  $: updatePose(posePoints);
 </script>
-
+  
 {#each posePoints as armaturePoint, p}
   <T.Mesh
     position.x={armaturePoint[0]}
     position.y={armaturePoint[1]}
     position.z={armaturePoint[2]}
+    on:click={(e) => {
+      if (activePoint === null) {
+        activePoint = p;
+      } else if (activePoint === p) {
+        activePoint = null;
+      }
+      e.stopPropagation();
+    }}
+    on:pointermove={(e) => {
+      if (activePoint === p) {
+        posePoints[p] = [e.point.x, e.point.y, posePoints[p][2]];
+      }
+      e.stopPropagation();
+    }}
   >
-    <T.BoxGeometry args={[10, 10, 10]} />
-    <T.MeshPhongMaterial color={0x00ff00}/>
+    <T.BoxGeometry args={[5, 5, 5]} />
+    <T.MeshPhongMaterial color={activePoint === p ? 0xff0000 : 0x00ff00}/>
   </T.Mesh>
 {/each}
 {#each poseLines as poseLine, i}
@@ -92,11 +95,12 @@
 </T.PerspectiveCamera>
 <Gizmo
   horizontalPlacement="left"
-  size={56}
-  paddingX={10}
-  paddingY={10}
+  size={100}
+  paddingX={20}
+  paddingY={20}
 />
 <T.DirectionalLight color={0xffffff}
   position={[0, 0, 2]}
 />
 <T.AmbientLight intensity={0.3} />
+  
