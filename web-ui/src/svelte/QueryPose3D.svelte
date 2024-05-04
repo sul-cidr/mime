@@ -5,10 +5,10 @@
   
   import { COCO_13_DEFAULT, COCO_13_SKELETON, COCO_COLORS } from "../lib/poseutils";
 
-  let activePoint = null;
+  export let posePoints = COCO_13_DEFAULT;
 
-  let posePoints = COCO_13_DEFAULT;
   let poseLines = [];
+  let activePoint = null;
 
   let autoRotate: boolean = false;
   let enableDamping: boolean = true;
