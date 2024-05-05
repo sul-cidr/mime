@@ -134,7 +134,7 @@ export const getPoseExtent = (coco13Pose: any[]) => {
 
 export const shiftNormalizeRescalePoseCoords = (
   projCoco13Pose: any[],
-  videoId: number,
+  videoId: string,
   xmin: number,
   ymin: number,
   poseWidth: number,
