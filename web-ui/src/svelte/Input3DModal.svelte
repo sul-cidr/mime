@@ -6,10 +6,11 @@
   import Pose from "./Pose.svelte";
   import { getPoseExtent, shiftNormalizeRescalePoseCoords } from "../lib/poseutils";
 
-
   export let parent: any;
 
   let posePoints;
+  let viewPoint = "free";
+  let resetPose;
 
   const shutdown = (triggerClose = false) => {
     if (triggerClose) {
@@ -67,6 +68,9 @@
   onDestroy(async () => {
     shutdown();
   });
+
+$: editDisabled = viewPoint === "free" ? "disabled" : "";
+
 </script>
   
 <div
@@ -74,19 +78,52 @@
 >
   <div class="flex flex-col items-center w-full">
     <header class="card-header font-bold">
-      <h3>Click keypoints to set query pose</h3>
+      {#if viewPoint === "free"}
+        <h3>Select "front" or "side" view to modify query pose</h3>
+      {:else}
+        <h3>Click and drag keypoints to modify query pose</h3>
+      {/if}
     </header>
-    <div class="flex flex-row justify-center">
+    <div class="flex flex-row justify-center items-center">
+      <button
+        type="button"
+        title="View pose with free camera movement"
+        class="btn-sm px-2 variant-ghost"
+        on:click={() => (viewPoint = "free")}>Free view</button
+      >
+      <span class="divider-vertical !border-l-8 !border-double"></span>
+      <div>Edit:</div>
+      <button
+        type="button"
+        title="Edit pose in frontal view"
+        class="btn-sm px-2 variant-ghost"
+        {editDisabled}
+        on:click={() => (viewPoint = "front")}>Front</button
+      >
+      <button
+        type="button"
+        title="Edit pose in side view"
+        class="btn-sm px-2 variant-ghost"
+        {editDisabled}
+        on:click={() => (viewPoint = "side")}>Side</button
+      >
+      <span class="divider-vertical !border-l-8 !border-double"></span>
       <button
         type="button"
         title="Search current pose"
         class="btn-sm px-2 variant-ghost"
         on:click={setSearchPose}>Search pose</button
       >
+      <button
+        type="button"
+        title="Reset query pose to default"
+        class="btn-sm px-2 variant-ghost"
+        on:click={resetPose}>Reset pose</button
+      >
       <span class="divider-vertical !border-l-8 !border-double"></span>
       <button
         type="button"
-        title="Close the camera controls"
+        title="Close the sketch window"
         class="btn-sm px-2 variant-ghost"
         on:click={() => {
           shutdown(true);
@@ -94,10 +131,10 @@
       >
     </div>
     <div class="card stretch-vert variant-ghost-tertiary drop-shadow-lg">
-      <header class="p-2">3D Pose</header>
+      <header class="p-2">3D Pose - {viewPoint} view</header>
       <div>
         <Canvas3D size={{width: 800, height: 800}}>
-          <QueryPose3D bind:posePoints />
+          <QueryPose3D bind:posePoints {viewPoint} bind:resetPose />
         </Canvas3D>
       </div>
     </div>

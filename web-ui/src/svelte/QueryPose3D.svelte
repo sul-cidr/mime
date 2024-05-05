@@ -5,7 +5,13 @@
   
   import { COCO_13_DEFAULT, COCO_13_SKELETON, COCO_COLORS } from "../lib/poseutils";
 
-  export let posePoints = COCO_13_DEFAULT;
+  export let posePoints = [...COCO_13_DEFAULT];
+  export let viewPoint = "free";
+  export const resetPose = () => {
+    posePoints = [...COCO_13_DEFAULT];
+  }
+
+  let cameraPosition = [0, 0, 200];
 
   let poseLines = [];
   let activePoint = null;
@@ -37,7 +43,15 @@
 
   }
 
+  const updateCamera = (viewPoint) => {
+    if (viewPoint === "front")
+      cameraPosition = [0, 0, 200];
+    else if (viewPoint === "side")
+      cameraPosition = [200, 0, 0];
+  }
+
   $: updatePose(posePoints);
+  $: updateCamera(viewPoint);
 </script>
   
 {#each posePoints as armaturePoint, p}
@@ -46,16 +60,19 @@
     position.y={armaturePoint[1]}
     position.z={armaturePoint[2]}
     on:click={(e) => {
-      if (activePoint === null) {
+      if ((viewPoint !== "free") && (activePoint === null)) {
         activePoint = p;
-      } else if (activePoint === p) {
+      } else if ((viewPoint !== "free") && (activePoint === p)) {
         activePoint = null;
       }
       e.stopPropagation();
     }}
     on:pointermove={(e) => {
-      if (activePoint === p) {
-        posePoints[p] = [e.point.x, e.point.y, posePoints[p][2]];
+      if ((viewPoint !== "free") && (activePoint === p)) {
+        if (viewPoint === "front")
+          posePoints[p] = [e.point.x, e.point.y, posePoints[p][2]];
+        else if (viewPoint === "side")
+          posePoints[p] = [posePoints[p][0], e.point.y, e.point.z];    
       }
       e.stopPropagation();
     }}
@@ -77,21 +94,22 @@
   fov={75}
   near={0.1}
   far={400}
-  position={[0, 0, 200]}
+  position={cameraPosition}
   on:create={({ ref }) => {
     ref.lookAt(0, 0, 0);
   }}
 >
-  <OrbitControls
-    {enableDamping}
-    {autoRotate}
-    {rotateSpeed}
-    {zoomToCursor}
-    {zoomSpeed}
-    {minPolarAngle}
-    {maxPolarAngle}
-    {enableZoom}
-  />
+<OrbitControls
+  enabled = {viewPoint === "free"}
+  {enableDamping}
+  {autoRotate}
+  {rotateSpeed}
+  {zoomToCursor}
+  {zoomSpeed}
+  {minPolarAngle}
+  {maxPolarAngle}
+  {enableZoom}
+/>
 </T.PerspectiveCamera>
 <Gizmo
   horizontalPlacement="left"
