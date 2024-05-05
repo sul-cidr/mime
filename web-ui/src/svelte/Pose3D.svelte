@@ -1,8 +1,8 @@
 <script lang="ts">
   import * as THREE from "three";
   import { T } from "@threlte/core";
-  import { Gizmo, OrbitControls } from '@threlte/extras'
-  
+  import { Gizmo, OrbitControls } from "@threlte/extras";
+
   import { COCO_13_SKELETON, COCO_COLORS } from "../lib/poseutils";
 
   export let pose: PoseRecord;
@@ -28,12 +28,11 @@
       [toX, toY, toZ] = posePoints[to! - 1]!;
 
       let geom = new THREE.BufferGeometry();
-      const points = new Float32Array( [fromX, fromY, fromZ, toX, toY, toZ]);
+      const points = new Float32Array([fromX, fromY, fromZ, toX, toY, toZ]);
       geom.setAttribute("position", new THREE.BufferAttribute(points, 3));
       return geom;
     });
-
-  }
+  };
 
   const updatePoseData = (pose: PoseRecord) => {
     posePoints = [];
@@ -45,7 +44,6 @@
     }
 
     updatePose(posePoints);
-
   };
 
   $: updatePoseData(pose);
@@ -58,13 +56,11 @@
     position.z={armaturePoint[2]}
   >
     <T.BoxGeometry args={[10, 10, 10]} />
-    <T.MeshPhongMaterial color={0x00ff00}/>
+    <T.MeshPhongMaterial color={0x00ff00} />
   </T.Mesh>
 {/each}
 {#each poseLines as poseLine, i}
-  <T.Line
-    geometry={poseLine}
-  >
+  <T.Line geometry={poseLine}>
     <T.LineBasicMaterial color={COCO_COLORS[i]} attach="material" />
   </T.Line>
 {/each}
@@ -73,8 +69,8 @@
   aspect={1}
   fov={75}
   near={0.1}
-  far={400}
-  position={[0, 0, 200]}
+  far={300}
+  position={[0, 0, 150]}
   on:create={({ ref }) => {
     ref.lookAt(0, 0, 0);
   }}
@@ -90,13 +86,6 @@
     {enableZoom}
   />
 </T.PerspectiveCamera>
-<Gizmo
-  horizontalPlacement="left"
-  size={56}
-  paddingX={10}
-  paddingY={10}
-/>
-<T.DirectionalLight color={0xffffff}
-  position={[0, 0, 2]}
-/>
+<Gizmo horizontalPlacement="left" size={56} paddingX={10} paddingY={10} />
+<T.DirectionalLight color={0xffffff} position={[0, 0, 2]} />
 <T.AmbientLight intensity={0.3} />
