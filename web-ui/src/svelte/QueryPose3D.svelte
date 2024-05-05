@@ -1,9 +1,13 @@
 <script lang="ts">
   import * as THREE from "three";
   import { T } from "@threlte/core";
-  import { Gizmo, Grid, interactivity, OrbitControls } from '@threlte/extras'
-  
-  import { COCO_13_DEFAULT, COCO_13_SKELETON, COCO_COLORS } from "../lib/poseutils";
+  import { Gizmo, Grid, interactivity, OrbitControls } from "@threlte/extras";
+
+  import {
+    COCO_13_DEFAULT,
+    COCO_13_SKELETON,
+    COCO_COLORS,
+  } from "../lib/poseutils";
 
   export let posePoints = [...COCO_13_DEFAULT];
   export let viewPoint = "free";
@@ -16,7 +20,7 @@
       });
       posePoints = [...rotatedCoords];
     }
-  }
+  };
 
   let prevViewpoint = "free";
 
@@ -37,7 +41,7 @@
 
   interactivity();
 
-  const updatePose = (posePoints) => {
+  const updatePose = (posePoints: []) => {
     // Draw lines connecting the armature points
     poseLines = [];
     poseLines = COCO_13_SKELETON.map(([from, to]) => {
@@ -46,63 +50,65 @@
       [toX, toY, toZ] = posePoints[to! - 1]!;
 
       let geom = new THREE.BufferGeometry();
-      const points = new Float32Array( [fromX, fromY, fromZ, toX, toY, toZ]);
+      const points = new Float32Array([fromX, fromY, fromZ, toX, toY, toZ]);
       geom.setAttribute("position", new THREE.BufferAttribute(points, 3));
       return geom;
     });
+  };
 
-  }
-
-  const updateView = (viewPoint) => {
+  const updateView = (viewPoint: string) => {
     cameraPosition = [0, 0, 200];
-    if (viewPoint === prevViewpoint)
-      return
+    if (viewPoint === prevViewpoint) return;
     let rotatedCoords = [];
-    if (((prevViewpoint === "free") || (prevViewpoint === "front")) && (viewPoint === "side")) {
+    if (
+      (prevViewpoint === "free" || prevViewpoint === "front") &&
+      viewPoint === "side"
+    ) {
       posePoints.forEach((p) => {
         rotatedCoords.push([-p[2], p[1], p[0]]);
       });
       posePoints = [...rotatedCoords];
-    } else if ((prevViewpoint === "side") && ((viewPoint === "free") || (viewPoint === "front"))) {
+    } else if (
+      prevViewpoint === "side" &&
+      (viewPoint === "free" || viewPoint === "front")
+    ) {
       posePoints.forEach((p) => {
         rotatedCoords.push([p[2], p[1], -p[0]]);
       });
       posePoints = [...rotatedCoords];
     }
     prevViewpoint = viewPoint;
-  }
+  };
 
   $: updatePose(posePoints);
   $: updateView(viewPoint);
 </script>
-  
+
 {#each posePoints as armaturePoint, p}
   <T.Mesh
     position.x={armaturePoint[0]}
     position.y={armaturePoint[1]}
     position.z={armaturePoint[2]}
     on:pointerdown={(e) => {
-      if ((viewPoint !== "free") && (activePoint === null)) {
+      if (viewPoint !== "free" && activePoint === null) {
         gridPosition = [0, 0, posePoints[p][2]];
         activePoint = p;
       }
       e.stopPropagation();
     }}
     on:pointermove={(e) => {
-      if ((viewPoint !== "free") && (activePoint === p)) {
+      if (viewPoint !== "free" && activePoint === p) {
         posePoints[p] = [e.point.x, e.point.y, posePoints[p][2]];
       }
       e.stopPropagation();
     }}
   >
     <T.BoxGeometry args={[5, 5, 5]} />
-    <T.MeshPhongMaterial color={activePoint === p ? 0xff0000 : 0x00ff00}/>
+    <T.MeshPhongMaterial color={activePoint === p ? 0xff0000 : 0x00ff00} />
   </T.Mesh>
 {/each}
 {#each poseLines as poseLine, i}
-  <T.Line
-    geometry={poseLine}
-  >
+  <T.Line geometry={poseLine}>
     <T.LineBasicMaterial color={COCO_COLORS[i]} attach="material" />
   </T.Line>
 {/each}
@@ -116,7 +122,7 @@
   target={[0, 0, 0]}
 >
   <OrbitControls
-    enabled = {viewPoint === "free"}
+    enabled={viewPoint === "free"}
     {enableDamping}
     {autoRotate}
     {rotateSpeed}
@@ -134,33 +140,33 @@
     cellSize={5}
     cellThickness={1}
     cellColor="#cccccc"
-    gridSize={[100, 100]}
+    gridSize={[150, 150]}
     fadeDistance={300}
     sectionSize={10}
     sectionColor="#777777"
     sectionThickness={2}
     on:pointerup={(e) => {
       if (activePoint !== null) {
-        posePoints[activePoint] = [e.point.x, e.point.y, posePoints[activePoint][2]];
+        posePoints[activePoint] = [
+          e.point.x,
+          e.point.y,
+          posePoints[activePoint][2],
+        ];
         activePoint = null;
       }
       e.stopPropagation();
     }}
     on:pointermove={(e) => {
       if (activePoint !== null)
-        posePoints[activePoint] = [e.point.x, e.point.y, posePoints[activePoint][2]];
+        posePoints[activePoint] = [
+          e.point.x,
+          e.point.y,
+          posePoints[activePoint][2],
+        ];
       e.stopPropagation();
     }}
   />
 {/if}
-<Gizmo
-  horizontalPlacement="left"
-  size={100}
-  paddingX={20}
-  paddingY={20}
-/>
-<T.DirectionalLight color={0xffffff}
-  position={[0, 0, 2]}
-/>
+<Gizmo horizontalPlacement="left" size={100} paddingX={20} paddingY={20} />
+<T.DirectionalLight color={0xffffff} position={[0, 0, 2]} />
 <T.AmbientLight intensity={0.3} />
-  

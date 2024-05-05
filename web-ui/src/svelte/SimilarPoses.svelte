@@ -28,7 +28,7 @@
   let poses: Array<PoseRecord>;
   let displayOption = "show_both";
 
-  const simStep = 5;
+  const simStep = 4;
   let simPager = {
     page: 0,
     offset: 0,
@@ -165,10 +165,12 @@
     </div>
     {#if poses}
       <div class="flex gap-4">
-        <div class="card min-w-48 stretch-vert variant-ghost-tertiary drop-shadow-lg">
+        <div
+          class="card min-w-48 stretch-vert variant-ghost-tertiary drop-shadow-lg"
+        >
           <header class="p-2">3D Pose</header>
           <div>
-            <Canvas3D size={{width: 300, height: 300}}>
+            <Canvas3D size={{ width: 200, height: 300 }}>
               <Pose3D pose={$currentPose} />
             </Canvas3D>
           </div>
@@ -246,7 +248,9 @@
 
         {#each poses as pose, p}
           {#if p >= simPager.offset * simPager.limit && p < simPager.offset * simPager.limit + simPager.limit}
-            <div class="card min-w-48 flex flex-col justify-between drop-shadow-lg">
+            <div
+              class="card min-w-48 flex flex-col justify-between drop-shadow-lg"
+            >
               <header class="p-2">
                 Frame {pose.frame}, Pose: {pose.pose_idx + 1}
               </header>
