@@ -165,7 +165,7 @@
     </div>
     {#if poses}
       <div class="flex gap-4">
-        <div class="card stretch-vert variant-ghost-tertiary drop-shadow-lg">
+        <div class="card min-w-48 stretch-vert variant-ghost-tertiary drop-shadow-lg">
           <header class="p-2">3D Pose</header>
           <div>
             <Canvas3D size={{width: 300, height: 300}}>
@@ -175,14 +175,14 @@
         </div>
         <div
           class={$currentPose.from_webcam
-            ? "card flex flex-col justify-start variant-ghost-tertiary drop-shadow-lg"
-            : "card flex flex-col justify-between variant-ghost-tertiary drop-shadow-lg"}
+            ? "card min-w-48 flex flex-col justify-start variant-ghost-tertiary drop-shadow-lg"
+            : "card min-w-48 flex flex-col justify-between variant-ghost-tertiary drop-shadow-lg"}
         >
           <header class="p-2">
             {#if !$currentPose.from_webcam}
               Frame {$currentPose.frame}, Pose: {$currentPose.pose_idx + 1}
             {:else}
-              Pose from webcam
+              2D Pose
             {/if}
           </header>
           <div class="w-full aspect-[5/6] frame-display py-[30px] px-[10px]">
@@ -246,7 +246,7 @@
 
         {#each poses as pose, p}
           {#if p >= simPager.offset * simPager.limit && p < simPager.offset * simPager.limit + simPager.limit}
-            <div class="card flex flex-col justify-between drop-shadow-lg">
+            <div class="card min-w-48 flex flex-col justify-between drop-shadow-lg">
               <header class="p-2">
                 Frame {pose.frame}, Pose: {pose.pose_idx + 1}
               </header>
