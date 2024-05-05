@@ -1,7 +1,7 @@
 <script lang="ts">
   import * as THREE from "three";
   import { T } from "@threlte/core";
-  import { Gizmo, interactivity, OrbitControls } from '@threlte/extras'
+  import { Gizmo, Grid, interactivity, OrbitControls } from '@threlte/extras'
   
   import { COCO_13_DEFAULT, COCO_13_SKELETON, COCO_COLORS } from "../lib/poseutils";
 
@@ -9,9 +9,19 @@
   export let viewPoint = "free";
   export const resetPose = () => {
     posePoints = [...COCO_13_DEFAULT];
+    if (viewPoint === "side") {
+      let rotatedCoords = [];
+      posePoints.forEach((p) => {
+        rotatedCoords.push([-p[2], p[1], p[0]]);
+      });
+      posePoints = [...rotatedCoords];
+    }
   }
 
+  let prevViewpoint = "free";
+
   let cameraPosition = [0, 0, 200];
+  let gridPosition = [0, 0, 0];
 
   let poseLines = [];
   let activePoint = null;
@@ -43,15 +53,27 @@
 
   }
 
-  const updateCamera = (viewPoint) => {
-    if (viewPoint === "front")
-      cameraPosition = [0, 0, 200];
-    else if (viewPoint === "side")
-      cameraPosition = [200, 0, 0];
+  const updateView = (viewPoint) => {
+    cameraPosition = [0, 0, 200];
+    if (viewPoint === prevViewpoint)
+      return
+    let rotatedCoords = [];
+    if (((prevViewpoint === "free") || (prevViewpoint === "front")) && (viewPoint === "side")) {
+      posePoints.forEach((p) => {
+        rotatedCoords.push([-p[2], p[1], p[0]]);
+      });
+      posePoints = [...rotatedCoords];
+    } else if ((prevViewpoint === "side") && ((viewPoint === "free") || (viewPoint === "front"))) {
+      posePoints.forEach((p) => {
+        rotatedCoords.push([p[2], p[1], -p[0]]);
+      });
+      posePoints = [...rotatedCoords];
+    }
+    prevViewpoint = viewPoint;
   }
 
   $: updatePose(posePoints);
-  $: updateCamera(viewPoint);
+  $: updateView(viewPoint);
 </script>
   
 {#each posePoints as armaturePoint, p}
@@ -59,20 +81,16 @@
     position.x={armaturePoint[0]}
     position.y={armaturePoint[1]}
     position.z={armaturePoint[2]}
-    on:click={(e) => {
+    on:pointerdown={(e) => {
       if ((viewPoint !== "free") && (activePoint === null)) {
+        gridPosition = [0, 0, posePoints[p][2]];
         activePoint = p;
-      } else if ((viewPoint !== "free") && (activePoint === p)) {
-        activePoint = null;
       }
       e.stopPropagation();
     }}
     on:pointermove={(e) => {
       if ((viewPoint !== "free") && (activePoint === p)) {
-        if (viewPoint === "front")
-          posePoints[p] = [e.point.x, e.point.y, posePoints[p][2]];
-        else if (viewPoint === "side")
-          posePoints[p] = [posePoints[p][0], e.point.y, e.point.z];    
+        posePoints[p] = [e.point.x, e.point.y, posePoints[p][2]];
       }
       e.stopPropagation();
     }}
@@ -93,24 +111,48 @@
   aspect={1}
   fov={75}
   near={0.1}
-  far={400}
+  far={800}
   position={cameraPosition}
-  on:create={({ ref }) => {
-    ref.lookAt(0, 0, 0);
-  }}
+  target={[0, 0, 0]}
 >
-<OrbitControls
-  enabled = {viewPoint === "free"}
-  {enableDamping}
-  {autoRotate}
-  {rotateSpeed}
-  {zoomToCursor}
-  {zoomSpeed}
-  {minPolarAngle}
-  {maxPolarAngle}
-  {enableZoom}
-/>
+  <OrbitControls
+    enabled = {viewPoint === "free"}
+    {enableDamping}
+    {autoRotate}
+    {rotateSpeed}
+    {zoomToCursor}
+    {zoomSpeed}
+    {minPolarAngle}
+    {maxPolarAngle}
+    {enableZoom}
+  />
 </T.PerspectiveCamera>
+{#if viewPoint !== "free"}
+  <Grid
+    position={gridPosition}
+    plane="xy"
+    cellSize={5}
+    cellThickness={1}
+    cellColor="#cccccc"
+    gridSize={[100, 100]}
+    fadeDistance={300}
+    sectionSize={10}
+    sectionColor="#777777"
+    sectionThickness={2}
+    on:pointerup={(e) => {
+      if (activePoint !== null) {
+        posePoints[activePoint] = [e.point.x, e.point.y, posePoints[activePoint][2]];
+        activePoint = null;
+      }
+      e.stopPropagation();
+    }}
+    on:pointermove={(e) => {
+      if (activePoint !== null)
+        posePoints[activePoint] = [e.point.x, e.point.y, posePoints[activePoint][2]];
+      e.stopPropagation();
+    }}
+  />
+{/if}
 <Gizmo
   horizontalPlacement="left"
   size={100}
