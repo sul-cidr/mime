@@ -11,6 +11,10 @@
   let posePoints;
   let viewPoint = "free";
   let resetPose;
+  let editDisabled = "";
+
+  const buttonClass = "btn-sm px-2 variant-ghost";
+  const selectedButtonClass = "btn-sm px-2 variant-ghost-success"
 
   const shutdown = (triggerClose = false) => {
     if (triggerClose) {
@@ -19,6 +23,14 @@
   };
 
   const setSearchPose = () => {
+
+    if (viewPoint === "side") {
+      let rotatedCoords = [];
+      posePoints.forEach((p) => {
+        rotatedCoords.push([p[2], p[1], -p[0]]);
+      });
+      posePoints = [...rotatedCoords];
+    }
 
     // The normalized 2D search pose should have 0,0 at top left, with max
     // width and height 100x100, so the 3D pose needs to be normalized and
@@ -69,7 +81,7 @@
     shutdown();
   });
 
-$: editDisabled = viewPoint === "free" ? "disabled" : "";
+$: editDisabled = viewPoint !== "free";
 
 </script>
   
@@ -88,7 +100,8 @@ $: editDisabled = viewPoint === "free" ? "disabled" : "";
       <button
         type="button"
         title="View pose with free camera movement"
-        class="btn-sm px-2 variant-ghost"
+        class={viewPoint === "free" ? selectedButtonClass : buttonClass}
+        disabled={!editDisabled}
         on:click={() => (viewPoint = "free")}>Free view</button
       >
       <span class="divider-vertical !border-l-8 !border-double"></span>
@@ -96,35 +109,33 @@ $: editDisabled = viewPoint === "free" ? "disabled" : "";
       <button
         type="button"
         title="Edit pose in frontal view"
-        class="btn-sm px-2 variant-ghost"
-        {editDisabled}
+        class={viewPoint === "front" ? selectedButtonClass : buttonClass}
         on:click={() => (viewPoint = "front")}>Front</button
       >
       <button
         type="button"
         title="Edit pose in side view"
-        class="btn-sm px-2 variant-ghost"
-        {editDisabled}
+        class={viewPoint === "side" ? selectedButtonClass : buttonClass}
         on:click={() => (viewPoint = "side")}>Side</button
       >
       <span class="divider-vertical !border-l-8 !border-double"></span>
       <button
         type="button"
         title="Search current pose"
-        class="btn-sm px-2 variant-ghost"
+        class={buttonClass}
         on:click={setSearchPose}>Search pose</button
       >
       <button
         type="button"
         title="Reset query pose to default"
-        class="btn-sm px-2 variant-ghost"
+        class={buttonClass}
         on:click={resetPose}>Reset pose</button
       >
       <span class="divider-vertical !border-l-8 !border-double"></span>
       <button
         type="button"
         title="Close the sketch window"
-        class="btn-sm px-2 variant-ghost"
+        class={buttonClass}
         on:click={() => {
           shutdown(true);
         }}>Close</button
