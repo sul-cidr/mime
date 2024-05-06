@@ -35,7 +35,7 @@ type VideoRecord = {
 };
 
 type PoseRecord = {
-  video_id: number;
+  video_id: string;
   video_name: string;
   frame: number;
   pose_idx: number;
