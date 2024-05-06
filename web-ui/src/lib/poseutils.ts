@@ -102,7 +102,9 @@ export const blaze33ToCoco13Coords = [
   0, 11, 12, 13, 14, 15, 16, 23, 24, 25, 26, 27, 28,
 ];
 
-export const getPoseExtent = (coco13Pose: any[]) => {
+export const getPoseExtent = (
+  coco13Pose: Array<{ x: number; y: number; z: number }>,
+) => {
   let xmin = null;
   let xmax = null;
   let ymin = null;
@@ -130,6 +132,18 @@ export const getPoseExtent = (coco13Pose: any[]) => {
     h: poseHeight,
     d: poseDepth,
   };
+};
+
+export const getPoseVectorExtent = (poseVector: [], dims: number = 3) => {
+  let posePoints: Array<{ x: number; y: number; z: number }> = [];
+  for (let p = 0; p < poseVector.length; p += dims) {
+    posePoints.push({
+      x: poseVector[p],
+      y: poseVector[p + 1],
+      z: poseVector[p + 2],
+    });
+  }
+  return getPoseExtent(posePoints);
 };
 
 export const shiftNormalizeRescalePoseCoords = (
