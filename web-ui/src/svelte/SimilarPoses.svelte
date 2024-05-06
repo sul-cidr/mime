@@ -23,8 +23,10 @@
     webcamImage,
   } from "@svelte/stores";
 
-  let avoidShotInResults: boolean = false;
   export let similarityMetric = "cosine";
+  export let toggle3DPoseModal;
+
+  let avoidShotInResults: boolean = false;
   let poses: Array<PoseRecord>;
   let displayOption = "show_both";
 
@@ -174,6 +176,17 @@
               <Pose3D pose={$currentPose} />
             </Canvas3D>
           </div>
+          <footer class="p-2">
+            <span
+              ><strong
+                ><button
+                  class="btn-sm variant-filled"
+                  type="button"
+                  on:click={toggle3DPoseModal}>Open in sketch editor</button
+                ></strong
+              ></span
+            >
+          </footer>
         </div>
         <div
           class={$currentPose.from_webcam
@@ -203,12 +216,14 @@
                         $currentPose.pose_idx + 1
                       }`}
                     />
-                  {:else}
+                  {:else if $webcamImage !== ""}
                     <img
                       class="object-contain h-full w-full"
                       src={$webcamImage}
                       alt="Pose excerpt from webcam"
                     />
+                  {:else}
+                    <div class="object-contain h-full w-full frame-display" />
                   {/if}
                 </Html>
               {/if}

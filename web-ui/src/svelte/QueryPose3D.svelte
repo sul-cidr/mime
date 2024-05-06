@@ -2,17 +2,22 @@
   import * as THREE from "three";
   import { T } from "@threlte/core";
   import { Gizmo, Grid, interactivity, OrbitControls } from "@threlte/extras";
+  import { currentPose } from "@svelte/stores";
 
   import {
     COCO_13_DEFAULT,
     COCO_13_SKELETON,
     COCO_COLORS,
+    getPoseVectorExtent,
   } from "../lib/poseutils";
 
-  export let posePoints = [...COCO_13_DEFAULT];
+  // If there's a currently selected search pose with a 3D version, use it
+  export let posePoints = $currentPose?.global3d_coco13 || [...COCO_13_DEFAULT];
   export let viewPoint = "free";
   export const resetPose = () => {
     posePoints = [...COCO_13_DEFAULT];
+    // The side "yz" plane view is just a manually rotated xy plane view, so we
+    // need to apply this manual rotation to the default pose when in side view
     if (viewPoint === "side") {
       let rotatedCoords = [];
       posePoints.forEach((p) => {
@@ -24,12 +29,13 @@
 
   let prevViewpoint = "free";
 
-  let cameraPosition = [0, 0, 200];
+  let cameraPosition = [-50, 50, 200]; // A bit off from square, to show depth (?)
   let gridPosition = [0, 0, 0];
 
   let poseLines = [];
   let activePoint = null;
 
+  // Camera orbit controls settings
   let autoRotate: boolean = false;
   let enableDamping: boolean = true;
   let rotateSpeed: number = 1;
@@ -42,7 +48,9 @@
   interactivity();
 
   const updatePose = (posePoints: []) => {
-    // Draw lines connecting the armature points
+    // Given a set of pose points, make lines connecting the armature points.
+    // Drawing these declaratively/reactively, as is done for the actual
+    // armature points, doesn't seem to work well with threlte.
     poseLines = [];
     poseLines = COCO_13_SKELETON.map(([from, to]) => {
       let fromX, fromY, fromZ, toX, toY, toZ;
@@ -56,8 +64,46 @@
     });
   };
 
+  const updatePosePoints = (newPose) => {
+    // If the pose is from the DB, it will be a 39-element flat vector, rather
+    // than an array of 13 coordinate objects. If we detect this, then we
+    // preprocess the pose and convert it to a 13-point array before using it.
+    if (newPose.length > 13) {
+      // 3D poses from PHALP tend have x, y or z coords that slightly exceed
+      // -.5 <= coord <= .5, but ideally they'd fit in a 1x1x1 cube that can
+      // then be blown up to 100x100x100 for the 3D viz, so for now we just
+      // scale and shift them so that they fit in the 1x1x1 cube.
+      const poseExtent = getPoseVectorExtent(newPose);
+      const xScale = poseExtent.w > 1 ? 1 / poseExtent.w : 1;
+      const yScale = poseExtent.h > 1 ? 1 / poseExtent.h : 1;
+      const zScale = poseExtent.d > 1 ? 1 / poseExtent.d : 1;
+      const xOffset = poseExtent.x < -0.5 ? 0.5 + poseExtent.x : 0;
+      const yOffset = poseExtent.y < -0.5 ? 0.5 + poseExtent.y : 0;
+      const zOffset = poseExtent.z < -0.5 ? 0.5 + poseExtent.z : 0;
+
+      let combinedPosePoints = [];
+
+      for (let p = 0; p < newPose.length; p += 3) {
+        combinedPosePoints.push([
+          (newPose[p] + xOffset) * xScale * 100,
+          (newPose[p + 1] + yOffset) * yScale * 100,
+          (newPose[p + 2] + zOffset) * zScale * 100,
+        ]);
+      }
+      posePoints = [...combinedPosePoints];
+    }
+  };
+
   const updateView = (viewPoint: string) => {
-    cameraPosition = [0, 0, 200];
+    // Slightly tortured logic here. A "side" view towards the yz plane seems
+    // desirable for editing the depth (z axis) of the pose armature points,
+    // but detecting pointer events only seems to work for the xy plane (maybe
+    // a bug in Svelte/ThreeJS?), so for now we just manually rotate the coords
+    // (by swapping the x and z values with their polarity reversed) when the
+    // side view edit is selected while in the front pose editor or free view,
+    // and then de-rotate them when switching back to front or free view, or
+    // when using them to search the DB.
+    cameraPosition = [-50, 50, 200];
     if (viewPoint === prevViewpoint) return;
     let rotatedCoords = [];
     if (
@@ -80,6 +126,7 @@
     prevViewpoint = viewPoint;
   };
 
+  $: updatePosePoints($currentPose?.global3d_coco13);
   $: updatePose(posePoints);
   $: updateView(viewPoint);
 </script>
@@ -140,7 +187,7 @@
     cellSize={5}
     cellThickness={1}
     cellColor="#cccccc"
-    gridSize={[150, 150]}
+    gridSize={[200, 200]}
     fadeDistance={300}
     sectionSize={10}
     sectionColor="#777777"

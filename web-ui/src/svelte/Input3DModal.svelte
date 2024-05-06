@@ -26,6 +26,7 @@
 
   const setSearchPose = () => {
     if (viewPoint === "side") {
+      viewPoint = "front";
       let rotatedCoords: [] = [];
       posePoints.forEach((p) => {
         rotatedCoords.push([p[2], p[1], -p[0]]);
@@ -61,9 +62,15 @@
       invExtent.h,
     );
 
-    // The 3D viz upscales the pose coords by a factor of 100 from the values
-    // in the DB (and returned by the pose estimator), so we need to downscale
-    // them at some point before using them to query the DB.
+    // The 3D viz shifts and scales the pose coords from the DB/PHALP to fit in
+    // a -.5 <-> .5 box in each dimension, then upscales them by a factor of
+    // 100, so we need to downscale them at some point before using them to query
+    // the DB.
+    // NOTE: Actually the 3D coords in the DB tend to exceed a 1x1x1 box in at
+    // least one dimension, so the synthesized 3D poses from the pose editor
+    // don't have quite the same scaling and centering regime. But the
+    // similarity indices used for searching (Euclidean, cosine) tend to be
+    // fairly robust to these discrepancies.
     let proj3dCoords: [] = [];
     posePoints.forEach((p) => {
       proj3dCoords.push(p[0] / 100.0, p[1] / 100.0, p[2] / 100.0);
@@ -73,7 +80,8 @@
 
     $currentPose = searchPose;
 
-    // XXX Maybe draw a blank background? Or don't show this card at all in the search results?
+    // Maybe draw in a blank background? Currently the alt text is visible if
+    // there's no actual webcam image (as is the case with synthetic poses).
     $webcamImage = "";
   };
 

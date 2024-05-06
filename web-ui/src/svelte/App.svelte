@@ -3,10 +3,12 @@
     AppBar,
     AppShell,
     Modal,
+    modalStore,
     Tab,
     TabGroup,
   } from "@skeletonlabs/skeleton";
-
+  import CameraPoseInput from "@svelte/CameraPoseInput.svelte";
+  import Input3DModal from "@svelte/Input3DModal.svelte";
   import VideosTable from "@svelte/VideosTable.svelte";
   import PoseDataExplorer from "@svelte/PoseDataExplorer.svelte";
   import FacesTimeline from "@svelte/FacesTimeline.svelte";
@@ -31,6 +33,54 @@
   let tabSet: number = 0;
 
   let poseplotFrame = "";
+
+  let modalActive = false;
+
+  // ??? Importing ModalComponent and ModalSettings the usual way causes an
+  // "ambiguous indirect export" syntax error, but the app somehow works fine
+  // without the imports, so...
+
+  const cameraModalComponent: ModalComponent = {
+    // Pass a reference to your custom component
+    ref: CameraPoseInput,
+    // Provide a template literal for the default component slot
+    slot: "<p>Camera Search</p>",
+  };
+
+  const input3DModalComponent: ModalComponent = {
+    // Pass a reference to your custom component
+    ref: Input3DModal,
+    // Provide a template literal for the default component slot
+    slot: "<p>Sketch Search</p>",
+  };
+
+  const cameraModal: ModalSettings = {
+    type: "component",
+    title: "Use the camera to search for a pose",
+    modalClasses: "w-modal",
+    component: cameraModalComponent,
+    background: "bg-surface-100-800-token",
+    buttonTextCancel: "Cancel",
+  };
+
+  const input3DModal: ModalSettings = {
+    type: "component",
+    title: "Manipulate a stick-figure pose in 3D to search",
+    modalClasses: "w-modal",
+    component: input3DModalComponent,
+    background: "gray",
+    buttonTextCancel: "Cancel",
+  };
+
+  const toggleCameraPoseModal = () => {
+    if (modalActive) modalStore.close();
+    else modalStore.trigger(cameraModal);
+  };
+
+  const toggle3DPoseModal = () => {
+    if (modalActive) modalStore.close();
+    else modalStore.trigger(input3DModal);
+  };
 
   $: $currentVideo, ($currentFrame = null);
   $: poseplotFrame = `<iframe src="/poseplot/${$currentVideo?.video_name}/index.html" width="100%" height="1200px" title="Pose Cluster Explorer" />`;
@@ -130,7 +180,11 @@
         {:else if tabSet === 1}
           {#if $currentVideo}
             <h2>{$currentVideo.video_name}</h2>
-            <PoseDataExplorer videoId={$currentVideo.id} />
+            <PoseDataExplorer
+              videoId={$currentVideo.id}
+              {toggleCameraPoseModal}
+              {toggle3DPoseModal}
+            />
             {#if $currentFrame}
               <FrameViewer />
             {/if}
@@ -138,7 +192,7 @@
               <SimilarMovelets />
             {/if}
             {#if $similarPoseFrames && $currentPose}
-              <SimilarPoses />
+              <SimilarPoses {toggle3DPoseModal} />
             {/if}
           {/if}
         {:else if tabSet === 2}
