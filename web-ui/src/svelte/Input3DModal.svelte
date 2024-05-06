@@ -11,9 +11,8 @@
   export let parent: any;
 
   let posePoints: [];
-  let viewPoint = "free";
+  let viewPoint = "front";
   let resetPose;
-  let editDisabled = false;
 
   const buttonClass = "btn-sm px-2 variant-ghost";
   const selectedButtonClass = "btn-sm px-2 variant-ghost-success";
@@ -88,8 +87,6 @@
   onDestroy(async () => {
     shutdown();
   });
-
-  $: editDisabled = viewPoint !== "free";
 </script>
 
 <div
@@ -97,33 +94,20 @@
 >
   <div class="flex flex-col items-center w-full">
     <header class="card-header font-bold">
-      {#if viewPoint === "free"}
-        <h3>Select "front" or "side" view to modify query pose</h3>
-      {:else}
-        <h3>Click and drag keypoints to modify query pose</h3>
-      {/if}
+      <h3>Click and drag keypoints to modify query pose</h3>
     </header>
     <div class="flex flex-row justify-center items-center">
       <button
         type="button"
-        title="View pose with free camera movement"
-        class={viewPoint === "free" ? selectedButtonClass : buttonClass}
-        disabled={!editDisabled}
-        on:click={() => (viewPoint = "free")}>Free view</button
-      >
-      <span class="divider-vertical !border-l-8 !border-double"></span>
-      <div>Edit:</div>
-      <button
-        type="button"
         title="Edit pose in frontal view"
         class={viewPoint === "front" ? selectedButtonClass : buttonClass}
-        on:click={() => (viewPoint = "front")}>Front</button
+        on:click={() => (viewPoint = "front")}>Edit front</button
       >
       <button
         type="button"
         title="Edit pose in side view"
         class={viewPoint === "side" ? selectedButtonClass : buttonClass}
-        on:click={() => (viewPoint = "side")}>Side</button
+        on:click={() => (viewPoint = "side")}>Edit side</button
       >
       <span class="divider-vertical !border-l-8 !border-double"></span>
       <button

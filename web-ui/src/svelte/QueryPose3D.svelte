@@ -13,7 +13,7 @@
 
   // If there's a currently selected search pose with a 3D version, use it
   export let posePoints = $currentPose?.global3d_coco13 || [...COCO_13_DEFAULT];
-  export let viewPoint = "free";
+  export let viewPoint = "front";
   export const resetPose = () => {
     posePoints = [...COCO_13_DEFAULT];
     // The side "yz" plane view is just a manually rotated xy plane view, so we
@@ -27,7 +27,7 @@
     }
   };
 
-  let prevViewpoint = "free";
+  let prevViewpoint = "front";
 
   let cameraPosition = [-50, 50, 200]; // A bit off from square, to show depth (?)
   let gridPosition = [0, 0, 0];
@@ -65,6 +65,7 @@
   };
 
   const updatePosePoints = (newPose) => {
+    if (!newPose) return;
     // If the pose is from the DB, it will be a 39-element flat vector, rather
     // than an array of 13 coordinate objects. If we detect this, then we
     // preprocess the pose and convert it to a 13-point array before using it.
@@ -100,24 +101,18 @@
     // but detecting pointer events only seems to work for the xy plane (maybe
     // a bug in Svelte/ThreeJS?), so for now we just manually rotate the coords
     // (by swapping the x and z values with their polarity reversed) when the
-    // side view edit is selected while in the front pose editor or free view,
-    // and then de-rotate them when switching back to front or free view, or
-    // when using them to search the DB.
+    // side view edit is selected while in the front pose editor, and then
+    // de-rotate them when switching back to front view, or when using them to
+    // search the DB.
     cameraPosition = [-50, 50, 200];
     if (viewPoint === prevViewpoint) return;
     let rotatedCoords = [];
-    if (
-      (prevViewpoint === "free" || prevViewpoint === "front") &&
-      viewPoint === "side"
-    ) {
+    if (prevViewpoint === "front" && viewPoint === "side") {
       posePoints.forEach((p) => {
         rotatedCoords.push([-p[2], p[1], p[0]]);
       });
       posePoints = [...rotatedCoords];
-    } else if (
-      prevViewpoint === "side" &&
-      (viewPoint === "free" || viewPoint === "front")
-    ) {
+    } else if (prevViewpoint === "side" && viewPoint === "front") {
       posePoints.forEach((p) => {
         rotatedCoords.push([p[2], p[1], -p[0]]);
       });
@@ -137,14 +132,14 @@
     position.y={armaturePoint[1]}
     position.z={armaturePoint[2]}
     on:pointerdown={(e) => {
-      if (viewPoint !== "free" && activePoint === null) {
+      if (activePoint === null) {
         gridPosition = [0, 0, posePoints[p][2]];
         activePoint = p;
       }
       e.stopPropagation();
     }}
     on:pointermove={(e) => {
-      if (viewPoint !== "free" && activePoint === p) {
+      if (activePoint === p) {
         posePoints[p] = [e.point.x, e.point.y, posePoints[p][2]];
       }
       e.stopPropagation();
@@ -169,10 +164,9 @@
   target={[0, 0, 0]}
 >
   <OrbitControls
-    enabled={viewPoint === "free"}
     {enableDamping}
     {autoRotate}
-    {rotateSpeed}
+    rotateSpeed={activePoint !== null ? 0 : 1}
     {zoomToCursor}
     {zoomSpeed}
     {minPolarAngle}
@@ -180,40 +174,37 @@
     {enableZoom}
   />
 </T.PerspectiveCamera>
-{#if viewPoint !== "free"}
-  <Grid
-    position={gridPosition}
-    plane="xy"
-    cellSize={5}
-    cellThickness={1}
-    cellColor="#cccccc"
-    gridSize={[200, 200]}
-    fadeDistance={300}
-    sectionSize={10}
-    sectionColor="#777777"
-    sectionThickness={2}
-    on:pointerup={(e) => {
-      if (activePoint !== null) {
-        posePoints[activePoint] = [
-          e.point.x,
-          e.point.y,
-          posePoints[activePoint][2],
-        ];
-        activePoint = null;
-      }
-      e.stopPropagation();
-    }}
-    on:pointermove={(e) => {
-      if (activePoint !== null)
-        posePoints[activePoint] = [
-          e.point.x,
-          e.point.y,
-          posePoints[activePoint][2],
-        ];
-      e.stopPropagation();
-    }}
-  />
-{/if}
-<Gizmo horizontalPlacement="left" size={100} paddingX={20} paddingY={20} />
+<Grid
+  position={gridPosition}
+  plane="xy"
+  cellSize={5}
+  cellThickness={1}
+  cellColor="#cccccc"
+  gridSize={[200, 200]}
+  fadeDistance={300}
+  sectionSize={10}
+  sectionColor="#777777"
+  sectionThickness={2}
+  on:pointerup={(e) => {
+    if (activePoint !== null) {
+      posePoints[activePoint] = [
+        e.point.x,
+        e.point.y,
+        posePoints[activePoint][2],
+      ];
+      activePoint = null;
+    }
+    e.stopPropagation();
+  }}
+  on:pointermove={(e) => {
+    if (activePoint !== null)
+      posePoints[activePoint] = [
+        e.point.x,
+        e.point.y,
+        posePoints[activePoint][2],
+      ];
+    e.stopPropagation();
+  }}
+/>
 <T.DirectionalLight color={0xffffff} position={[0, 0, 2]} />
 <T.AmbientLight intensity={0.3} />
