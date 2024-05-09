@@ -1,6 +1,8 @@
 <script lang="ts">
   import { ProgressBar, SlideToggle } from "@skeletonlabs/skeleton";
+  import { Canvas as Canvas3D } from "@threlte/core";
 
+  import Scene3D from "@svelte/Scene3D.svelte";
   import FrameDisplay from "@svelte/FrameDisplay.svelte";
   import FrameDetails from "@svelte/FrameDetails.svelte";
 
@@ -15,6 +17,7 @@
   let hoveredPoseIdx: number | undefined;
   let shot: number | 0;
   let interest: number | 0;
+  let show3Dframe: boolean = false;
 
   const updatePoseData = (data: Array<PoseRecord>) => {
     if (data) {
@@ -121,7 +124,15 @@
         />
       </label>
     </div>
-    <SlideToggle name="slider-label" bind:checked={showFrame} size="sm">
+    <SlideToggle name="show-3d-frame" bind:checked={show3Dframe} size="sm">
+      3D scene
+    </SlideToggle>
+    <SlideToggle
+      name="slider-label"
+      bind:checked={showFrame}
+      size="sm"
+      disabled={show3Dframe}
+    >
       Show Frame
     </SlideToggle>
     <div>
@@ -135,7 +146,15 @@
 
   <div class="flex gap-4 p-4 bg-surface-100-800-token">
     {#if poseData}
-      <FrameDisplay {showFrame} bind:poses={poseData} bind:hoveredPoseIdx />
+      {#if !show3Dframe}
+        <FrameDisplay {showFrame} bind:poses={poseData} bind:hoveredPoseIdx />
+      {:else}
+        <div>
+          <Canvas3D size={{ width: 640, height: 480 }}>
+            <Scene3D></Scene3D>
+          </Canvas3D>
+        </div>
+      {/if}
       <FrameDetails
         bind:poses={poseData}
         {trackCt}

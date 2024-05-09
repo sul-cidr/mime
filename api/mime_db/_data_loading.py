@@ -149,6 +149,10 @@ async def load_4dh_predictions(self, video_id: UUID, pkl_path: Path, clear=True)
                 joints_2d, pose_utils.phalp_to_coco_13
             ).flatten()
 
+            keypoints3d = pose_utils.merge_coords(
+                frame["3d_joints"][pose_idx], pose_utils.phalp_to_coco_13, is_3d=True
+            ).flatten()
+
             all_phalp_keypoints = np.array(
                 [[coord[0], coord[1], 1.0] for coord in joints_2d]
             ).flatten()
@@ -167,8 +171,10 @@ async def load_4dh_predictions(self, video_id: UUID, pkl_path: Path, clear=True)
                     "keypoints": coco13_joints,
                     "keypointsopp": coco17_joints,
                     "keypoints4dh": all_phalp_keypoints,
+                    "keypoints3d": keypoints3d,
                     "global3d_phalp": global3d_phalp,
                     "bbox": np.array(frame["bbox"][pose_idx]),
+                    "camera": np.array(frame["camera"][pose_idx]),
                     "score": frame["conf"][pose_idx],
                     "category": frame["class_name"][pose_idx],
                     "track_id": tracked_id,
@@ -180,8 +186,8 @@ async def load_4dh_predictions(self, video_id: UUID, pkl_path: Path, clear=True)
     await self._pool.executemany(
         """
         INSERT INTO pose (
-            video_id, frame, pose_idx, keypoints, keypointsopp, keypoints4dh, global3d_phalp, bbox, score, category, track_id)
-            VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+            video_id, frame, pose_idx, keypoints, keypointsopp, keypoints4dh, keypoints3d, global3d_phalp, bbox, camera, score, category, track_id)
+            VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
         ;
         """,
         data,
