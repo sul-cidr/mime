@@ -7,12 +7,13 @@
 
   import { COCO_13_SKELETON, COCO_COLORS } from "../lib/poseutils";
 
-  let cameraPosition = [0, 0, 100];
   let minCoords = [0, 0, 0];
   let maxCoords = [0, 0, 0];
 
-  let allPosePoints = [];
-  let allPoseLines = [];
+  let sceneMidpoint = [0, 0, 0];
+
+  let allPosePoints: number[][][] = [];
+  let allPoseLines: THREE.BufferGeometry[][] = [];
 
   // Camera orbit controls settings
   let autoRotate: boolean = false;
@@ -34,9 +35,9 @@
 
   const updatePoseData = (data: Array<PoseRecord>) => {
     if (data && data.length) {
-      const newPosePoints = [];
+      const newPosePoints: number[][][] = [];
       data.forEach((pr: PoseRecord) => {
-        let projCoords = [];
+        let projCoords: number[][] = [];
         for (let k = 0; k < pr.keypoints3d.length; k += 3) {
           const kp = [
             pr.keypoints3d[k],
@@ -46,13 +47,13 @@
           projCoords.push([
             (kp[0] + pr.camera[0]) * 10,
             (kp[1] + pr.camera[1]) * -10,
-            (kp[2] + pr.camera[2]) * 1,
+            (kp[2] - pr.camera[2]) * 1,
           ]);
         }
         newPosePoints.push(projCoords);
       });
-      allPosePoints = newPosePoints;
-      minCoords = allPosePoints.reduce(
+      //allPosePoints = newPosePoints;
+      minCoords = newPosePoints.reduce(
         (localMins, pose) =>
           pose.reduce(
             (poseMins, coords) => [
@@ -70,7 +71,7 @@
           ),
         [null, null, null],
       );
-      maxCoords = allPosePoints.reduce(
+      maxCoords = newPosePoints.reduce(
         (localMaxs, pose) =>
           pose.reduce(
             (poseMaxs, coords) => [
@@ -88,17 +89,41 @@
           ),
         [null, null, null],
       );
+      const zAdjust = -minCoords[2];
+      minCoords[2] += zAdjust;
+      maxCoords[2] += zAdjust;
+
+      let reprojCoords: number[][] = [];
+      const shiftedPosePoints: number[][][] = [];
+      for (let n = 0; n < newPosePoints.length; n += 1) {
+        reprojCoords = [];
+        for (let r = 0; r < newPosePoints[n].length; r += 1) {
+          reprojCoords.push([
+            newPosePoints[n][r][0],
+            newPosePoints[n][r][1],
+            newPosePoints[n][r][2] + zAdjust,
+          ]);
+        }
+        shiftedPosePoints.push(reprojCoords);
+      }
+      allPosePoints = shiftedPosePoints;
+
+      sceneMidpoint = [
+        (minCoords[0] + maxCoords[0]) / 2,
+        minCoords[1],
+        (minCoords[2] + maxCoords[2]) / 2,
+      ];
     }
   };
 
-  const updatePoseLines = (thesePosePoints) => {
+  const updatePoseLines = (thesePosePoints: number[][][]) => {
     // Given a set of pose points, make lines connecting the armature points.
     // Drawing these declaratively/reactively, as is done for the actual
     // armature points, doesn't seem to work well with threlte.
     allPoseLines = [];
     for (let p = 0; p < allPosePoints.length; p += 1) {
-      const posePoints = thesePosePoints[p];
-      let thesePoseLines = [];
+      const posePoints: number[] = thesePosePoints[p];
+      let thesePoseLines: THREE.BufferGeometry[] = [];
       for (let pp = 0; pp < COCO_13_SKELETON.length; pp += 1) {
         let [from, to] = COCO_13_SKELETON[pp];
         let fromX, fromY, fromZ, toX, toY, toZ;
@@ -146,12 +171,8 @@
   fov={75}
   near={1}
   far={400}
-  position={cameraPosition}
-  target={[
-    (minCoords[0] + maxCoords[0]) / 2,
-    0,
-    (minCoords[2] + maxCoords[2]) / 2,
-  ]}
+  position={[sceneMidpoint[0], maxCoords[1], maxCoords[2] + 50]}
+  target={sceneMidpoint}
 >
   <OrbitControls
     {enableDamping}
@@ -165,11 +186,7 @@
   />
 </T.PerspectiveCamera>
 <Grid
-  position={[
-    (minCoords[0] + maxCoords[0]) / 2,
-    minCoords[1],
-    (minCoords[2] + maxCoords[2]) / 2,
-  ]}
+  position={sceneMidpoint}
   plane="xz"
   cellSize={1}
   cellThickness={1}
