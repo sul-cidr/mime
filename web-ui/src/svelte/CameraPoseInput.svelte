@@ -11,7 +11,6 @@
     FilesetResolver,
     DrawingUtils,
   } from "@mediapipe/tasks-vision";
-  import Pose from "./Pose.svelte";
 
   export let parent: any;
 
