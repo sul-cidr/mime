@@ -9,13 +9,15 @@
 
   let poseData: PoseRecord[];
 
-  let minCoords = [0, 0, 0];
-  let maxCoords = [0, 0, 0];
+  let minCoords = [null, null, null];
+  let maxCoords = [null, null, null];
 
   let sceneMidpoint = [0, 0, 0];
 
   let allPosePoints: number[][][] = [];
   let allPoseLines: THREE.BufferGeometry[][] = [];
+  let allPoseExtents: number[][] = [];
+  let allPoseWireOpacities: number[] = [];
 
   // Camera orbit controls settings
   let autoRotate: boolean = false;
@@ -37,8 +39,36 @@
     return await response.json();
   }
 
+  const get3DPoseExtent = (
+    pose: [],
+    minsSoFar = [null, null, null],
+    maxsSoFar = [null, null, null],
+  ) => {
+    const poseMin = pose.reduce(
+      (poseMins, coords) => [
+        poseMins[0] === null ? coords[0] : Math.min(poseMins[0], coords[0]),
+        poseMins[1] === null ? coords[1] : Math.min(poseMins[1], coords[1]),
+        poseMins[2] === null ? coords[2] : Math.min(poseMins[2], coords[2]),
+      ],
+      minsSoFar,
+    );
+    const poseMax = pose.reduce(
+      (poseMaxs, coords) => [
+        poseMaxs[0] === null ? coords[0] : Math.max(poseMaxs[0], coords[0]),
+        poseMaxs[1] === null ? coords[1] : Math.max(poseMaxs[1], coords[1]),
+        poseMaxs[2] === null ? coords[2] : Math.max(poseMaxs[2], coords[2]),
+      ],
+      maxsSoFar,
+    );
+    return [poseMin, poseMax];
+  };
+
   const updatePoseData = (data: Array<PoseRecord>) => {
     if (data && data.length) {
+      minCoords = [null, null, null];
+      maxCoords = [null, null, null];
+      sceneMidpoint = [0, 0, 0];
+
       poseData = data;
       const newPosePoints: number[][][] = [];
       data.forEach((pr: PoseRecord) => {
@@ -57,44 +87,16 @@
         }
         newPosePoints.push(projCoords);
       });
-      //allPosePoints = newPosePoints;
-      minCoords = newPosePoints.reduce(
-        (localMins, pose) =>
-          pose.reduce(
-            (poseMins, coords) => [
-              poseMins[0] === null
-                ? coords[0]
-                : Math.min(poseMins[0], coords[0]),
-              poseMins[1] === null
-                ? coords[1]
-                : Math.min(poseMins[1], coords[1]),
-              poseMins[2] === null
-                ? coords[2]
-                : Math.min(poseMins[2], coords[2]),
-            ],
-            localMins,
-          ),
-        [null, null, null],
-      );
-      maxCoords = newPosePoints.reduce(
-        (localMaxs, pose) =>
-          pose.reduce(
-            (poseMaxs, coords) => [
-              poseMaxs[0] === null
-                ? coords[0]
-                : Math.max(poseMaxs[0], coords[0]),
-              poseMaxs[1] === null
-                ? coords[1]
-                : Math.max(poseMaxs[1], coords[1]),
-              poseMaxs[2] === null
-                ? coords[2]
-                : Math.max(poseMaxs[2], coords[2]),
-            ],
-            localMaxs,
-          ),
-        [null, null, null],
-      );
-      const zAdjust = -minCoords[2];
+
+      for (let l = 0; l < newPosePoints.length; l += 1) {
+        [minCoords, maxCoords] = get3DPoseExtent(
+          newPosePoints[l],
+          minCoords,
+          maxCoords,
+        );
+      }
+
+      const zAdjust = -(maxCoords[2] + minCoords[2]);
       minCoords[2] += zAdjust;
       maxCoords[2] += zAdjust;
 
@@ -112,6 +114,11 @@
         shiftedPosePoints.push(reprojCoords);
       }
       allPosePoints = shiftedPosePoints;
+
+      for (let a = 0; a < allPosePoints.length; a += 1) {
+        allPoseExtents.push(get3DPoseExtent(allPosePoints[a]));
+        allPoseWireOpacities.push(0);
+      }
 
       sceneMidpoint = [
         (minCoords[0] + maxCoords[0]) / 2,
@@ -151,14 +158,39 @@
 </script>
 
 {#each allPosePoints as posePoints, pp}
+  <T.Mesh
+    position.x={(allPoseExtents[pp][0][0] + allPoseExtents[pp][1][0]) / 2}
+    position.y={(allPoseExtents[pp][0][1] + allPoseExtents[pp][1][1]) / 2}
+    position.z={(allPoseExtents[pp][0][2] + allPoseExtents[pp][1][2]) / 2}
+    on:pointerover={() => {
+      allPoseWireOpacities[pp] = 1;
+    }}
+    on:pointerout={() => {
+      allPoseWireOpacities[pp] = 0;
+    }}
+    on:click={() => {
+      $currentPose = poseData[pp];
+    }}
+  >
+    <T.BoxGeometry
+      args={[
+        5 + Math.abs(allPoseExtents[pp][0][0] - allPoseExtents[pp][1][0]),
+        5 + Math.abs(allPoseExtents[pp][0][1] - allPoseExtents[pp][1][1]),
+        5 + Math.abs(allPoseExtents[pp][0][2] - allPoseExtents[pp][1][2]),
+      ]}
+    />
+    <T.MeshBasicMaterial
+      color={0x00ff00}
+      wireframe={true}
+      transparent={true}
+      opacity={allPoseWireOpacities[pp]}
+    />
+  </T.Mesh>
   {#each posePoints as armaturePoint}
     <T.Mesh
       position.x={armaturePoint[0]}
       position.y={armaturePoint[1]}
       position.z={armaturePoint[2]}
-      on:click={() => {
-        $currentPose = poseData[pp];
-      }}
     >
       <T.BoxGeometry args={[1, 1, 1]} />
       <T.MeshPhongMaterial color={0x00ff00} />
