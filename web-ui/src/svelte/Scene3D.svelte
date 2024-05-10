@@ -17,7 +17,6 @@
   let allPosePoints: number[][][] = [];
   let allPoseLines: THREE.BufferGeometry[][] = [];
   let allPoseExtents: number[][] = [];
-  let allPoseWireOpacities: number[] = [];
 
   // Camera orbit controls settings
   let autoRotate: boolean = false;
@@ -117,7 +116,6 @@
 
       for (let a = 0; a < allPosePoints.length; a += 1) {
         allPoseExtents.push(get3DPoseExtent(allPosePoints[a]));
-        allPoseWireOpacities.push(0);
       }
 
       sceneMidpoint = [
@@ -162,29 +160,18 @@
     position.x={(allPoseExtents[pp][0][0] + allPoseExtents[pp][1][0]) / 2}
     position.y={(allPoseExtents[pp][0][1] + allPoseExtents[pp][1][1]) / 2}
     position.z={(allPoseExtents[pp][0][2] + allPoseExtents[pp][1][2]) / 2}
-    on:pointerover={() => {
-      allPoseWireOpacities[pp] = 1;
-    }}
-    on:pointerout={() => {
-      allPoseWireOpacities[pp] = 0;
-    }}
     on:click={() => {
       $currentPose = poseData[pp];
     }}
   >
     <T.BoxGeometry
       args={[
-        5 + Math.abs(allPoseExtents[pp][0][0] - allPoseExtents[pp][1][0]),
-        5 + Math.abs(allPoseExtents[pp][0][1] - allPoseExtents[pp][1][1]),
-        5 + Math.abs(allPoseExtents[pp][0][2] - allPoseExtents[pp][1][2]),
+        2 + Math.abs(allPoseExtents[pp][0][0] - allPoseExtents[pp][1][0]),
+        2 + Math.abs(allPoseExtents[pp][0][1] - allPoseExtents[pp][1][1]),
+        2 + Math.abs(allPoseExtents[pp][0][2] - allPoseExtents[pp][1][2]),
       ]}
     />
-    <T.MeshBasicMaterial
-      color={0x00ff00}
-      wireframe={true}
-      transparent={true}
-      opacity={allPoseWireOpacities[pp]}
-    />
+    <T.MeshBasicMaterial visible={false} />
   </T.Mesh>
   {#each posePoints as armaturePoint}
     <T.Mesh
@@ -228,12 +215,12 @@
 <Grid
   position={sceneMidpoint}
   plane="xz"
-  cellSize={1}
+  cellSize={5}
   cellThickness={1}
   cellColor="#cccccc"
-  gridSize={[100, 100]}
-  fadeDistance={100}
-  sectionSize={5}
+  gridSize={[150, 150]}
+  fadeDistance={200}
+  sectionSize={10}
   sectionColor="#777777"
   sectionThickness={2}
 />
