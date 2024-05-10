@@ -1,11 +1,13 @@
 <script lang="ts">
   import * as THREE from "three";
   import { T } from "@threlte/core";
-  import { Gizmo, Grid, OrbitControls } from "@threlte/extras";
-  import { currentVideo, currentFrame } from "@svelte/stores";
+  import { Gizmo, Grid, interactivity, OrbitControls } from "@threlte/extras";
+  import { currentVideo, currentFrame, currentPose } from "@svelte/stores";
   import { API_BASE } from "@config";
 
   import { COCO_13_SKELETON, COCO_COLORS } from "../lib/poseutils";
+
+  let poseData: PoseRecord[];
 
   let minCoords = [0, 0, 0];
   let maxCoords = [0, 0, 0];
@@ -25,6 +27,8 @@
   let maxPolarAngle: number = Math.PI;
   let enableZoom: boolean = true;
 
+  interactivity();
+
   async function getPoseData(videoId: string, frame: number) {
     if (!frame) {
       return null;
@@ -35,6 +39,7 @@
 
   const updatePoseData = (data: Array<PoseRecord>) => {
     if (data && data.length) {
+      poseData = data;
       const newPosePoints: number[][][] = [];
       data.forEach((pr: PoseRecord) => {
         let projCoords: number[][] = [];
@@ -145,12 +150,15 @@
   );
 </script>
 
-{#each allPosePoints as posePoints}
+{#each allPosePoints as posePoints, pp}
   {#each posePoints as armaturePoint}
     <T.Mesh
       position.x={armaturePoint[0]}
       position.y={armaturePoint[1]}
       position.z={armaturePoint[2]}
+      on:click={() => {
+        $currentPose = poseData[pp];
+      }}
     >
       <T.BoxGeometry args={[1, 1, 1]} />
       <T.MeshPhongMaterial color={0x00ff00} />
