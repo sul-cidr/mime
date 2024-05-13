@@ -17,6 +17,7 @@
   let allPosePoints: number[][][] = [];
   let allPoseLines: THREE.BufferGeometry[][] = [];
   let allPoseExtents: number[][] = [];
+  let armaturePointColors: number[] = [];
 
   // Camera orbit controls settings
   let autoRotate: boolean = false;
@@ -70,6 +71,7 @@
 
       poseData = data;
       const newPosePoints: number[][][] = [];
+      armaturePointColors = [];
       data.forEach((pr: PoseRecord) => {
         let projCoords: number[][] = [];
         for (let k = 0; k < pr.keypoints3d.length; k += 3) {
@@ -84,6 +86,7 @@
             (kp[2] - pr.camera[2]) * 1,
           ]);
         }
+        armaturePointColors.push(0x00ff00);
         newPosePoints.push(projCoords);
       });
 
@@ -163,6 +166,12 @@
     on:click={() => {
       $currentPose = poseData[pp];
     }}
+    on:pointerover={() => {
+      armaturePointColors[pp] = 0xff0000;
+    }}
+    on:pointerout={() => {
+      armaturePointColors[pp] = 0x00ff00;
+    }}
   >
     <T.BoxGeometry
       args={[
@@ -180,7 +189,7 @@
       position.z={armaturePoint[2]}
     >
       <T.BoxGeometry args={[1, 1, 1]} />
-      <T.MeshPhongMaterial color={0x00ff00} />
+      <T.MeshPhongMaterial color={armaturePointColors[pp]} />
     </T.Mesh>
   {/each}
 {/each}
