@@ -7,7 +7,6 @@
 
   export let pose: PoseRecord;
 
-<<<<<<< HEAD
   let posePoints = [];
   let poseLines = [];
 
@@ -19,18 +18,6 @@
   let minPolarAngle: number = 0;
   let maxPolarAngle: number = Math.PI;
   let enableZoom: boolean = true;
-=======
-  let canvas: HTMLCanvasElement;
-  let renderer: THREE.WebGLRenderer;
-  let camera: THREE.PerspectiveCamera;
-  let scene: THREE.Scene;
-  let poseObject: THREE.Group;
-
-  let dummyObject: THREE.Group;
-  let quaternion: THREE.Quaternion;
-  let zAxis: THREE.Vector3;
-  let yAxis: THREE.Vector3;
->>>>>>> 3de15be (Streamline 3D plotting; relabel similarity options)
 
   const updatePose = (posePoints) => {
     // Draw lines connecting the armature points
