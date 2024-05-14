@@ -5,6 +5,7 @@
     currentFrame,
     currentPose,
     currentActionPose,
+    searchAllVideos,
     searchThresholds,
   } from "@svelte/stores";
   import { formatSeconds } from "@utils";

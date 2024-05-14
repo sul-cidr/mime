@@ -16,6 +16,7 @@
     currentActionPose,
     currentVideo,
     similarActionFrames,
+    searchAllVideos,
     searchThresholds,
   } from "@svelte/stores";
   let avoidShotInResults: boolean = false;
@@ -57,19 +58,21 @@
     simPager = simPager;
   };
 
-  const updateCurrentAction = (data: ActionRecord) => {
-    $currentActionPose = data;
-  };
-
   async function getActionData(
     thisActionPose: PoseRecord | null,
     similarityMetric: string,
+    searchAllVideos: boolean,
     searchThresholds: { [id: string]: number },
     avoidShot: boolean,
   ) {
     if (thisActionPose === null) return [];
+
+    let videoParam: any = thisActionPose.video_id;
+    if (searchAllVideos) {
+      videoParam = `ALL|${thisActionPose.video_id}`;
+    }
     const response = await fetch(
-      `${API_BASE}/actions/similar/${searchThresholds["total_results"]}/${similarityMetric}|${searchThresholds[similarityMetric]}/${thisActionPose.video_id}/${thisActionPose.frame}/${thisActionPose.track_id}/${avoidShot ? thisActionPose.shot : -1}/`,
+      `${API_BASE}/actions/similar/${searchThresholds["total_results"]}/${similarityMetric}|${searchThresholds[similarityMetric]}/${videoParam}/${thisActionPose.frame}/${thisActionPose.track_id}/${avoidShot ? thisActionPose.shot : -1}/`,
     );
 
     return await response.json();
@@ -78,12 +81,13 @@
   $: getActionData(
     $currentActionPose,
     similarityMetric,
+    $searchAllVideos,
     $searchThresholds,
     avoidShotInResults,
   ).then((data) => updateActionData(data));
 </script>
 
-{#if $currentActionPose}
+{#if $currentActionPose && $currentActionPose.action_labels !== undefined}
   <section
     class="variant-ghost-secondary px-4 pt-4 pb-8 flex flex-col gap-4 items-center"
   >
@@ -120,7 +124,7 @@
         ></span
       >
     </div>
-    {#if actionPoses}
+    {#if actionPoses !== undefined && actionPoses.length > 0}
       <div class="flex gap-4">
         <div
           class="card flex flex-col justify-start variant-ghost-tertiary drop-shadow-lg"
@@ -166,7 +170,7 @@
               <li>Query pose</li>
               <li>
                 <ul>
-                  {#each $currentActionPose.action_labels as action, a}
+                  {#each $currentActionPose.action_labels as action}
                     <li>{action}</li>
                   {/each}
                 </ul>
@@ -222,30 +226,46 @@
                 </LayerCake>
               </div>
               <footer class="p-2">
-                <ul>
-                  <li>Time: {formatSeconds(pose.frame / $currentVideo.fps)}</li>
-                  <li>Distance: {pose.distance?.toFixed(5)}</li>
-                  <li>
-                    <ul>
-                      {#each pose.action_labels as action, a}
-                        <li>{action}</li>
-                      {/each}
-                    </ul>
-                  </li>
-                  <li>
-                    Face group: {pose.face_cluster_id}
-                  </li>
-                </ul>
-                <span
-                  ><strong
-                    ><button
-                      class="btn-sm variant-filled"
-                      type="button"
-                      value={pose.frame}
-                      on:click={goToFrame}>Go to frame {pose.frame}</button
-                    ></strong
-                  ></span
-                >
+                {#if pose.video_id == $currentVideo.id}
+                  <ul>
+                    <li>
+                      Time: {formatSeconds(pose.frame / $currentVideo.fps)}
+                    </li>
+                    <li>Distance: {pose.distance?.toFixed(5)}</li>
+                    <li>
+                      <ul>
+                        {#each pose.action_labels as action}
+                          <li>{action}</li>
+                        {/each}
+                      </ul>
+                    </li>
+                    <li>
+                      Face group: {pose.face_cluster_id}
+                    </li>
+                  </ul>
+                  <span
+                    ><strong
+                      ><button
+                        class="btn-sm variant-filled"
+                        type="button"
+                        value={pose.frame}
+                        on:click={goToFrame}>Go to frame {pose.frame}</button
+                      ></strong
+                    ></span
+                  >
+                {:else}
+                  <ul>
+                    <li>{pose.video_name}</li>
+                    <li>Distance: {pose.distance?.toFixed(5)}</li>
+                    <li>
+                      <ul>
+                        {#each pose.action_labels as action}
+                          <li>{action}</li>
+                        {/each}
+                      </ul>
+                    </li>
+                  </ul>
+                {/if}
               </footer>
             </div>
           {/if}
