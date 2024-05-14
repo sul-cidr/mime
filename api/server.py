@@ -325,12 +325,12 @@ async def search_nearest_poses(
 
 
 @mime_api.get(
-    "/actions/similar/{max_results}/{metric_and_max}/{video_id}/{frame}/{track_id}/{avoid_shot}/"
+    "/actions/similar/{max_results}/{metric_and_max}/{video_param}/{frame}/{track_id}/{avoid_shot}/"
 )
 async def get_nearest_actions(
     max_results: int,
     metric_and_max: str,
-    video_id: UUID,
+    video_param: UUID | str,
     frame: int,
     track_id: int,
     avoid_shot: int,
@@ -340,7 +340,7 @@ async def get_nearest_actions(
     _, max_distance = metric_and_max.split("|")
 
     frame_data = await request.app.state.db.get_nearest_actions(
-        video_id,
+        video_param,
         frame,
         track_id,
         float(max_distance),
