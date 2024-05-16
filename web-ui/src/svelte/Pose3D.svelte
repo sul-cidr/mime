@@ -2,8 +2,12 @@
   import * as THREE from "three";
   import { T } from "@threlte/core";
   import { Gizmo, OrbitControls } from "@threlte/extras";
-
-  import { COCO_13_SKELETON, COCO_COLORS } from "../lib/poseutils";
+  import {
+    shiftNormalizeRescalePoseCoords,
+    COCO_13_SKELETON,
+    COCO_COLORS,
+  } from "../lib/poseutils";
+  import { currentPose, currentVideo } from "@svelte/stores";
 
   export let pose: PoseRecord;
 
@@ -36,20 +40,28 @@
 
   const updatePoseData = (pose: PoseRecord) => {
     posePoints = [];
-    const poseCoords = pose.global3d_coco13;
-    for (let i = 0; i < poseCoords.length; i += 3) {
-      posePoints.push(
-        poseCoords.slice(i, i + 3).map((point) => Math.round(point * 100)),
-      );
+    if (pose.global3d_coco13) {
+      for (let i = 0; i < pose.global3d_coco13.length; i += 3) {
+        posePoints.push(
+          pose.global3d_coco13
+            .slice(i, i + 3)
+            .map((point) => Math.round(point * 100)),
+        );
+      }
+    } else {
+      // Provides some degraded functionality if 3D pose data is not available
+      // (Pose appears in the 3D Pose pane, but is not available in 3D pose editor)
+      for (let i = 0; i < pose.norm.length; i += 2) {
+        posePoints.push([pose.norm[i] - 50, 50 - pose.norm[i + 1], 0]);
+      }
     }
-
     updatePose(posePoints);
   };
 
   $: updatePoseData(pose);
 </script>
 
-{#each posePoints as armaturePoint, p}
+{#each posePoints as armaturePoint}
   <T.Mesh
     position.x={armaturePoint[0]}
     position.y={armaturePoint[1]}

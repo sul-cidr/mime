@@ -73,8 +73,9 @@
       const newPosePoints: number[][][] = [];
       armaturePointColors = [];
       data.forEach((pr: PoseRecord) => {
+        if (!pr.keypoints3d) return;
         let projCoords: number[][] = [];
-        for (let k = 0; k < pr.keypoints3d.length; k += 3) {
+        for (let k = 0; k < pr.keypoints3d?.length; k += 3) {
           const kp = [
             pr.keypoints3d[k],
             pr.keypoints3d[k + 1],
