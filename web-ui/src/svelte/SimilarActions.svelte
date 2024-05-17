@@ -78,8 +78,6 @@
     return await response.json();
   }
 
-  $: $currentVideo, resetActionPoses();
-
   $: getActionData(
     $currentActionPose,
     similarityMetric,

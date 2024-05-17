@@ -8,7 +8,10 @@
     currentVideo,
     similarPoseFrames,
     similarMoveletFrames,
+    currentFrame,
     currentPose,
+    currentActionPose,
+    similarActionFrames,
     currentMovelet,
     currentMoveletPose,
   } from "@svelte/stores";
@@ -85,11 +88,14 @@
   const selectVideoHandler = ({ detail: video }: { detail: VideoRecord }) => {
     $currentVideo = video;
     highlightVideoRow(video);
+    $currentFrame = null;
     $currentPose = null;
     $currentMovelet = null;
     $currentMoveletPose = null;
+    $currentActionPose = null;
     $similarPoseFrames = {};
     $similarMoveletFrames = {};
+    $similarActionFrames = {};
   };
 
   onMount(async () => {
