@@ -82,7 +82,6 @@
     else modalStore.trigger(input3DModal);
   };
 
-  $: $currentVideo, ($currentFrame = null);
   $: poseplotFrame = `<iframe src="/poseplot/${$currentVideo?.video_name}/index.html" width="100%" height="1200px" title="Pose Cluster Explorer" />`;
 </script>
 
