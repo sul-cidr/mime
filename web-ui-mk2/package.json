@@ -16,6 +16,8 @@
 		"@sveltejs/kit": "^2.5.9",
 		"@sveltejs/vite-plugin-svelte": "^3.1.0",
 		"@types/eslint": "^8.56.10",
+		"carbon-components-svelte": "^0.85.0",
+		"carbon-icons-svelte": "^12.6.0",
 		"eslint": "^8.57.0",
 		"eslint-config-prettier": "^9.1.0",
 		"eslint-plugin-svelte": "^2.39.0",
