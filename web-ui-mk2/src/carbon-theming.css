@@ -1,0 +1,71 @@
+@layer base, custom;
+
+@import 'carbon-components-svelte/css/white.css' layer(base);
+
+/* Theme Colors */
+:root {
+	--panel-background: rgb(224, 228, 237);
+	--panel-text: #525252;
+	--primary: rebeccapurple;
+	--primary-hover: rgb(137, 83, 192);
+	--primary-active: rgb(73, 41, 105);
+}
+
+/* Button and Link Colors */
+.bx--file-browse-btn {
+	color: var(--primary-hover);
+}
+
+.bx--inline-notification:not(.bx--inline-notification--low-contrast) a {
+	color: var(--primary-active);
+
+	&:hover {
+		color: var(--primary);
+	}
+}
+
+.bx--btn--primary {
+	background-color: var(--primary);
+
+	&:hover {
+		background-color: var(--primary-hover);
+	}
+	&.active {
+		background-color: var(--primary-active);
+	}
+}
+
+/* Loading Component */
+.bx--loading__stroke {
+	stroke: var(--primary);
+}
+
+.bx--header {
+	background-color: var(--panel-background);
+
+	.bx--header__name,
+	.bx--header__name:hover {
+		color: var(--panel-text);
+	}
+}
+
+/* Side Nav Colors */
+.bx--side-nav__link {
+	&.bx--side-nav__link--current::before {
+		background-color: var(--primary);
+	}
+}
+
+/* Side Nav Rail -- Increase Size */
+.bx--side-nav__link {
+	min-height: 3.5rem;
+
+	.bx--side-nav__icon svg {
+		width: 1.5rem;
+		height: 1.5rem;
+	}
+}
+
+.bx--side-nav--rail {
+	min-width: 3.5rem;
+}
