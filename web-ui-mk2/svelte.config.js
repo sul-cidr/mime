@@ -14,6 +14,10 @@ const config = {
 		}),
 		paths: {
 			base: '/mk2'
+		},
+		alias: {
+			'@': './src',
+			'@components': './src/components'
 		}
 	}
 };
