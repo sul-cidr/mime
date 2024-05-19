@@ -40,6 +40,7 @@ class MimeDb:
         assign_frame_interest,
         assign_movelet_clusters,
         assign_poem_embeddings,
+        assign_pose_interest,
         clear_actions,
         clear_poses,
         load_4dh_predictions,

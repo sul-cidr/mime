@@ -194,7 +194,8 @@ export const shiftNormalizeRescalePoseCoords = (
     //distance?: number;
     //shot: number | 0;
     //face_cluster_id: number | null;
-    //pose_interest: number | 0; // this is actually the avg for all poses in the frame :-/
+    //pose_interest: number | 0;
+    //action_interest: number | 0;
     from_webcam: true,
   };
 

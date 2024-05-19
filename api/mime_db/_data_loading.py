@@ -429,15 +429,39 @@ async def assign_poem_embeddings(self, poem_data, reindex=True) -> None:
         return
 
 
-async def assign_frame_interest(self, frame_interest) -> None:
+async def assign_pose_interest(self, pose_interest, metric="pose") -> None:
+    colname = "pose_interest"
+    if metric == "action":
+        colname = "action_interest"
     async with self._pool.acquire() as conn:
         await conn.execute(
-            "ALTER TABLE frame ADD COLUMN IF NOT EXISTS pose_interest FLOAT DEFAULT 0.0;"
+            f"ALTER TABLE pose ADD COLUMN IF NOT EXISTS {colname} FLOAT DEFAULT 0.0;"
         )
         await conn.executemany(
-            """
+            f"""
+                UPDATE pose
+                SET {colname} = $4
+                WHERE video_id = $1 AND frame = $2 AND pose_idx = $3
+                ;
+            """,
+            pose_interest,
+        )
+
+        return
+
+
+async def assign_frame_interest(self, frame_interest, metric="pose") -> None:
+    colname = "pose_interest"
+    if metric == "action":
+        colname = "action_interest"
+    async with self._pool.acquire() as conn:
+        await conn.execute(
+            f"ALTER TABLE frame ADD COLUMN IF NOT EXISTS {colname} FLOAT DEFAULT 0.0;"
+        )
+        await conn.executemany(
+            f"""
                 UPDATE frame
-                SET pose_interest = $3
+                SET {colname} = $3
                 WHERE video_id = $1 AND frame = $2
                 ;
             """,

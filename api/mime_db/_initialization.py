@@ -36,6 +36,7 @@ async def initialize_db(conn, drop=False) -> None:
             shot INTEGER DEFAULT 0,
             total_movement FLOAT DEFAULT 0.0,
             pose_interest FLOAT DEFAULT 0.0,
+            action_interest FLOAT DEFAULT 0.0,
             PRIMARY KEY(video_id, frame)
         )
         ;
@@ -49,10 +50,12 @@ async def initialize_db(conn, drop=False) -> None:
             frame INTEGER NOT NULL,
             pose_idx INTEGER NOT NULL,
             keypoints vector(39) NOT NULL,
+            norm vector(26) DEFAULT NULL,
             keypointsopp vector(51) DEFAULT NULL,
             keypoints4dh vector(135) DEFAULT NULL,
             keypoints3d vector(39) DEFAULT NULL,
             global3d_phalp vector(135) DEFAULT NULL,
+            global3d_coco_13 vector(39) DEFAULT NULL,
             ava_action vector(60) DEFAULT NULL,
             action_labels text[3] DEFAULT NULL,
             bbox FLOAT[4] NOT NULL,
@@ -60,6 +63,8 @@ async def initialize_db(conn, drop=False) -> None:
             score FLOAT NOT NULL,
             category INTEGER,
             track_id INTEGER DEFAULT NULL,
+            pose_interest FLOAT DEFAULT 0.0,
+            action_interest FLOAT DEFAULT 0.0,
             poem_embedding vector(16) DEFAULT NULL,
             norm vector(26) DEFAULT NULL,
             global3d_coco13 vector(39) DEFAULT NULL,
@@ -147,12 +152,12 @@ async def initialize_db(conn, drop=False) -> None:
         CREATE MATERIALIZED VIEW if not exists video_frame_meta as
         SELECT  pose_faces.video_id,
                 pose_faces.frame,
-                pose_faces.pose_ct,
                 pose_faces.track_ct,
                 pose_faces.face_ct,
                 pose_faces.avg_score,
                 CAST(frame.is_shot_boundary AS INT) AS is_shot,
                 frame.pose_interest,
+                frame.action_interest,
                 CASE
                   WHEN frame.total_movement = 'NaN'
                   THEN 0.0
@@ -161,7 +166,6 @@ async def initialize_db(conn, drop=False) -> None:
         FROM (
             SELECT pose.video_id,
                    pose.frame,
-                   count(pose.pose_idx) AS pose_ct,
                    count(NULLIF(pose.track_id,0)) AS track_ct,
                    count(face.pose_idx) AS face_ct,
                    ROUND(AVG(pose.score)::numeric, 2) AS avg_score

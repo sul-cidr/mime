@@ -59,14 +59,15 @@ type PoseRecord = {
   distance?: number;
   shot: number | 0;
   face_cluster_id: number | null;
-  pose_interest: number | 0; // this is actually the avg for all poses in the frame :-/
+  pose_interest: number | 0;
+  action_interest: number | 0;
   from_webcam: boolean | false;
 };
 
 type ActionRecord = {
   ava_action: FixedLengthArray<number, 60> | undefined;
   action_labels: string[3] | undefined;
-}
+};
 
 type FaceRecord = {
   video_id: number;
@@ -84,11 +85,11 @@ type FaceRecord = {
 type FrameRecord = {
   frame: number;
   avgScore: number;
-  poseCt: number;
   trackCt: number;
   isShot: number | undefined;
   movement: number | undefined;
-  interest: number | undefined;
+  pose_interest: number | undefined;
+  action_interest: number | undefined;
   sim_pose: number | undefined;
   sim_move: number | undefined;
   time: string | undefined;

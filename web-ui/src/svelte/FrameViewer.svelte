@@ -16,7 +16,8 @@
   let playInterval: number | undefined;
   let hoveredPoseIdx: number | undefined;
   let shot: number | 0;
-  let interest: number | 0;
+  let pose_interest: number | 0;
+  let action_interest: number | 0;
   let show3Dframe: boolean = false;
 
   const updatePoseData = (data: Array<PoseRecord>) => {
@@ -27,7 +28,8 @@
         data.forEach((pr: PoseRecord) => {
           if (pr.track_id !== null) trackCount += 1;
           shot = pr.shot;
-          interest = pr.pose_interest;
+          pose_interest = pr.pose_interest;
+          action_interest = pr.action_interest;
         });
       }
       trackCt = trackCount;
@@ -161,7 +163,8 @@
         {faceCt}
         bind:hoveredPoseIdx
         {shot}
-        {interest}
+        {pose_interest}
+        {action_interest}
       />
     {:else}
       Loading pose data... <ProgressBar />

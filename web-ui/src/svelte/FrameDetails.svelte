@@ -16,7 +16,8 @@
   export let faceCt: number;
   export let hoveredPoseIdx: number | undefined;
   export let shot: number | 0;
-  export let interest: number | 0;
+  export let pose_interest: number | 0;
+  export let action_interest: number | 0;
 
   let showSearchSettings = false;
 
@@ -43,8 +44,14 @@
         <dd>{formatSeconds(($currentFrame || 0) / $currentVideo.fps)}</dd>
         <dt>Shot:</dt>
         <dd>{shot}</dd>
-        <dt>Interest:</dt>
-        <dd>{(interest * 100).toFixed(2)}%</dd>
+        {#if pose_interest}
+          <dt>Avg pose interest:</dt>
+          <dd>{(pose_interest * 100).toFixed(2)}%</dd>
+        {/if}
+        {#if action_interest}
+          <dt>Avg action interest:</dt>
+          <dd>{(action_interest * 100).toFixed(2)}%</dd>
+        {/if}
       </dl>
       <div class="flex pl-4">
         <SlideToggle
