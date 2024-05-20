@@ -40,7 +40,7 @@ async def main() -> None:
 
     pkl_file = pkl_path.name
 
-    video_name = pkl_file.replace(".phalp.lart.pkl", "")
+    video_name = pkl_file.replace(".lart.pkl", "")
 
     video_id = await db.get_video_id(video_name)
 
