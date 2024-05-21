@@ -11,6 +11,17 @@
 	--primary-active: rgb(73, 41, 105);
 }
 
+.bx--side-nav__item:not(.bx--side-nav__item--active):hover
+	.bx--side-nav__item:not(.bx--side-nav__item--active)
+	> .bx--side-nav__submenu:hover,
+.bx--side-nav__item:not(.bx--side-nav__item--active) > .bx--side-nav__link:hover,
+.bx--side-nav__menu
+	a.bx--side-nav__link:not(.bx--side-nav__link--current):not([aria-current='page']):hover,
+.bx--side-nav a.bx--header__menu-item:hover,
+.bx--side-nav .bx--header__menu-title[aria-expanded='true']:hover {
+	background-color: var(--panel-background);
+}
+
 /* Button and Link Colors */
 .bx--file-browse-btn {
 	color: var(--primary-hover);
@@ -56,6 +67,11 @@
 	}
 }
 
+a.bx--side-nav__link[aria-current='page'],
+a.bx--side-nav__link--current {
+	background-color: var(--panel-background);
+}
+
 /* Side Nav Rail -- Increase Size */
 .bx--side-nav__link {
 	min-height: 3.5rem;
@@ -68,4 +84,9 @@
 
 .bx--side-nav--rail {
 	min-width: 3.5rem;
+}
+
+/* Data Table */
+.bx--data-table th {
+	background-color: var(--panel-background);
 }
