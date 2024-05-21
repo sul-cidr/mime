@@ -17,7 +17,7 @@
 		{ key: 'shot_ct', value: 'Shots' }
 	];
 
-	$effect(async () => {
+	$effect(() => {
 		videos = fetch(`${API_BASE}/videos/`)
 			.then((data) => data.json())
 			.then((data) =>
