@@ -66,8 +66,6 @@ async def initialize_db(conn, drop=False) -> None:
             pose_interest FLOAT DEFAULT 0.0,
             action_interest FLOAT DEFAULT 0.0,
             poem_embedding vector(16) DEFAULT NULL,
-            norm vector(26) DEFAULT NULL,
-            global3d_coco13 vector(39) DEFAULT NULL,
             PRIMARY KEY(video_id, frame, pose_idx)
         )
         ;
