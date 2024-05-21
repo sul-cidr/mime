@@ -6,31 +6,25 @@
     SlideToggle,
   } from "@skeletonlabs/skeleton";
   import { LayerCake, Canvas, Html } from "layercake";
-  import { Canvas as Canvas3D } from "@threlte/core";
   import Pose from "@svelte/Pose.svelte";
-  import Pose3D from "@svelte/Pose3D.svelte";
-  import { formatSeconds } from "@utils";
+  import { formatSeconds } from "../lib/utils";
   import { getExtent, getNormDims } from "../lib/poseutils";
 
   import { API_BASE } from "@config";
   import {
     currentFrame,
-    currentPose,
+    currentActionPose,
     currentVideo,
-    similarPoseFrames,
+    similarActionFrames,
     searchAllVideos,
     searchThresholds,
-    webcamImage,
   } from "@svelte/stores";
-
-  export let similarityMetric = "cosine";
-  export let toggle3DPoseModal;
-
   let avoidShotInResults: boolean = false;
-  let poses: Array<PoseRecord>;
+  export let similarityMetric = "cosine";
+  let actionPoses: Array<PoseRecord>;
   let displayOption = "show_both";
 
-  const simStep = 4;
+  const simStep = 5;
   let simPager = {
     page: 0,
     offset: 0,
@@ -39,19 +33,18 @@
     amounts: [simStep],
   };
 
-  const resetPoses = () => {
-    $currentPose = null;
-    $similarPoseFrames = {};
+  const resetActionPoses = () => {
+    $currentActionPose = null;
+    $similarActionFrames = {};
   };
 
   const goToFrame = (e: any) => ($currentFrame = e.originalTarget.value);
 
-  const updatePoseData = (data: Array<PoseRecord>) => {
-    poses = data;
-    $similarPoseFrames = {};
-    poses.forEach((pose) => {
-      if (pose.video_id == $currentVideo.id)
-        $similarPoseFrames[pose["frame"]] = 1;
+  const updateActionData = (data: PoseRecord[]) => {
+    actionPoses = data;
+    $similarActionFrames = {};
+    actionPoses.forEach((pose) => {
+      $similarActionFrames[pose["frame"]] = 1;
     });
 
     // This is necessary to make the pager reset reactively
@@ -59,83 +52,49 @@
       page: 0,
       offset: 0,
       limit: simStep,
-      size: poses.length,
+      size: actionPoses.length,
       amounts: [simStep],
     };
     simPager = simPager;
   };
 
-  async function getPoseData(
-    thisPose: PoseRecord | null,
+  async function getActionData(
+    thisActionPose: PoseRecord | null,
     similarityMetric: string,
     searchAllVideos: boolean,
     searchThresholds: { [id: string]: number },
     avoidShot: boolean,
   ) {
-    if (thisPose === null) return [];
+    if (thisActionPose === null) return [];
 
-    let query = "";
-
-    let videoParam: any = thisPose.video_id;
+    let videoParam: any = thisActionPose.video_id;
     if (searchAllVideos) {
-      videoParam = `ALL|${thisPose.video_id}`;
+      videoParam = `ALL|${thisActionPose.video_id}`;
     }
+    const response = await fetch(
+      `${API_BASE}/actions/similar/${searchThresholds["total_results"]}/${similarityMetric}|${searchThresholds[similarityMetric]}/${videoParam}/${thisActionPose.frame}/${thisActionPose.track_id}/${avoidShot ? thisActionPose.shot : -1}/`,
+    );
 
-    if (thisPose.from_webcam) {
-      query = `${API_BASE}/poses/similar/${searchThresholds["total_results"]}/${similarityMetric}|${searchThresholds[similarityMetric]}/${videoParam}/${similarityMetric === "global" ? thisPose.global3d_coco13 : thisPose.norm}/`;
-    } else {
-      query = `${API_BASE}/poses/similar/${searchThresholds["total_results"]}/${similarityMetric}|${searchThresholds[similarityMetric]}/${videoParam}/${thisPose.frame}/${thisPose.pose_idx}/${avoidShot ? thisPose.shot : -1}/`;
-    }
-
-    const response = await fetch(query);
     return await response.json();
   }
 
-  $: getPoseData(
-    $currentPose,
+  $: getActionData(
+    $currentActionPose,
     similarityMetric,
     $searchAllVideos,
     $searchThresholds,
     avoidShotInResults,
-  ).then((data) => updatePoseData(data));
+  ).then((data) => updateActionData(data));
 </script>
 
-{#if $currentPose}
+{#if $currentActionPose && $currentActionPose.action_labels !== undefined}
   <section
     class="variant-ghost-secondary px-4 pt-4 pb-8 flex flex-col gap-4 items-center"
   >
-    <div class="p-1 inline-flex items-center rounded-token space-x-10">
+    <div class="p-1 inline-flex items-center space-x-10 rounded-token">
       <div class="flex items-center space-x-1">
-        <span><strong>Poses similarity:</strong></span>
-        <RadioGroup>
-          <RadioItem
-            bind:group={similarityMetric}
-            name="similarity-metric"
-            value="cosine">Cosine</RadioItem
-          >
-          <RadioItem
-            bind:group={similarityMetric}
-            name="similarity-metric"
-            value="euclidean">Euclidean</RadioItem
-          >
-          <!-- <RadioItem
-            bind:group={similarityMetric}
-            name="similarity-metric"
-            value="innerproduct">Inner Product</RadioItem
-          > -->
-          <RadioItem
-            bind:group={similarityMetric}
-            name="similarity-metric"
-            value="view_invariant">2D+ Cosine</RadioItem
-          >
-          <RadioItem
-            bind:group={similarityMetric}
-            name="similarity-metric"
-            value="global">3D Cosine</RadioItem
-          >
-        </RadioGroup>
-      </div>
-      <div class="flex items-center space-x-1">
+        <span><strong>Similar actions</strong></span>
+        <span class="divider-vertical !border-l-8 !border-double" />
         <span><strong>Show:</strong></span>
         <RadioGroup>
           <RadioItem
@@ -160,112 +119,85 @@
           ><button
             class="btn-sm variant-filled"
             type="button"
-            on:click={resetPoses}>X</button
+            on:click={resetActionPoses}>X</button
           ></strong
         ></span
       >
     </div>
-    {#if poses}
+    {#if actionPoses !== undefined && actionPoses.length > 0}
       <div class="flex gap-4">
         <div
-          class="card min-w-48 stretch-vert variant-ghost-tertiary drop-shadow-lg"
-        >
-          <header class="p-2">3D Pose</header>
-          <div>
-            <Canvas3D size={{ width: 200, height: 300 }}>
-              <Pose3D pose={$currentPose} />
-            </Canvas3D>
-          </div>
-          <footer class="p-2">
-            <span
-              ><strong
-                ><button
-                  class="btn-sm variant-filled"
-                  type="button"
-                  on:click={toggle3DPoseModal}>Open in sketch editor</button
-                ></strong
-              ></span
-            >
-          </footer>
-        </div>
-        <div
-          class={$currentPose.from_webcam
-            ? "card min-w-48 flex flex-col justify-start variant-ghost-tertiary drop-shadow-lg"
-            : "card min-w-48 flex flex-col justify-between variant-ghost-tertiary drop-shadow-lg"}
+          class="card flex flex-col justify-start variant-ghost-tertiary drop-shadow-lg"
         >
           <header class="p-2">
-            {#if !$currentPose.from_webcam}
-              Frame {$currentPose.frame}, Pose: {$currentPose.pose_idx + 1}
-            {:else}
-              2D Pose
-            {/if}
+            Frame {$currentActionPose.frame}, Pose: {$currentActionPose.pose_idx +
+              1}
           </header>
           <div class="w-full aspect-[5/6] frame-display py-[30px] px-[10px]">
             <LayerCake>
               {#if displayOption == "show_background" || displayOption == "show_both"}
                 <Html zIndex={0}>
-                  {#if !$currentPose.from_webcam}
-                    <img
-                      class="object-contain h-full w-full"
-                      src={`${API_BASE}/frame/resize/${$currentPose.video_id}/${
-                        $currentPose.frame
-                      }/${getExtent($currentPose.keypoints).join(
-                        ",",
-                      )}|${getNormDims($currentPose.norm).join(",")}/`}
-                      alt={`Frame ${$currentPose.frame}, Pose: ${
-                        $currentPose.pose_idx + 1
-                      }`}
-                    />
-                  {:else if $webcamImage !== ""}
-                    <img
-                      class="object-contain h-full w-full"
-                      src={$webcamImage}
-                      alt="Pose excerpt from webcam"
-                    />
-                  {:else}
-                    <div class="object-contain h-full w-full frame-display" />
-                  {/if}
+                  <img
+                    class="object-contain h-full w-full"
+                    src={`${API_BASE}/frame/resize/${$currentActionPose.video_id}/${
+                      $currentActionPose.frame
+                    }/${getExtent($currentActionPose.keypoints).join(
+                      ",",
+                    )}|${getNormDims($currentActionPose.norm).join(",")}/`}
+                    alt={`Frame ${$currentActionPose.frame}, Pose: ${
+                      $currentActionPose.pose_idx + 1
+                    }`}
+                  />
                 </Html>
               {/if}
               {#if displayOption == "show_pose" || displayOption == "show_both"}
                 <Canvas zIndex={1}>
-                  <Pose poseData={$currentPose.norm} normalizedPose={true} />
+                  <Pose
+                    poseData={$currentActionPose.norm}
+                    normalizedPose={true}
+                  />
                 </Canvas>
               {/if}
             </LayerCake>
           </div>
           <footer class="p-2">
-            {#if !$currentPose.from_webcam}
-              <ul>
-                <li>
-                  Time: {formatSeconds($currentPose.frame / $currentVideo.fps)}
-                </li>
-                <li>
-                  Face group: {$currentPose.face_cluster_id}
-                </li>
-              </ul>
-              <span
-                ><strong
-                  ><button
-                    class="btn-sm variant-filled"
-                    type="button"
-                    value={$currentPose.frame}
-                    on:click={goToFrame}
-                    >Go to frame {$currentPose.frame}</button
-                  ></strong
-                ></span
-              >
-            {/if}
+            <ul>
+              <li>
+                Time: {formatSeconds(
+                  $currentActionPose.frame / $currentVideo.fps,
+                )}
+              </li>
+              <li>Query pose</li>
+              <li>
+                <ul>
+                  {#each $currentActionPose.action_labels as action}
+                    <li>{action}</li>
+                  {/each}
+                </ul>
+              </li>
+              <li>
+                Face group: {$currentActionPose.face_cluster_id}
+              </li>
+            </ul>
+            <span
+              ><strong
+                ><button
+                  class="btn-sm variant-filled"
+                  type="button"
+                  value={$currentActionPose.frame}
+                  on:click={goToFrame}
+                  >Go to frame {$currentActionPose.frame}</button
+                ></strong
+              ></span
+            >
           </footer>
         </div>
 
         <span class="divider-vertical !border-l-8 !border-double" />
 
-        {#each poses as pose, p}
+        {#each actionPoses as pose, p}
           {#if p >= simPager.offset * simPager.limit && p < simPager.offset * simPager.limit + simPager.limit}
-            <div
-              class="card min-w-48 flex flex-col justify-between drop-shadow-lg"
-            >
+            <div class="card flex flex-col justify-between drop-shadow-lg">
               <header class="p-2">
                 Frame {pose.frame}, Pose: {pose.pose_idx + 1}
               </header>
@@ -301,6 +233,13 @@
                     </li>
                     <li>Distance: {pose.distance?.toFixed(5)}</li>
                     <li>
+                      <ul>
+                        {#each pose.action_labels as action}
+                          <li>{action}</li>
+                        {/each}
+                      </ul>
+                    </li>
+                    <li>
                       Face group: {pose.face_cluster_id}
                     </li>
                   </ul>
@@ -318,6 +257,13 @@
                   <ul>
                     <li>{pose.video_name}</li>
                     <li>Distance: {pose.distance?.toFixed(5)}</li>
+                    <li>
+                      <ul>
+                        {#each pose.action_labels as action}
+                          <li>{action}</li>
+                        {/each}
+                      </ul>
+                    </li>
                   </ul>
                 {/if}
               </footer>
@@ -329,13 +275,12 @@
         <SlideToggle
           name="avoid-shot-toggle"
           bind:checked={avoidShotInResults}
-          bind:disabled={$currentPose.from_webcam}
           size="sm"
         >
           Exclude current shot
         </SlideToggle>
         <div class="hide-paginator-label flex items-center">
-          <span>Similar poses</span>
+          <span>Similar action poses</span>
           <Paginator
             bind:settings={simPager}
             showFirstLastButtons={false}

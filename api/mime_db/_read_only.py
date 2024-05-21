@@ -157,10 +157,10 @@ async def search_by_pose(
     max_distance="Infinity",
     limit=500,
 ) -> list:
-    if isinstance(video_param, UUID):
-        pose_subquery = f"pose.video_id = '{video_param}'"
-    else:
+    if video_param.find("ALL|") != -1:
         pose_subquery = "TRUE"
+    else:
+        pose_subquery = f"pose.video_id = '{video_param}'"
 
     distance = {
         "cosine": f"{embedding} <=> '{pose_coords}'",
@@ -192,20 +192,20 @@ async def get_nearest_poses(
     avoid_shot=-1,
     limit=500,
 ) -> list:
-    if isinstance(video_param, UUID):
-        pose_subquery = f"pose.video_id = '{video_param}'"
-        distance_subquery = f"""
-            SELECT {embedding}
-            FROM pose
-            WHERE video_id = '{video_param}' AND frame = $1 AND pose_idx = $2
-        """
-    else:
+    if video_param.find("ALL|") != -1:
         pose_subquery = "TRUE"
         distance_subquery = f"""
             SELECT {embedding}
             FROM pose
             WHERE video_id = '{video_param.split("|")[1]}' AND frame = $1 AND pose_idx = $2
             """
+    else:
+        pose_subquery = f"pose.video_id = '{video_param}'"
+        distance_subquery = f"""
+            SELECT {embedding}
+            FROM pose
+            WHERE video_id = '{video_param}' AND frame = $1 AND pose_idx = $2
+        """
 
     distance = {
         "cosine": f"{embedding} <=> ({distance_subquery})",
@@ -226,6 +226,40 @@ async def get_nearest_poses(
         pose_idx,
         avoid_shot,
         limit,
+    )
+
+
+async def get_nearest_actions(
+    self,
+    video_param: UUID | str,
+    frame: int,
+    track_id: int,
+    max_distance="Infinity",
+    avoid_shot=-1,
+    limit=500,
+) -> list:
+    if video_param.find("ALL|") != -1:
+        pose_subquery = "TRUE"
+        distance_subquery = f"""ava_action <=> (SELECT ava_action FROM pose WHERE video_id = '{video_param.split("|")[1]}' AND frame = $1 AND track_id = $2)"""
+    else:
+        pose_subquery = f"pose.video_id = '{video_param}'"
+        distance_subquery = f"""ava_action <=> (SELECT ava_action FROM pose WHERE video_id = '{video_param}' AND frame = $1 AND track_id = $2)"""
+
+    return await self._pool.fetch(
+        f"""
+        WITH search_results AS(
+            SELECT pose.video_id, video.video_name, pose.frame, pose.pose_idx, pose.track_id, pose.norm, pose.keypoints, {distance_subquery} AS distance, pose.ava_action AS ava_action, pose.action_labels AS action_labels, frame.shot AS shot, face.cluster_id AS face_cluster_id FROM pose, frame, face, video
+            WHERE {pose_subquery} AND video.id=pose.video_id AND frame.video_id = pose.video_id AND face.video_id = pose.video_id AND face.frame = pose.frame AND face.pose_idx = pose.pose_idx AND pose.frame = frame.frame AND NOT (frame.shot = $3 OR (pose.frame = $1 AND pose.track_id = $2))
+            ORDER BY distance
+            LIMIT $4
+        )
+        SELECT * from search_results where search_results.distance < $5
+        """,
+        frame,
+        track_id,
+        avoid_shot,
+        limit,
+        max_distance,
     )
 
 

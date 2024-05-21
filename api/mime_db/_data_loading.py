@@ -39,6 +39,13 @@ async def clear_poses(self, video_id: UUID) -> None:
     await self._pool.execute("DELETE FROM pose WHERE video_id = $1;", video_id)
 
 
+async def clear_actions(self, video_id: UUID) -> None:
+    await self._pool.execute(
+        "UPDATE pose SET ava_action = NULL, action_labels = NULL WHERE video_id = $1;",
+        video_id,
+    )
+
+
 async def load_openpifpaf_predictions(
     self, video_id: UUID, json_path: Path, clear=True
 ) -> None:
@@ -112,12 +119,12 @@ async def load_4dh_predictions(self, video_id: UUID, pkl_path: Path, clear=True)
         if len(frame["2d_joints"]) == 0:
             continue
 
-        # XXX TODO we only want the pose data about the tracked poses in each frame;
-        # the raw output also contains data about previously tracked poses ("ghosts")
-        # that we really don't want to include. Unfortunately the 2d and 3d joints data
-        # as well as the conf values and includes these "ghosts", so need to filter those
-        # entries out. This can be done by only using the indices of the "tracked_ids"
-        # in the larger "tid" list to get the joints and conf data.
+        # We only want the pose data about the tracked poses in each frame; the raw
+        # output also contains data about previously tracked poses ("ghosts") that we
+        # really don't want to include. The 2d and 3d joints data  includes these
+        # "ghosts", so need to filter those entries out. This can be done by only using
+        # the indices of the "tracked_ids" in the larger "tid" list to get the joints
+        # and conf data.
 
         for tracked_id in frame["tracked_ids"]:
             if tracked_id in frame["tid"]:
@@ -149,6 +156,10 @@ async def load_4dh_predictions(self, video_id: UUID, pkl_path: Path, clear=True)
                 joints_2d, pose_utils.phalp_to_coco_13
             ).flatten()
 
+            keypoints3d = pose_utils.merge_coords(
+                frame["3d_joints"][pose_idx], pose_utils.phalp_to_coco_13, is_3d=True
+            ).flatten()
+
             all_phalp_keypoints = np.array(
                 [[coord[0], coord[1], 1.0] for coord in joints_2d]
             ).flatten()
@@ -167,8 +178,10 @@ async def load_4dh_predictions(self, video_id: UUID, pkl_path: Path, clear=True)
                     "keypoints": coco13_joints,
                     "keypointsopp": coco17_joints,
                     "keypoints4dh": all_phalp_keypoints,
+                    "keypoints3d": keypoints3d,
                     "global3d_phalp": global3d_phalp,
                     "bbox": np.array(frame["bbox"][pose_idx]),
+                    "camera": np.array(frame["camera"][pose_idx]),
                     "score": frame["conf"][pose_idx],
                     "category": frame["class_name"][pose_idx],
                     "track_id": tracked_id,
@@ -180,8 +193,8 @@ async def load_4dh_predictions(self, video_id: UUID, pkl_path: Path, clear=True)
     await self._pool.executemany(
         """
         INSERT INTO pose (
-            video_id, frame, pose_idx, keypoints, keypointsopp, keypoints4dh, global3d_phalp, bbox, score, category, track_id)
-            VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+            video_id, frame, pose_idx, keypoints, keypointsopp, keypoints4dh, keypoints3d, global3d_phalp, bbox, camera, score, category, track_id)
+            VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
         ;
         """,
         data,
@@ -253,6 +266,59 @@ async def add_video_tracks(self, video_id: UUID | None, track_data) -> None:
                 track["frame"],
                 track["pose_idx"],
             )
+
+
+async def load_lart_predictions(
+    self, video_id: UUID, pkl_path: Path, clear=True, reindex=True
+) -> None:
+    if clear:
+        logging.debug(f"Clearing actions for video {video_id}")
+        await self.clear_actions(video_id)
+
+    logging.info(f"Importing data from '{pkl_path}'...")
+
+    frames = joblib.load(pkl_path)
+
+    logging.info(f"Loading data for {len(frames)} frames from '{pkl_path}'...")
+
+    action_updates = []
+
+    for _, frame in frames.items():
+        if len(frame["tracked_ids"]) == 0 or "ava_action" not in frame:
+            continue
+
+        for tracked_id in frame["tracked_ids"]:
+            action_updates.append(
+                {
+                    "video_id": video_id,
+                    "frame": frame["time"] + 1,
+                    "track_id": tracked_id,
+                    "ava_action": frame["ava_action"][tracked_id][0],
+                    "action_labels": frame["label"][tracked_id],
+                }
+            )
+
+    data = [tuple(pose_action.values()) for pose_action in action_updates]
+
+    await self._pool.executemany(
+        """
+        UPDATE pose SET ava_action = $4, action_labels = $5 WHERE video_id = $1 AND frame = $2 AND track_id = $3
+        ;
+        """,
+        data,
+    )
+
+    logging.info(f"Loaded {len(data)} action predictions!")
+
+    if reindex:
+        logging.info("Building action search index")
+        await self._pool.execute(
+            """
+            CREATE INDEX ON pose
+            USING ivfflat (ava_action vector_cosine_ops)
+            ;
+            """,
+        )
 
 
 async def add_video_faces(self, video_id: UUID | None, faces_data) -> None:

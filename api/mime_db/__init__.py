@@ -40,8 +40,10 @@ class MimeDb:
         assign_frame_interest,
         assign_movelet_clusters,
         assign_poem_embeddings,
+        clear_actions,
         clear_poses,
         load_4dh_predictions,
+        load_lart_predictions,
         load_openpifpaf_predictions,
     )
     from mime_db._initialization import initialize_db, remove_video
@@ -55,6 +57,7 @@ class MimeDb:
         get_frame_faces,
         get_movelet_data_from_video,
         get_movelet_from_pose,
+        get_nearest_actions,
         get_nearest_movelets,
         get_nearest_poses,
         get_pose_by_frame_and_track,

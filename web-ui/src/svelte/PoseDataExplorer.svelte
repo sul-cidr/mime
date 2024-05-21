@@ -1,8 +1,6 @@
 <script lang="ts">
-  import { modalStore } from "@skeletonlabs/skeleton";
   import { ProgressBar } from "@skeletonlabs/skeleton";
   import Icon from "@svelte/Icon.svelte";
-  import CameraPoseInput from "@svelte/CameraPoseInput.svelte";
   import { API_BASE } from "@config";
   import { formatSeconds } from "@utils";
 
@@ -11,42 +9,18 @@
   import { currentVideo } from "@svelte/stores";
 
   export let videoId: string;
+  export let toggleCameraPoseModal;
+  export let toggle3DPoseModal;
+
   let data: Array<FrameRecord> | undefined;
   let filteredData: Array<FrameRecord>;
 
   let showFilters = false;
 
-  let modalActive = false;
-
-  // ??? Importing ModalComponent and ModalSettings the usual way causes an
-  // "ambiguous indirect export" syntax error, but the app somehow works fine
-  // without the imports, so...
-
-  const cameraModalComponent: ModalComponent = {
-    // Pass a reference to your custom component
-    ref: CameraPoseInput,
-    // Provide a template literal for the default component slot
-    slot: "<p>Camera Search</p>",
-  };
-
-  const modal: ModalSettings = {
-    type: "component",
-    title: "Use the camera to search for a pose",
-    modalClasses: "w-modal",
-    component: cameraModalComponent,
-    background: "bg-surface-100-800-token",
-    buttonTextCancel: "Cancel",
-  };
-
   async function getPoseData(videoId: string) {
     const response = await fetch(`${API_BASE}/poses/${videoId}/`);
     return await response.json();
   }
-
-  const toggleCameraPoseModal = () => {
-    if (modalActive) modalStore.close();
-    else modalStore.trigger(modal);
-  };
 
   const updatePoseData = (_data: Array<FrameRecord>) => {
     data = filteredData = _data;
@@ -83,6 +57,13 @@
       >
         <PoseDataFilters {data} bind:filteredData />
       </div>
+    </div>
+    <div class="flex">
+      <button
+        type="button"
+        class="btn-sm px-2 variant-ghost"
+        on:click={toggle3DPoseModal}>Search by sketch</button
+      >
     </div>
     <div class="flex">
       <button

@@ -9,6 +9,9 @@ const config = defineConfig({
   integrations: [svelte(), tailwind()],
   vite: {
     cacheDir: process.env.VITE_CACHE_DIR || "node_modules/.vite",
+    ssr: {
+      noExternal: ['three']
+    },
   },
 });
 
