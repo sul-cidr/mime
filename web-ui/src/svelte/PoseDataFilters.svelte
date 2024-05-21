@@ -8,9 +8,9 @@
   let filterByAvgScoreMin: number = 0.5;
   let filterByAvgScoreMax: number = 1;
 
-  let filterByPoseCountActive: boolean = false;
-  let filterByPoseCountMin: number = 2;
-  let filterByPoseCountMax: number = 15;
+  let filterByTrackCountActive: boolean = false;
+  let filterByTrackCountMin: number = 2;
+  let filterByTrackCountMax: number = 15;
 
   const filterPoses = () => {
     filteredData = data;
@@ -22,18 +22,18 @@
         ) {
           return p;
         }
-        return { frame: p.frame, avgScore: 0, poseCt: 0, faceCt: 0 };
+        return { frame: p.frame, avgScore: 0, trackCt: 0, faceCt: 0 };
       });
     }
-    if (filterByPoseCountActive) {
+    if (filterByTrackCountActive) {
       filteredData = filteredData.map((p) => {
         if (
-          p.poseCt >= filterByPoseCountMin &&
-          p.poseCt <= filterByPoseCountMax
+          p.trackCt >= filterByTrackCountMin &&
+          p.trackCt <= filterByTrackCountMax
         ) {
           return p;
         }
-        return { frame: p.frame, avgScore: 0, poseCt: 0, faceCt: 0 };
+        return { frame: p.frame, avgScore: 0, trackCt: 0, faceCt: 0 };
       });
     }
   };
@@ -41,9 +41,9 @@
   $: filterByAvgScoreActive,
     filterByAvgScoreMin,
     filterByAvgScoreMax,
-    filterByPoseCountActive,
-    filterByPoseCountMin,
-    filterByPoseCountMax,
+    filterByTrackCountActive,
+    filterByTrackCountMin,
+    filterByTrackCountMax,
     filterPoses();
 </script>
 
@@ -89,40 +89,40 @@
       </label>
     </div>
   </div>
-  <div class="card w-80" class:variant-ghost-primary={filterByPoseCountActive}>
+  <div class="card w-80" class:variant-ghost-primary={filterByTrackCountActive}>
     <div class="flex items-center justify-between p-4">
-      Filter by Pose Count: <SlideToggle
+      Filter by Track Count: <SlideToggle
         name="filter-by-avg-score-active"
         size="sm"
-        bind:checked={filterByPoseCountActive}
+        bind:checked={filterByTrackCountActive}
       />
     </div>
     <div class="flex">
       <label
         class="flex items-center justify-center w-1/2 pb-4"
-        class:opacity-50={!filterByPoseCountActive}
+        class:opacity-50={!filterByTrackCountActive}
       >
         Min:
         <input
           type="number"
-          bind:value={filterByPoseCountMin}
-          disabled={!filterByPoseCountActive}
+          bind:value={filterByTrackCountMin}
+          disabled={!filterByTrackCountActive}
           min="0"
-          max={filterByPoseCountMax}
+          max={filterByTrackCountMax}
           step="1"
           class="text-center w-16 ml-4"
         />
       </label>
       <label
         class="flex items-center justify-center w-1/2 pb-4"
-        class:opacity-50={!filterByPoseCountActive}
+        class:opacity-50={!filterByTrackCountActive}
       >
         Max:
         <input
           type="number"
-          bind:value={filterByPoseCountMax}
-          disabled={!filterByPoseCountActive}
-          min={filterByPoseCountMin}
+          bind:value={filterByTrackCountMax}
+          disabled={!filterByTrackCountActive}
+          min={filterByTrackCountMin}
           max="15"
           step="1"
           class="text-center w-16 ml-4"

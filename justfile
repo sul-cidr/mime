@@ -73,7 +73,11 @@ default:
 
 # Calculate pose distances from the global mean for a video already in the DB
 @calculate-pose-interest path: && refresh-db-views
-  docker compose exec -T api sh -c "LOG_LEVEL=$LOG_LEVEL /app/calculate_pose_interest.py --video-name \"$1\""
+  docker compose exec -T api sh -c "LOG_LEVEL=$LOG_LEVEL /app/calculate_interest.py --video-name \"$1\" --metric pose"
+
+# Calculate action vector distances from the global mean for a video already in the DB
+@calculate-action-interest path: && refresh-db-views
+  docker compose exec -T api sh -c "LOG_LEVEL=$LOG_LEVEL /app/calculate_interest.py --video-name \"$1\" --metric action"
 
 # Load LART action recognition data (per-pose, per-frame) for a video to the DB
 @load-actions path clear="false":

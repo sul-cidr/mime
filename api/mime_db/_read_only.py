@@ -22,13 +22,13 @@ async def get_pose_data_by_frame(self, video_id: UUID) -> list:
     return await self._pool.fetch(
         """
         SELECT frame,
-               pose_ct AS "poseCt",
                track_ct AS "trackCt",
                face_ct AS "faceCt",
                avg_score AS "avgScore",
                is_shot AS "isShot",
                movement,
-               pose_interest AS "interest"
+               pose_interest,
+               action_interest
            FROM video_frame_meta
            WHERE video_id = $1;
         """,
@@ -93,7 +93,7 @@ async def get_pose_annotations(self, column: str, video_id: UUID) -> list[np.nda
 
 async def get_frame_data(self, video_id: UUID, frame: int) -> list:
     return await self._pool.fetch(
-        "SELECT pose.*, frame.shot, frame.pose_interest FROM pose, frame WHERE pose.video_id = $1 AND pose.frame = $2 AND frame.video_id = $1 AND frame.frame = $2;",
+        "SELECT pose.*, frame.shot, frame.pose_interest, frame.action_interest FROM pose, frame WHERE pose.video_id = $1 AND pose.frame = $2 AND frame.video_id = $1 AND frame.frame = $2;",
         video_id,
         frame,
     )

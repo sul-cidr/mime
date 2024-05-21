@@ -73,7 +73,12 @@
    * to the max integer value from the DB). Hopefully this won't happen on the
    * deployed production version.
    */
-  const seriesToFit = ["movement", "avgScore", "interest"]; // always normalize between 0 and maxValue
+  const seriesToFit = [
+    "movement",
+    "avgScore",
+    "pose_interest",
+    "action_interest",
+  ]; // always normalize between 0 and maxValue
   let normalizedSeriesAlreadyScaled = false;
 
   const scaleToFit = (thisValue: number) =>
@@ -124,12 +129,12 @@
         timeSeries.push({
           frame: i,
           avgScore: 0,
-          poseCt: 0,
           faceCt: 0,
           trackCt: 0,
           isShot: 0,
           movement: 0,
-          interest: 0,
+          pose_interest: 0,
+          action_interest: 0,
           sim_pose: 0,
           sim_action: 0,
         });
@@ -154,12 +159,12 @@
       timeSeries.push({
         frame: i,
         avgScore: 0,
-        poseCt: 0,
         faceCt: 0,
         trackCt: 0,
         isShot: 0,
         movement: 0,
-        interest: 0,
+        pose_interest: 0,
+        action_interest: 0,
         sim_pose: 0,
         sim_action: 0,
       });
@@ -265,7 +270,8 @@
           "isShot",
           "avgScore",
           "movement",
-          "interest",
+          "pose_interest",
+          "action_interest",
         ]}
       />
       <Key align="end" bind:hiddenSeries />
