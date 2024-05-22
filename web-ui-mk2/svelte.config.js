@@ -17,7 +17,7 @@ const config = {
 		},
 		alias: {
 			'@': './src',
-			'@components': './src/components'
+			$components: './src/components'
 		}
 	}
 };
