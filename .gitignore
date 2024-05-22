@@ -5,3 +5,7 @@ mime-cache
 __pycache__/
 web-extras/poseplot/*
 !web-extras/poseplot/web/
+web-extras/input/
+web-extras/output/
+web-ui-mk2/
+
