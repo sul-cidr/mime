@@ -1,6 +1,6 @@
 <script>
 	import { PoseLandmarker, FilesetResolver, DrawingUtils } from '@mediapipe/tasks-vision';
-	import { Loading } from 'carbon-components-svelte';
+	import { NumberInput, Button, Loading } from 'carbon-components-svelte';
 
 	let /** @type HTMLVideoElement */ videoElement;
 	let /** @type HTMLCanvasElement */ canvasElement;
@@ -22,14 +22,22 @@
 
 		canvasCtx = /** @type {CanvasRenderingContext2D} */ (canvasElement.getContext('2d'));
 		drawingUtils = new DrawingUtils(canvasCtx);
-		videoElement.addEventListener('loadeddata', predictWebcam);
 
-		return await navigator.mediaDevices
+		const webcamReady = new Promise((resolve) => {
+			videoElement.addEventListener('loadeddata', () => {
+				predictWebcam();
+				resolve(true);
+			});
+		});
+
+		navigator.mediaDevices
 			.getUserMedia({ video: true, audio: false })
 			.then((stream) => (videoElement.srcObject = stream))
 			.catch((err) => {
 				console.error(`Error during webcam setup: ${err}`);
 			});
+
+		return webcamReady;
 	};
 
 	const predictWebcam = async () => {
@@ -53,31 +61,43 @@
 
 <section>
 	<!-- svelte-ignore a11y_media_has_caption -->
-	<video bind:this={videoElement} autoplay playsinline></video>
-	<canvas bind:this={canvasElement} class="output_canvas"></canvas>
+	<div class="webcam">
+		<video bind:this={videoElement} autoplay playsinline></video>
+		<canvas bind:this={canvasElement} class="output_canvas"></canvas>
+	</div>
 	{#await init()}
-		<div>
+		<div class="loading">
 			<Loading withOverlay={false} />
 			Loading Webcam...
 		</div>
+	{:then}
+		<div class="grab">
+			<NumberInput label="Delay" size="sm" value={0} min={0} max={10} />
+			<Button size="small">Grab</Button>
+		</div>
+		<Button size="small" class="search">Search</Button>
 	{/await}
 </section>
 
 <style>
 	section {
 		position: relative;
+	}
 
-		div {
-			align-items: center;
-			display: flex;
-			flex-direction: column;
-			gap: 1rem;
-			left: 0;
-			position: absolute;
-			top: 50%;
-			translate: 0 -50%;
-			width: 100%;
-		}
+	.webcam {
+		position: relative;
+	}
+
+	.loading {
+		align-items: center;
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+		left: 0;
+		position: absolute;
+		top: 50%;
+		translate: 0 -50%;
+		width: 100%;
 	}
 
 	video,
@@ -90,5 +110,32 @@
 		left: 0;
 		position: absolute;
 		top: 0;
+	}
+
+	.grab {
+		align-items: center;
+		display: flex;
+		gap: 1rem;
+		margin: 1rem 0;
+
+		& :global(.bx--number) {
+			align-items: center;
+			flex-direction: row;
+			gap: 1rem;
+		}
+
+		& :global(.bx--number--sm.bx--number input[type='number']) {
+			padding-right: 6rem;
+		}
+
+		& :global(.bx--number input[type='number']) {
+			min-width: unset;
+			padding-left: 1rem;
+		}
+	}
+
+	:global(.search) {
+		text-align: center;
+		width: 100%;
 	}
 </style>
