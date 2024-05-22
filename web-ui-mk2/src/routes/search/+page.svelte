@@ -1,5 +1,6 @@
 <script>
 	import { Tabs, Tab, TabContent } from '/node_modules/carbon-components-svelte/src/index.js';
+	import WebcamPoseInput from '$components/WebcamPoseInput.svelte';
 
 	let selected = $state(0);
 </script>
@@ -11,7 +12,9 @@
 			<Tab label="Webcam" />
 			<Tab label="Pose Editor" />
 			<svelte:fragment slot="content">
-				<TabContent>Webcam Input goes here...</TabContent>
+				<TabContent>
+					{#if selected === 0}<WebcamPoseInput />{/if}
+				</TabContent>
 				<TabContent>Pose Editor goes here...</TabContent>
 			</svelte:fragment>
 		</Tabs>
