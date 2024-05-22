@@ -102,6 +102,7 @@
 
 	video,
 	canvas {
+		transform: rotateY(180deg);
 		width: 100%;
 	}
 
