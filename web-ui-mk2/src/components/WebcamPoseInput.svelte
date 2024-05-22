@@ -1,5 +1,6 @@
 <script>
 	import { PoseLandmarker, FilesetResolver, DrawingUtils } from '@mediapipe/tasks-vision';
+	import { Loading } from 'carbon-components-svelte';
 
 	let /** @type HTMLVideoElement */ videoElement;
 	let /** @type HTMLCanvasElement */ canvasElement;
@@ -23,7 +24,7 @@
 		drawingUtils = new DrawingUtils(canvasCtx);
 		videoElement.addEventListener('loadeddata', predictWebcam);
 
-		navigator.mediaDevices
+		return await navigator.mediaDevices
 			.getUserMedia({ video: true, audio: false })
 			.then((stream) => (videoElement.srcObject = stream))
 			.catch((err) => {
@@ -48,21 +49,35 @@
 
 		videoElement.requestVideoFrameCallback(predictWebcam);
 	};
-
-	$effect(() => {
-		init();
-	});
 </script>
 
-<div>
+<section>
 	<!-- svelte-ignore a11y_media_has_caption -->
 	<video bind:this={videoElement} autoplay playsinline></video>
 	<canvas bind:this={canvasElement} class="output_canvas"></canvas>
-</div>
+	{#await init()}
+		<div>
+			<Loading withOverlay={false} />
+			Loading Webcam...
+		</div>
+	{/await}
+</section>
 
 <style>
-	div {
+	section {
 		position: relative;
+
+		div {
+			align-items: center;
+			display: flex;
+			flex-direction: column;
+			gap: 1rem;
+			left: 0;
+			position: absolute;
+			top: 50%;
+			translate: 0 -50%;
+			width: 100%;
+		}
 	}
 
 	video,
