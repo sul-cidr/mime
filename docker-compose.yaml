@@ -40,6 +40,7 @@ services:
   web-ui-mk2:
     container_name: mime-web-ui-mk2
     build: ./web-ui-mk2
+    user: 1000:1000
 
     volumes:
       - ./web-ui-mk2:/app2:Z
