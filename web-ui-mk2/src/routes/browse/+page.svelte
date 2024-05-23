@@ -21,7 +21,8 @@
 		videos = fetch(`${API_BASE}/videos/`)
 			.then((data) => data.json())
 			.then((data) =>
-				data.videos.map((video) => ({
+				data.videos.map((video, i) => ({
+					id: i,
 					video_name: video.video_name,
 					meta: `${video.width}x${video.height}@${video.fps.toFixed(2)}fps`,
 					length: new Date((video.frame_count / video.fps) * 1000).toISOString().slice(11, 19),
