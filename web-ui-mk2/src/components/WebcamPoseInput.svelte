@@ -9,7 +9,7 @@
 		BLAZE_33_TO_COCO_13,
 		COCO_13_SKELETON,
 		COCO_COLORS,
-		segmentArray,
+		segmentPose,
 		shiftNormalizeRescalePoseCoords
 	} from '$lib/pose-utils';
 
@@ -138,7 +138,7 @@
 		poseLandmarker.detectForVideo(videoElement, performance.now(), (result) => {
 			const poseData = landmarksToCoco13(result.landmarks).keypoints;
 			capturedPose = [...poseData];
-			const segments = /** @type {Array<Array<number>>} */ (segmentArray(poseData, 2));
+			const segments = segmentPose(poseData, 2);
 			draw(captureContext, segments);
 			/** @type {HTMLImageElement} */ (document.getElementById('captured')).src =
 				captureCanvas.toDataURL('image/png');

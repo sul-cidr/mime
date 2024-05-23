@@ -42,14 +42,12 @@ export const BLAZE_33_TO_COCO_13 = [0, 11, 12, 13, 14, 15, 16, 23, 24, 25, 26, 2
 /**
  * Segments an array into smaller arrays of a specified length.
  *
- * @param {Array<any>} arr - The array to be segmented.
+ * @param {Array<number>} arr - The array to be segmented.
  * @param {number} [l=3] - The length of each segment. Defaults to 3.
- * @return {Array<Array<any>>|null} - An array of smaller arrays, or null if the input array is null.
+ * @return {Array<Array<number>>} - An array of smaller arrays, or null if the input array is null.
  */
-export const segmentArray = (arr, l = 3) => {
-	if (arr == null) return null;
-	return [...Array(Math.ceil(arr.length / l))].map(() => arr.splice(0, l));
-};
+export const segmentPose = (arr, l = 3) =>
+	[...Array(Math.ceil(arr.length / l))].map(() => arr.splice(0, l));
 
 /**
  * Calculates the bounds of a COCO 13 pose.
