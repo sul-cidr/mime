@@ -15,4 +15,4 @@ WORKDIR /app2
 EXPOSE 5173
 COPY . .
 RUN pnpm --modules-dir $MODULES_DIR --virtual-store-dir $MODULES_DIR/.pnpm --store-dir $MODULES_DIR/.pnpm-store install
-ENTRYPOINT pnpm dev --host
+ENTRYPOINT $MODULES_DIR/.bin/vite dev --host
