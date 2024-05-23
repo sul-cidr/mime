@@ -1,8 +1,15 @@
 <script>
 	import { Tabs, Tab, TabContent } from '/node_modules/carbon-components-svelte/src/index.js';
+	import SearchResults from '$components/SearchResults.svelte';
 	import WebcamPoseInput from '$components/WebcamPoseInput.svelte';
 
 	let selected = $state(0);
+	let sourcePose = $state();
+
+	/** @param {MinimalPose} pose */
+	const setSourcePose = (pose) => {
+		sourcePose = pose;
+	};
 </script>
 
 <section>
@@ -13,13 +20,17 @@
 			<Tab label="Pose Editor" />
 			<svelte:fragment slot="content">
 				<TabContent>
-					{#if selected === 0}<WebcamPoseInput />{/if}
+					{#if selected === 0}<WebcamPoseInput {setSourcePose} />{/if}
 				</TabContent>
 				<TabContent>Pose Editor goes here...</TabContent>
 			</svelte:fragment>
 		</Tabs>
 	</div>
-	<div id="results-container"></div>
+	<div id="results-container">
+		{#if sourcePose}
+			<SearchResults {sourcePose} />
+		{/if}
+	</div>
 </section>
 
 <style>
@@ -47,6 +58,7 @@
 
 		#results-container {
 			flex: 1 1 auto;
+			overflow-y: auto;
 		}
 	}
 </style>

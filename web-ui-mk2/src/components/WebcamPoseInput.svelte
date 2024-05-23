@@ -13,6 +13,14 @@
 		shiftNormalizeRescalePoseCoords
 	} from '$lib/pose-utils';
 
+	/**
+	 * @typedef {Object} WebcamPoseInputProps
+	 * @property {function} setSourcePose Function to set the selected pose in the parent component
+	 */
+
+	/** @type {WebcamPoseInputProps} */
+	let { setSourcePose } = $props();
+
 	let /** @type HTMLVideoElement */ videoElement;
 	let /** @type HTMLCanvasElement */ canvasElement;
 	let /** @type CanvasRenderingContext2D */ canvasCtx;
@@ -20,7 +28,7 @@
 	let /** @type PoseLandmarker */ poseLandmarker;
 	let /** @type DrawingUtils */ drawingUtils;
 
-	let capturedPose = $state(false);
+	let capturedPose = $state();
 
 	const scaleFactor = 1;
 	const normalizedPose = true;
@@ -129,9 +137,9 @@
 
 		poseLandmarker.detectForVideo(videoElement, performance.now(), (result) => {
 			const poseData = landmarksToCoco13(result.landmarks).keypoints;
+			capturedPose = [...poseData];
 			const segments = /** @type {Array<Array<number>>} */ (segmentArray(poseData, 2));
 			draw(captureContext, segments);
-			capturedPose = true;
 			/** @type {HTMLImageElement} */ (document.getElementById('captured')).src =
 				captureCanvas.toDataURL('image/png');
 		});
@@ -158,7 +166,9 @@
 
 	<div class="captured" class:ready={capturedPose}>
 		<div class="controls">
-			<Button size="small" icon={Search} class="search">Search</Button>
+			<Button size="small" icon={Search} class="search" onclick={() => setSourcePose(capturedPose)}>
+				Search
+			</Button>
 			<Button
 				size="small"
 				kind="secondary"
