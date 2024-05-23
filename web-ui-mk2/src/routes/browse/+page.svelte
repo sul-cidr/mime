@@ -1,8 +1,6 @@
 <script>
 	import { DataTable } from 'carbon-components-svelte';
-
-	import { env } from '$env/dynamic/public';
-	const API_BASE = env.PUBLIC_API_BASE;
+	import { page } from '$app/stores';
 
 	let videos = $state();
 
@@ -18,7 +16,7 @@
 	];
 
 	$effect(() => {
-		videos = fetch(`${API_BASE}/videos/`)
+		videos = fetch(`${$page.data.apiBase}/videos/`)
 			.then((data) => data.json())
 			.then((data) =>
 				data.videos.map((video, i) => ({
