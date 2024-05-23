@@ -4,6 +4,11 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+patchedDependencies:
+  carbon-components-svelte@0.85.0:
+    hash: kxrjrltshiyc3bhnzr45avdqqa
+    path: patches/carbon-components-svelte@0.85.0.patch
+
 importers:
 
   .:
@@ -26,7 +31,7 @@ importers:
         version: 8.56.10
       carbon-components-svelte:
         specifier: ^0.85.0
-        version: 0.85.0
+        version: 0.85.0(patch_hash=kxrjrltshiyc3bhnzr45avdqqa)
       carbon-icons-svelte:
         specifier: ^12.6.0
         version: 12.6.0
@@ -1446,7 +1451,7 @@ snapshots:
 
   callsites@3.1.0: {}
 
-  carbon-components-svelte@0.85.0:
+  carbon-components-svelte@0.85.0(patch_hash=kxrjrltshiyc3bhnzr45avdqqa):
     dependencies:
       '@ibm/telemetry-js': 1.5.1
       flatpickr: 4.6.9

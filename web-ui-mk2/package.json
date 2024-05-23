@@ -31,5 +31,10 @@
 	"type": "module",
 	"dependencies": {
 		"@mediapipe/tasks-vision": "^0.10.14"
+	},
+	"pnpm": {
+		"patchedDependencies": {
+			"carbon-components-svelte@0.85.0": "patches/carbon-components-svelte@0.85.0.patch"
+		}
 	}
 }
