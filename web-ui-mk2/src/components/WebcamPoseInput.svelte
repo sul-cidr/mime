@@ -9,6 +9,7 @@
 		BLAZE_33_TO_COCO_13,
 		COCO_13_SKELETON,
 		COCO_COLORS,
+		getPoseBounds,
 		segmentArray,
 		shiftNormalizeRescalePoseCoords
 	} from '$lib/pose-utils';
@@ -67,6 +68,45 @@
 		const bbox = videoElement.getBoundingClientRect();
 		const projCoco13Pose = coco13Pose.map((c) => ({ x: c.x * bbox.width, y: c.y * bbox.height }));
 		const searchPose = shiftNormalizeRescalePoseCoords(projCoco13Pose);
+
+		let globalExtent = getPoseBounds(coco13Pose);
+
+		// For 3D searching, the coordinates should be adjusted so that 0,0,0 is
+		// roughly in the middle of the cuboid defined by the pose
+		const cuboidScaleFactor = 1 / Math.max(...[globalExtent.w, globalExtent.h, globalExtent.d]);
+
+		/** @type {Coco13Pose} */
+		let positive3dPose = [];
+		coco13Pose.forEach((p) => {
+			positive3dPose.push({
+				x: p.x - globalExtent.x,
+				y: p.y - globalExtent.y,
+				z: p.z ? p.z - globalExtent.z : undefined
+			});
+		});
+
+		/** @type {Coco13Pose} */
+		let rescaled3dPose = [];
+		positive3dPose.forEach((p) => {
+			rescaled3dPose.push({
+				x: p.x * cuboidScaleFactor,
+				y: p.y * cuboidScaleFactor,
+				z: p.z ? p.z * cuboidScaleFactor : undefined
+			});
+		});
+
+		const midX = (globalExtent.w * cuboidScaleFactor) / 2;
+		const midY = (globalExtent.h * cuboidScaleFactor) / 2;
+		const midZ = (globalExtent.d * cuboidScaleFactor) / 2;
+
+		/** @type {SmplSkeleton} */
+		let proj3dCoords = [];
+		rescaled3dPose.forEach((p) => {
+			proj3dCoords.push(p.x - midX, midY - p.y, midZ - (p.z ?? 0));
+		});
+
+		searchPose.global3d_coco13 = proj3dCoords;
+
 		return searchPose;
 	};
 

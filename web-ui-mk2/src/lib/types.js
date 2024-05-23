@@ -1,5 +1,6 @@
 /** @typedef {Array<number>} Coco13SkeletonNoConfidence */
 /** @typedef {Array<{x: number, y: number, z?: number}>} Coco13Pose */
+/** @typedef {Array<number>} SmplSkeleton */
 
 /**
  * @typedef {Object} MinimalPose
