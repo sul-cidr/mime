@@ -40,15 +40,15 @@ export const COCO_COLORS = [
 export const BLAZE_33_TO_COCO_13 = [0, 11, 12, 13, 14, 15, 16, 23, 24, 25, 26, 27, 28];
 
 /**
- * Segments an array into smaller arrays of a specified length.
+ * Segments an array into an array of arrays of a specified length.
  *
- * @param {Array<any>} arr - The array to be segmented.
+ * @param {Array<number>} arr - The keypoints array to be segmented.
  * @param {number} [l=3] - The length of each segment. Defaults to 3.
- * @return {Array<Array<any>>|null} - An array of smaller arrays, or null if the input array is null.
+ * @return {Array<Array<number>>} - An array of arrays of length l.
  */
-export const segmentArray = (arr, l = 3) => {
-	if (arr == null) return null;
-	return [...Array(Math.ceil(arr.length / l))].map(() => arr.splice(0, l));
+export const segmentKeypoints = (arr, l = 3) => {
+	const _arr = [...arr];
+	return [...Array(Math.ceil(arr.length / l))].map(() => _arr.splice(0, l));
 };
 
 /**
