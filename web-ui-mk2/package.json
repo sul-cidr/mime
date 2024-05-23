@@ -1,0 +1,32 @@
+{
+	"name": "web-ui-mk2",
+	"version": "0.0.1",
+	"private": true,
+	"scripts": {
+		"dev": "vite dev",
+		"build": "vite build",
+		"preview": "vite preview",
+		"check": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json",
+		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json --watch",
+		"lint": "prettier --check . && eslint .",
+		"format": "prettier --write ."
+	},
+	"devDependencies": {
+		"@sveltejs/adapter-static": "^3.0.1",
+		"@sveltejs/kit": "^2.5.9",
+		"@sveltejs/vite-plugin-svelte": "^3.1.0",
+		"@types/eslint": "^8.56.10",
+		"carbon-components-svelte": "^0.85.0",
+		"carbon-icons-svelte": "^12.6.0",
+		"eslint": "^8.57.0",
+		"eslint-config-prettier": "^9.1.0",
+		"eslint-plugin-svelte": "^2.39.0",
+		"prettier": "^3.2.5",
+		"prettier-plugin-svelte": "^3.2.3",
+		"svelte": "^5.0.0-next.136",
+		"svelte-check": "^3.7.1",
+		"typescript": "^5.4.5",
+		"vite": "^5.2.11"
+	},
+	"type": "module"
+}
