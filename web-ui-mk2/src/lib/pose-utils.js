@@ -137,3 +137,39 @@ export const drawPoseOnCanvas = (context, segments, scaleFactor) => {
 		context.stroke();
 	});
 };
+
+/**
+ * Calculates the dimensions of a set of keypoints.  Keypoints with x or y >= 0 are excluded.
+ *
+ * @param {Array<number>} keypoints - An array of keypoints (without confidence values).
+ * @return {Array<number>} [width, height].
+ */
+export const getKeypointsDimensions = (keypoints) => {
+	const segments = segmentKeypoints(keypoints, 2);
+	const xValues = segments.map(([x]) => x).filter((x) => x > 0);
+	const yValues = segments.map(([, y]) => y).filter((y) => y > 0);
+
+	return [Math.max(...xValues) - Math.min(...xValues), Math.max(...yValues) - Math.min(...yValues)];
+};
+
+/**
+ * Calculates the bounding box of a set of keypoints.  Keypoints with confidence == 0 are excluded.
+ *
+ * @param {Array<number>} keypoints - An array of keypoints (with confidence values).
+ * @return {Array<number>} [minX, minY, width, height].
+ */
+export const getKeypointsBounds = (keypoints) => {
+	const segments = segmentKeypoints(keypoints).filter(([, , confidence]) => confidence > 0);
+	const xValues = segments.map(([x]) => x);
+	const yValues = segments.map(([, y]) => y);
+
+	const minX = Math.min(...xValues);
+	const maxX = Math.max(...xValues);
+	const minY = Math.min(...yValues);
+	const maxY = Math.max(...yValues);
+
+	const width = maxX - minX;
+	const height = maxY - minY;
+
+	return [minX, minY, width, height];
+};
