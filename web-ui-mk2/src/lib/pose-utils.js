@@ -114,3 +114,26 @@ export const shiftNormalizeRescalePoseCoords = (projCoco13Pose) => {
 
 	return searchPose;
 };
+
+/**
+ * @param {CanvasRenderingContext2D} context
+ * @param {Array<Array<number>>} segments
+ * @param {number} scaleFactor
+ * @returns {void}
+ */
+export const drawPoseOnCanvas = (context, segments, scaleFactor) => {
+	COCO_13_SKELETON.forEach(([from, to], i) => {
+		let [fromX, fromY, fromConfidence = null] = segments[from - 1];
+		let [toX, toY, toConfidence = null] = segments[to - 1];
+
+		if (fromConfidence === 0 || toConfidence === 0) return;
+		if ([fromX, fromY, toX, toY].some((x) => x === -1)) return;
+
+		context.lineWidth = 3;
+		context.strokeStyle = COCO_COLORS[i];
+		context.beginPath();
+		context.moveTo(fromX * scaleFactor, fromY * scaleFactor);
+		context.lineTo(toX * scaleFactor, toY * scaleFactor);
+		context.stroke();
+	});
+};
