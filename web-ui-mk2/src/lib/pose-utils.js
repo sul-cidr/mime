@@ -40,11 +40,11 @@ export const COCO_COLORS = [
 export const BLAZE_33_TO_COCO_13 = [0, 11, 12, 13, 14, 15, 16, 23, 24, 25, 26, 27, 28];
 
 /**
- * Segments an array into smaller arrays of a specified length.
+ * Segments an array into an array of arrays of a specified length.
  *
  * @param {Array<number>} arr - The array to be segmented.
  * @param {number} [l=3] - The length of each segment. Defaults to 3.
- * @return {Array<Array<number>>} - An array of smaller arrays, or null if the input array is null.
+ * @return {Array<Array<number>>} - An array of arrays of length l.
  */
 export const segmentPose = (arr, l = 3) =>
 	[...Array(Math.ceil(arr.length / l))].map(() => arr.splice(0, l));
@@ -111,4 +111,50 @@ export const shiftNormalizeRescalePoseCoords = (projCoco13Pose) => {
 	};
 
 	return searchPose;
+};
+
+export const getNormDims = (keypoints) => {
+	let x_values = [];
+	let y_values = [];
+	for (let i = 0; i < keypoints.length; i++) {
+		if (keypoints[i] >= 0) {
+			if (i % 2 == 0) {
+				x_values.push(keypoints[i]);
+			} else {
+				y_values.push(keypoints[i]);
+			}
+		}
+	}
+
+	let min_x = Math.min(...x_values);
+	let max_x = Math.max(...x_values);
+	let min_y = Math.min(...y_values);
+	let max_y = Math.max(...y_values);
+
+	let width = max_x - min_x;
+	let height = max_y - min_y;
+
+	return [width, height];
+};
+
+export const getExtent = (keypoints) => {
+	let x_values = [];
+	let y_values = [];
+	for (let i = 0; i < keypoints.length; i++) {
+		if (i % 3 == 0 && keypoints[i + 2] > 0) {
+			x_values.push(keypoints[i]);
+		} else if ((i - 1) % 3 == 0 && keypoints[i + 1] > 0) {
+			y_values.push(keypoints[i]);
+		}
+	}
+
+	let min_x = Math.min(...x_values);
+	let max_x = Math.max(...x_values);
+	let min_y = Math.min(...y_values);
+	let max_y = Math.max(...y_values);
+
+	let width = max_x - min_x;
+	let height = max_y - min_y;
+
+	return [min_x, min_y, width, height];
 };
