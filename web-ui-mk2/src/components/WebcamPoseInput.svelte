@@ -9,7 +9,7 @@
 		BLAZE_33_TO_COCO_13,
 		drawPoseOnCanvas,
 		segmentKeypoints,
-		shiftNormalizeRescalePoseCoords
+		shiftNormalizeRescaleKeypoints
 	} from '$lib/pose-utils';
 
 	/**
@@ -29,23 +29,22 @@
 
 	let capturedPose = $state();
 
-	const scaleFactor = 1;
-	const normalizedPose = true;
-	const width = 290;
-	const normalizationFactor = normalizedPose ? width / 100 : 1;
-
 	/**
 	 * @param {Coco13Pose[]} landmarks
-	 * @returns {MinimalPose}
+	 * @typedef {Object} coco13FromLandmarks
+	 * @property {number[]} keypoints
+	 * @property {number[]} normedKeypoints
+	 * @returns {coco13FromLandmarks}
 	 */
-	const landmarksToCoco13 = (landmarks) => {
+	const coco13FromLandmarks = (landmarks) => {
 		const coco13Pose = BLAZE_33_TO_COCO_13.map((i) => landmarks[0][i]);
 
 		// Project the pose coords into the image space for 2D and view-invariant searching.
 		const bbox = videoElement.getBoundingClientRect();
-		const projCoco13Pose = coco13Pose.map((c) => ({ x: c.x * bbox.width, y: c.y * bbox.height }));
-		const searchPose = shiftNormalizeRescalePoseCoords(projCoco13Pose);
-		return searchPose;
+		const keypoints = coco13Pose.map((c) => [c.x * bbox.width, c.y * bbox.height]).flat();
+		const normedKeypoints = shiftNormalizeRescaleKeypoints(keypoints);
+
+		return { keypoints, normedKeypoints };
 	};
 
 	const init = async () => {
@@ -106,10 +105,10 @@
 		captureContext.drawImage(videoElement, 0, 0, width, height);
 
 		poseLandmarker.detectForVideo(videoElement, performance.now(), (result) => {
-			const poseData = landmarksToCoco13(result.landmarks).keypoints;
-			capturedPose = [...poseData];
-			const segments = segmentKeypoints(poseData, 2);
-			drawPoseOnCanvas(captureContext, segments, scaleFactor * normalizationFactor);
+			const { keypoints, normedKeypoints } = coco13FromLandmarks(result.landmarks);
+			capturedPose = [...normedKeypoints];
+			const segments = segmentKeypoints(keypoints, 2);
+			drawPoseOnCanvas(captureContext, segments, 1);
 			/** @type {HTMLImageElement} */ (document.getElementById('captured')).src =
 				captureCanvas.toDataURL('image/png');
 		});
