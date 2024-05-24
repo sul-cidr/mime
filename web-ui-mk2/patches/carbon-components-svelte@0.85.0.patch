@@ -1,0 +1,25 @@
+diff --git a/package.json b/package.json
+index ef63e95c2f19d12a9ad3c12d72fa072e7e294ec4..17a6265d515b6b90a0ad80ebe02a943d63dbc326 100644
+--- a/package.json
++++ b/package.json
+@@ -36,7 +36,6 @@
+     "build:docs": "node scripts/build-docs",
+     "build:lib": "rollup -c",
+     "format": "prettier --write \"./**/*.{svelte,js,md}\"",
+-    "postinstall": "ibmtelemetry --config=telemetry.yml",
+     "release": "standard-version && yarn build:docs"
+   },
+   "dependencies": {
+diff --git a/src/Tabs/TabContent.svelte b/src/Tabs/TabContent.svelte
+index b04cacf5177ee0ff527c814502e434ab3889702e..73e01f9490acc5efccca99d89a3c4f021c3e7444 100644
+--- a/src/Tabs/TabContent.svelte
++++ b/src/Tabs/TabContent.svelte
+@@ -17,7 +17,7 @@
+   role="tabpanel"
+   aria-labelledby="{tabId}"
+   aria-hidden="{!selected}"
+-  hidden="{selected ? undefined : ''}"
++  hidden="{selected ? undefined : true}"
+   id="{id}"
+   class:bx--tab-content="{true}"
+   {...$$restProps}
