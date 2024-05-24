@@ -21,6 +21,10 @@
 			<img
 				src={`${$page.data.apiBase}/frame/resize/${video_id}/${frame}/${dims}/`}
 				alt={`Frame ${frame}, Pose: ${pose_idx + 1}`}
+				onload={({ target }) => {
+					/** @type {HTMLImageElement} */ (target).style.opacity = '1';
+					/** @type {HTMLImageElement} */ (target).style.transform = 'scale(1)';
+				}}
 			/>
 		</Html>
 		<Canvas zIndex={1}>
@@ -42,5 +46,11 @@
 		height: 100%;
 		width: 100%;
 		object-fit: contain;
+		opacity: 0;
+		transform: scale(1.1);
+		transform-origin: center;
+		transition:
+			opacity 0.5s,
+			transform 0.7s;
 	}
 </style>
