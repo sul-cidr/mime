@@ -5,6 +5,8 @@
 	import CloseLarge from 'carbon-icons-svelte/lib/CloseLarge.svelte';
 	import Search from 'carbon-icons-svelte/lib/Search.svelte';
 
+	import { getLocalStorage, setLocalStorage } from '$lib/localstorage';
+
 	import {
 		BLAZE_33_TO_COCO_13,
 		drawPoseOnCanvas,
@@ -49,6 +51,8 @@
 	};
 
 	const init = async () => {
+		delay = getLocalStorage('webcam-delay', 0);
+
 		const vision = await FilesetResolver.forVisionTasks('src/lib/wasm');
 		poseLandmarker = await PoseLandmarker.createFromOptions(vision, {
 			baseOptions: {
@@ -123,6 +127,8 @@
 			delay * 1000 - 100
 		);
 	};
+
+	$effect(() => setLocalStorage('webcam-delay', delay));
 </script>
 
 <section>
