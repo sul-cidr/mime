@@ -6,7 +6,7 @@
 
 	/**
 	 * @typedef {Object} SearchResultsProps
-	 * @property {MinimalPose} sourcePose Pose to be presented
+	 * @property {PoseRecord} sourcePose Pose to be presented
 	 */
 
 	/** @type {SearchResultsProps} */
