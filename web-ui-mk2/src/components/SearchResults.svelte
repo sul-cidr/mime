@@ -1,6 +1,8 @@
 <script>
 	import { page } from '$app/stores';
 
+	import PoseCard from './PoseCard.svelte';
+
 	/**
 	 * @typedef {Object} SearchResultsProps
 	 * @property {MinimalPose} sourcePose Source pose to be searched
@@ -31,9 +33,17 @@
 		Searching...
 	{:then data}
 		{#each data as pose}
-			<pre>{JSON.stringify(pose)}</pre>
+			<PoseCard sourcePose={pose} />
 		{/each}
 	{:catch error}
 		<p style="color: red">{error.message}</p>
 	{/await}
 </div>
+
+<style>
+	div {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 1rem;
+	}
+</style>
