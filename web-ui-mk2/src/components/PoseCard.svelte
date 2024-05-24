@@ -65,7 +65,13 @@
 		<p></p>
 	{/await}
 	<canvas bind:this={canvasElement}></canvas>
+	<span>{sourcePose.video_name}</span>
+	<span>Frame: {sourcePose.frame} | Pose: {sourcePose.pose_idx}</span>
 </div>
 
 <style>
+	div {
+		display: flex;
+		flex-direction: column;
+	}
 </style>
