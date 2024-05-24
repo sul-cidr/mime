@@ -80,39 +80,29 @@ export const getPoseBounds = (coco13Pose) => {
 export const POSE_MAX_DIM = 100;
 
 /**
- * Calculates the bounds of a COCO 13 pose.
+ * Shifts, normalizes, and rescales keypoints.
  *
- * @param {Coco13Pose} projCoco13Pose
- * @return {MinimalPose} Minimal pose data with normalized coords and 2D bbox
+ * @param {Array<number>} keypoints - An array of keypoints.
+ * @return {Array<number>} An array of normalized and rescaled keypoints.
  */
-export const shiftNormalizeRescalePoseCoords = (projCoco13Pose) => {
-	const { x: xMin, y: yMin, w: poseWidth, h: poseHeight } = getPoseBounds(projCoco13Pose);
-	const scaleFactor = POSE_MAX_DIM / Math.max(poseWidth, poseHeight);
+export const shiftNormalizeRescaleKeypoints = (keypoints) => {
+	const [xMin, yMin, w, h] = getKeypointsBounds(keypoints, false);
+	const scaleFactor = POSE_MAX_DIM / Math.max(w, h);
 
 	let xOffset = 0;
 	let yOffset = 0;
 
-	if (poseWidth >= poseHeight) {
-		yOffset = Math.round((POSE_MAX_DIM - scaleFactor * poseHeight) / 2);
+	if (w >= h) {
+		yOffset = (POSE_MAX_DIM - scaleFactor * h) / 2;
 	} else {
-		xOffset = Math.round((POSE_MAX_DIM - scaleFactor * poseWidth) / 2);
+		xOffset = (POSE_MAX_DIM - scaleFactor * w) / 2;
 	}
 
-	/** @type {Coco13SkeletonNoConfidence} */
-	let normCoco13Pose = [];
-
-	projCoco13Pose.forEach((c) => {
-		normCoco13Pose.push(Math.round((c.x - xMin) * scaleFactor + xOffset));
-		normCoco13Pose.push(Math.round((c.y - yMin) * scaleFactor + yOffset));
-	});
-
-	const searchPose = {
-		keypoints: normCoco13Pose,
-		bbox: [xMin, yMin, poseWidth, poseHeight],
-		norm: normCoco13Pose
-	};
-
-	return searchPose;
+	return keypoints
+		.map((c, i) =>
+			i % 2 ? (c - yMin) * scaleFactor + yOffset : (c - xMin) * scaleFactor + xOffset
+		)
+		.flat();
 };
 
 /**
