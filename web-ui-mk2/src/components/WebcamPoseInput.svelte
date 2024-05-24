@@ -28,6 +28,7 @@
 	let /** @type DrawingUtils */ drawingUtils;
 
 	let capturedPose = $state();
+	let delay = $state(0);
 
 	/**
 	 * @param {Coco13Pose[]} landmarks
@@ -97,21 +98,30 @@
 	};
 
 	const grab = () => {
-		const captureCanvas = document.createElement('canvas');
-		const captureContext = /** @type CanvasRenderingContext2D */ (captureCanvas.getContext('2d'));
-		const { width, height } = videoElement.getBoundingClientRect();
-		captureCanvas.width = width;
-		captureCanvas.height = height;
-		captureContext.drawImage(videoElement, 0, 0, width, height);
+		document.querySelector('.live')?.classList.add('grabbing');
+		setTimeout(
+			() => {
+				const captureCanvas = document.createElement('canvas');
+				const captureContext = /** @type CanvasRenderingContext2D */ (
+					captureCanvas.getContext('2d')
+				);
+				const { width, height } = videoElement.getBoundingClientRect();
+				captureCanvas.width = width;
+				captureCanvas.height = height;
+				captureContext.drawImage(videoElement, 0, 0, width, height);
 
-		poseLandmarker.detectForVideo(videoElement, performance.now(), (result) => {
-			const { keypoints, normedKeypoints } = coco13FromLandmarks(result.landmarks);
-			capturedPose = [...normedKeypoints];
-			const segments = segmentKeypoints(keypoints, 2);
-			drawPoseOnCanvas(captureContext, segments, 1);
-			/** @type {HTMLImageElement} */ (document.getElementById('captured')).src =
-				captureCanvas.toDataURL('image/png');
-		});
+				poseLandmarker.detectForVideo(videoElement, performance.now(), (result) => {
+					const { keypoints, normedKeypoints } = coco13FromLandmarks(result.landmarks);
+					capturedPose = [...normedKeypoints];
+					const segments = segmentKeypoints(keypoints, 2);
+					drawPoseOnCanvas(captureContext, segments, 1);
+					/** @type {HTMLImageElement} */ (document.getElementById('captured')).src =
+						captureCanvas.toDataURL('image/png');
+				});
+				document.querySelector('.live')?.classList.remove('grabbing');
+			},
+			delay * 1000 - 100
+		);
 	};
 </script>
 
@@ -123,7 +133,7 @@
 		</div>
 	{:then}
 		<div class="controls">
-			<NumberInput label="Delay" size="sm" value={0} min={0} max={10} />
+			<NumberInput label="Delay" size="sm" bind:value={delay} min={0} max={9} />
 			<Button size="small" icon={Camera} onclick={grab}>Grab</Button>
 		</div>
 	{/await}
@@ -173,6 +183,17 @@
 
 	.live {
 		margin-top: 1rem;
+
+		&:global(.grabbing::after) {
+			position: absolute;
+			content: '';
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			background: rgba(255, 255, 255, 0.5);
+			animation: pulse 1s infinite;
+		}
 	}
 
 	video,
@@ -221,6 +242,24 @@
 		& :global(.bx--number input[type='number']) {
 			min-width: unset;
 			padding-left: 1rem;
+		}
+	}
+
+	@keyframes pulse {
+		0% {
+			background: rgba(255, 255, 255, 0);
+		}
+
+		40% {
+			background: rgba(255, 255, 255, 0);
+		}
+
+		80% {
+			background: rgba(255, 255, 255, 0.5);
+		}
+
+		100% {
+			background: rgba(255, 255, 255, 0.5);
 		}
 	}
 </style>
