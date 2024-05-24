@@ -15,6 +15,7 @@
 	let searchType = $state('cosine');
 
 	let limit = $state(14);
+	let excludeWithinFrames = $state(30);
 
 	/** @type {string[]}*/
 	let selectedVideoIds = $state([]);
@@ -24,6 +25,7 @@
 		queryParams.append('pose', JSON.stringify(sourcePose));
 		queryParams.append('search_type', searchType);
 		if (selectedVideoIds.length) selectedVideoIds.forEach((v) => queryParams.append('videos', v));
+		queryParams.append('exclude_within_frames', Math.max(excludeWithinFrames, 1).toString());
 		queryParams.append('limit', limit.toString());
 
 		const query = `${$page.data.apiBase}/pose-search/?${queryParams.toString()}`;
@@ -60,8 +62,12 @@
 		</select>
 	</label>
 	<label>
+		Exclude within Frames:
+		<input type="number" bind:value={excludeWithinFrames} />
+	</label>
+	<label>
 		# Results:
-		<input type="number" bind:value={limit} />
+		<input type="number" bind:value={limit} min="1" />
 	</label>
 </div>
 
@@ -93,5 +99,9 @@
 		display: flex;
 		gap: 0.5rem;
 		line-height: 24px;
+	}
+
+	input[type='number'] {
+		width: 5rem;
 	}
 </style>

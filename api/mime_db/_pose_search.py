@@ -9,8 +9,8 @@ async def search_poses(
     pose_coords: List[int] | List[float],
     search_type: Literal["cosine", "euclidean", "view_invariant", "3d"],
     videos: Set[UUID] | None = None,
-    max_distance="Infinity",
-    limit=50,
+    exclude_within_frames: int = 30,
+    limit: int = 50,
 ) -> list:
     """Search for poses in the database"""
 
@@ -41,36 +41,46 @@ async def search_poses(
 
     return await self._pool.fetch(
         f"""
-        WITH search_results AS(
+        WITH ranked_poses AS (
 
             SELECT pose.video_id,
                 video.video_name,
                 pose.frame,
                 pose.pose_idx,
-                pose.norm, pose.keypoints,
+                pose.norm,
+                pose.keypoints,
                 {distance} AS distance,
-                frame.shot AS shot,
-                face.cluster_id AS face_cluster_id
+                RANK() OVER (ORDER BY {distance}) AS rank
 
-            FROM pose, frame, face, video
+            FROM pose, video
 
             WHERE video.id = pose.video_id
-              AND frame.video_id = pose.video_id
-              AND face.video_id = pose.video_id
-              AND face.frame = pose.frame
-              AND face.pose_idx = pose.pose_idx
-              AND pose.frame = frame.frame
               {additional_where}
 
             ORDER BY distance
-
-            LIMIT $1
+            LIMIT 50000
         )
 
-        SELECT * from search_results
-        WHERE search_results.distance < 'Infinity'
+        SELECT video_id,
+               video_name,
+               frame,
+               pose_idx,
+               norm,
+               keypoints,
+               distance,
+               rank
+        FROM ranked_poses
+        WHERE NOT EXISTS (
+            SELECT 1
+            FROM ranked_poses rp2
+            WHERE rp2.rank < ranked_poses.rank
+            and rp2.pose_idx = ranked_poses.pose_idx
+            and ABS(rp2.frame - ranked_poses.frame) < $2
+        )
+        ORDER BY distance
+        LIMIT $1
         ;
     """,
         limit,
-        # max_distance,
+        exclude_within_frames,
     )

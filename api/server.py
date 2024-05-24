@@ -399,8 +399,15 @@ async def pose_search(
     search_type: Literal["cosine", "euclidean", "view_invariant", "3d"] = "cosine",
     videos: Set[str] = Query(None),  # noqa: B008
     limit: int = 50,
+    exclude_within_frames: int = 30,
 ):
-    results = await request.app.state.db.search_poses(pose_coords=pose, search_type=search_type, videos=videos, limit=limit)
+    results = await request.app.state.db.search_poses(
+        pose_coords=pose,
+        search_type=search_type,
+        videos=videos,
+        limit=limit,
+        exclude_within_frames=exclude_within_frames,
+    )
     return Response(
         content=json.dumps(results, cls=MimeJSONEncoder),
         media_type="application/json",
