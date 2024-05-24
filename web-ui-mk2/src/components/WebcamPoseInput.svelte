@@ -7,8 +7,7 @@
 
 	import {
 		BLAZE_33_TO_COCO_13,
-		COCO_13_SKELETON,
-		COCO_COLORS,
+		drawPoseOnCanvas,
 		segmentKeypoints,
 		shiftNormalizeRescalePoseCoords
 	} from '$lib/pose-utils';
@@ -34,35 +33,6 @@
 	const normalizedPose = true;
 	const width = 290;
 	const normalizationFactor = normalizedPose ? width / 100 : 1;
-
-	/**
-	 * @param {CanvasRenderingContext2D} context
-	 * @param {Array<Array<number>>} segments
-	 * @returns {void}
-	 */
-	const draw = (context, segments) => {
-		COCO_13_SKELETON.forEach(([from, to], i) => {
-			let fromX, fromY, toX, toY, fromConfidence, toConfidence;
-			[fromX, fromY, fromConfidence = null] = segments[from - 1];
-			[toX, toY, toConfidence = null] = segments[to - 1];
-			if (fromConfidence === 0 || toConfidence === 0) return;
-			if ([fromX, fromY, toX, toY].some((x) => x === -1)) return;
-
-			context.lineWidth = scaleFactor > 0.8 ? 3 : 2;
-			context.strokeStyle = COCO_COLORS[i];
-
-			context.beginPath();
-			context.moveTo(
-				fromX * normalizationFactor * scaleFactor,
-				fromY * normalizationFactor * scaleFactor
-			);
-			context.lineTo(
-				toX * normalizationFactor * scaleFactor,
-				toY * normalizationFactor * scaleFactor
-			);
-			context.stroke();
-		});
-	};
 
 	/**
 	 * @param {Coco13Pose[]} landmarks
@@ -139,7 +109,7 @@
 			const poseData = landmarksToCoco13(result.landmarks).keypoints;
 			capturedPose = [...poseData];
 			const segments = segmentKeypoints(poseData, 2);
-			draw(captureContext, segments);
+			drawPoseOnCanvas(captureContext, segments, scaleFactor * normalizationFactor);
 			/** @type {HTMLImageElement} */ (document.getElementById('captured')).src =
 				captureCanvas.toDataURL('image/png');
 		});
