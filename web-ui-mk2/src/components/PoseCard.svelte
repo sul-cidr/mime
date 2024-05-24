@@ -1,70 +1,22 @@
 <script>
-	import {
-		COCO_13_SKELETON,
-		COCO_COLORS,
-		segmentPose,
-		shiftNormalizeRescalePoseCoords
-	} from '$lib/pose-utils';
+	import { LayerCake, Canvas } from 'layercake';
+	import Pose from './Pose.svelte';
 
 	/**
 	 * @typedef {Object} SearchResultsProps
-	 * @property {MinimalPose} sourcePose Source pose to be searched
+	 * @property {MinimalPose} sourcePose Pose to be presented
 	 */
 
 	/** @type {SearchResultsProps} */
 	let { sourcePose } = $props();
-
-	let canvasElement = $state();
-
-	const scaleFactor = 1;
-	const normalizedPose = true;
-	const width = 290;
-	const normalizationFactor = normalizedPose ? width / 100 : 1;
-
-	/**
-	 * @param {CanvasRenderingContext2D} context
-	 * @param {Array<Array<number>>} segments
-	 * @returns {void}
-	 */
-	const draw = (context, segments) => {
-		console.log(context, segments);
-		COCO_13_SKELETON.forEach(([from, to], i) => {
-			let fromX, fromY, toX, toY, fromConfidence, toConfidence;
-			[fromX, fromY, fromConfidence = null] = segments[from - 1];
-			[toX, toY, toConfidence = null] = segments[to - 1];
-			if (fromConfidence === 0 || toConfidence === 0) return;
-			if ([fromX, fromY, toX, toY].some((x) => x === -1)) return;
-
-			context.lineWidth = scaleFactor > 0.8 ? 3 : 2;
-			context.strokeStyle = COCO_COLORS[i];
-
-			context.beginPath();
-			context.moveTo(
-				fromX * normalizationFactor * scaleFactor,
-				fromY * normalizationFactor * scaleFactor
-			);
-			context.lineTo(
-				toX * normalizationFactor * scaleFactor,
-				toY * normalizationFactor * scaleFactor
-			);
-			context.stroke();
-		});
-	};
-
-	const init = async () => {
-		const canvasCtx = canvasElement.getContext('2d');
-		const segments = segmentPose(sourcePose.norm, 2);
-		draw(canvasCtx, segments);
-	};
 </script>
 
 <div>
-	{#await init()}
-		Loading...
-	{:then}
-		<p></p>
-	{/await}
-	<canvas bind:this={canvasElement}></canvas>
+	<LayerCake>
+		<Canvas zIndex={1}>
+			<Pose poseData={sourcePose.norm} normalizedPose={true} />
+		</Canvas>
+	</LayerCake>
 </div>
 
 <style>
@@ -74,13 +26,5 @@
 		outline: 1px solid var(--primary);
 		position: relative;
 		width: 180px;
-	}
-	canvas {
-		height: 100%;
-		width: 100%;
-		object-fit: contain;
-		position: absolute;
-		top: 0;
-		left: 0;
 	}
 </style>
