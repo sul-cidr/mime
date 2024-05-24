@@ -1,7 +1,7 @@
 <script>
 	import { page } from '$app/stores';
 	import { LayerCake, Canvas, Html } from 'layercake';
-	import { getKeypointsBounds, getKeypointsDimensions } from '$lib/pose-utils';
+	import { getKeypointsBounds } from '$lib/pose-utils';
 	import Pose from './Pose.svelte';
 
 	/**
@@ -17,9 +17,10 @@
 	<LayerCake>
 		<Html zIndex={0}>
 			{@const { video_id, frame, norm, keypoints, pose_idx } = sourcePose}
-			{@const dims = `${getKeypointsBounds(keypoints).join(',')}|${getKeypointsDimensions(norm).join(',')}`}
+			{@const dims = getKeypointsBounds(keypoints).join(',')}
+			{@const [, , h, w] = getKeypointsBounds(norm, false)}
 			<img
-				src={`${$page.data.apiBase}/frame/resize/${video_id}/${frame}/${dims}/`}
+				src={`${$page.data.apiBase}/frame/resize/${video_id}/${frame}/${dims}|${h},${w}/`}
 				alt={`Frame ${frame}, Pose: ${pose_idx + 1}`}
 				onload={({ target }) => {
 					/** @type {HTMLImageElement} */ (target).style.opacity = '1';
