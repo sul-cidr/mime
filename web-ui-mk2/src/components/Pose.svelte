@@ -23,10 +23,7 @@
 			// (see https://layercake.graphics/guide#scalecanvas)
 			scaleCanvas($ctx, $width, $height);
 			$ctx.clearRect(0, 0, $width, $height);
-
-			const normalizationFactor = normalizedPose ? $width / 100 : 1;
-			const segments = segmentKeypoints(poseData, 2);
-			drawPoseOnCanvas($ctx, segments, scaleFactor * normalizationFactor);
+			drawPoseOnCanvas($ctx, poseData, true);
 		}
 	});
 </script>

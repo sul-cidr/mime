@@ -123,8 +123,7 @@
 				poseLandmarker.detectForVideo(videoElement, performance.now(), (result) => {
 					const { keypoints, normedKeypoints } = coco13FromLandmarks(result.landmarks);
 					capturedPose = [...normedKeypoints];
-					//const segments = segmentKeypoints(keypoints, 2);
-					drawPoseOnCanvas(captureContext, keypoints);
+					drawPoseOnCanvas(captureContext, keypoints, false);
 					/** @type {HTMLImageElement} */ (document.getElementById('captured')).src =
 						captureCanvas.toDataURL('image/png');
 				});
