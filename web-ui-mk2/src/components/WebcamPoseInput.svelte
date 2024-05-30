@@ -98,7 +98,13 @@
 			}
 		});
 
-		if (!capturedPose) videoElement.requestVideoFrameCallback(runWebcamPosePrediction);
+		if (!capturedPose) {
+			if ('requestVideoFrameCallback' in HTMLVideoElement.prototype) {
+				videoElement.requestVideoFrameCallback(runWebcamPosePrediction);
+			} else {
+				window.requestAnimationFrame(runWebcamPosePrediction);
+			}
+		}
 	};
 
 	const grab = () => {
@@ -117,8 +123,8 @@
 				poseLandmarker.detectForVideo(videoElement, performance.now(), (result) => {
 					const { keypoints, normedKeypoints } = coco13FromLandmarks(result.landmarks);
 					capturedPose = [...normedKeypoints];
-					const segments = segmentKeypoints(keypoints, 2);
-					drawPoseOnCanvas(captureContext, segments, 1);
+					//const segments = segmentKeypoints(keypoints, 2);
+					drawPoseOnCanvas(captureContext, keypoints);
 					/** @type {HTMLImageElement} */ (document.getElementById('captured')).src =
 						captureCanvas.toDataURL('image/png');
 				});
