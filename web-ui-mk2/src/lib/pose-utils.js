@@ -107,11 +107,30 @@ export const shiftNormalizeRescaleKeypoints = (keypoints) => {
 
 /**
  * @param {CanvasRenderingContext2D} context
- * @param {Array<Array<number>>} segments
- * @param {number} scaleFactor
+ * @param {Array<number>} poseData
+ * @param {boolean} fitToCanvas
  * @returns {void}
  */
-export const drawPoseOnCanvas = (context, segments, scaleFactor) => {
+export const drawPoseOnCanvas = (context, poseData, fitToCanvas) => {
+	const segments = segmentKeypoints(poseData, 2);
+	let scaleFactor = 1;
+	let xAdjust = 0;
+	let yAdjust = 0;
+
+	if (fitToCanvas) {
+		const [xMin, yMin, width, height] = getKeypointsBounds(poseData, false)
+		const xMid = (xMin * 2 + width) / 2;
+		const yMid = (yMin * 2 + height) / 2;
+
+		if (width > height) {
+			scaleFactor = context.canvas.width / width;
+			yAdjust = (yMin-yMid) * scaleFactor / 2;
+		} else {
+			scaleFactor = context.canvas.height / height;
+			xAdjust = (xMin-xMid) * scaleFactor / 2;
+		}
+	}
+
 	COCO_13_SKELETON.forEach(([from, to], i) => {
 		let [fromX, fromY, fromConfidence = null] = segments[from - 1];
 		let [toX, toY, toConfidence = null] = segments[to - 1];
@@ -122,8 +141,8 @@ export const drawPoseOnCanvas = (context, segments, scaleFactor) => {
 		context.lineWidth = 3;
 		context.strokeStyle = COCO_COLORS[i];
 		context.beginPath();
-		context.moveTo(fromX * scaleFactor, fromY * scaleFactor);
-		context.lineTo(toX * scaleFactor, toY * scaleFactor);
+		context.moveTo(fromX * scaleFactor + xAdjust, fromY * scaleFactor + yAdjust);
+		context.lineTo(toX * scaleFactor + xAdjust, toY * scaleFactor + yAdjust);
 		context.stroke();
 	});
 };
