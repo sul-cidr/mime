@@ -157,7 +157,7 @@ async def search_by_pose(
     max_distance="Infinity",
     limit=500,
 ) -> list:
-    if video_param.find("ALL|") != -1:
+    if isinstance(video_param, str) and video_param.find("ALL|") != -1:
         pose_subquery = "TRUE"
     else:
         pose_subquery = f"pose.video_id = '{video_param}'"
@@ -192,7 +192,7 @@ async def get_nearest_poses(
     avoid_shot=-1,
     limit=500,
 ) -> list:
-    if video_param.find("ALL|") != -1:
+    if isinstance(video_param, str) and video_param.find("ALL|") != -1:
         pose_subquery = "TRUE"
         distance_subquery = f"""
             SELECT {embedding}
@@ -238,7 +238,7 @@ async def get_nearest_actions(
     avoid_shot=-1,
     limit=500,
 ) -> list:
-    if video_param.find("ALL|") != -1:
+    if isinstance(video_param, str) and video_param.find("ALL|") != -1:
         pose_subquery = "TRUE"
         distance_subquery = f"""ava_action <=> (SELECT ava_action FROM pose WHERE video_id = '{video_param.split("|")[1]}' AND frame = $1 AND track_id = $2)"""
     else:
