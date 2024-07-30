@@ -74,6 +74,7 @@ async def search_poses(
             SELECT 1
             FROM ranked_poses rp2
             WHERE rp2.rank < ranked_poses.rank
+            and rp2.video_id = ranked_poses.video_id
             and rp2.pose_idx = ranked_poses.pose_idx
             and ABS(rp2.frame - ranked_poses.frame) < $2
         )
