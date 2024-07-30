@@ -46,6 +46,8 @@
 	div {
 		aspect-ratio: 5 / 6;
 		background-color: rgba(0, 0, 0, 0.5);
+		display: flex;
+		flex-direction: column;
 		outline: 1px solid var(--primary);
 		position: relative;
 		width: 180px;
