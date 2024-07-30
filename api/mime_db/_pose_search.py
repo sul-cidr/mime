@@ -68,9 +68,9 @@ async def search_poses(
         )
 
         SELECT * from search_results
-        WHERE search_results.distance < $2
+        WHERE search_results.distance < 'Infinity'
         ;
     """,
         limit,
-        max_distance,
+        # max_distance,
     )

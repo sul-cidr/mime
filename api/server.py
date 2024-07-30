@@ -400,7 +400,7 @@ async def pose_search(
     videos: Set[str] = Query(None),  # noqa: B008
     limit: int = 50,
 ):
-    results = await request.app.state.db.search_poses(pose, search_type, videos, limit)
+    results = await request.app.state.db.search_poses(pose_coords=pose, search_type=search_type, videos=videos, limit=limit)
     return Response(
         content=json.dumps(results, cls=MimeJSONEncoder),
         media_type="application/json",
