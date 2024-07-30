@@ -54,7 +54,7 @@
 		<SideNavLink
 			icon={ChartScatter}
 			text="Analytics"
-			href="{base}/"
+			href="{base}/analytics/"
 			isSelected={$page.url.pathname == `${base}/analytics`}
 		/>
 		<SideNavDivider />
