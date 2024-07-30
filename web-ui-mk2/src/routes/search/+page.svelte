@@ -27,9 +27,7 @@
 		</Tabs>
 	</div>
 	<div id="results-container">
-		{#if sourcePose}
-			<SearchResults {sourcePose} />
-		{/if}
+		<SearchResults {sourcePose} />
 	</div>
 </section>
 
