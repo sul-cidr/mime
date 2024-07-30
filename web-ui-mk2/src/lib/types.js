@@ -28,3 +28,19 @@
  * @property {number} h height
  * @property {number} d depth
  */
+
+/**
+ * @typedef {Object} VideoRecord
+ * @property {string} id
+ * @property {string} video_name
+ * @property {number} frame_count
+ * @property {number} fps
+ * @property {number} width
+ * @property {number} height
+ * @property {string} created_on
+ * @property {number} pose_ct
+ * @property {number} track_ct
+ * @property {number} shot_ct
+ * @property {number} poses_per_frame
+ * @property {number} face_ct
+ */
