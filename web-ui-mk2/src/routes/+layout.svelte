@@ -14,6 +14,7 @@
 	import Home from 'carbon-icons-svelte/lib/Home.svelte';
 	import LogoGithub from 'carbon-icons-svelte/lib/LogoGithub.svelte';
 	import Search from 'carbon-icons-svelte/lib/Search.svelte';
+	import ChartScatter from 'carbon-icons-svelte/lib/ChartScatter.svelte';
 
 	import '@/carbon-theming.css';
 
@@ -49,6 +50,12 @@
 			text="Search Interface"
 			href="{base}/search/"
 			isSelected={$page.url.pathname == `${base}/search`}
+		/>
+		<SideNavLink
+			icon={ChartScatter}
+			text="Analytics"
+			href="{base}/"
+			isSelected={$page.url.pathname == `${base}/analytics`}
 		/>
 		<SideNavDivider />
 		<SideNavLink icon={LogoGithub} text="GitHub" href="https://github.com/sul-cidr/mime" />
