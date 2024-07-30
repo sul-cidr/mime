@@ -32,6 +32,11 @@
 			<Pose poseData={sourcePose.norm} normalizedPose={true} />
 		</Canvas>
 	</LayerCake>
+	<aside>
+		<span>{sourcePose.video_name}</span>
+		<!-- <span>Frame {sourcePose.frame} (#{sourcePose.pose_idx + 1})</span> -->
+		<!-- <span>Time: {formatSeconds(sourcePose.frame / sourcePose.video.fps)}</span> -->
+	</aside>
 </div>
 
 <style>
@@ -41,6 +46,14 @@
 		outline: 1px solid var(--primary);
 		position: relative;
 		width: 180px;
+	}
+
+	aside {
+		display: flex;
+		padding: 0.5rem;
+		background: aliceblue;
+		flex-direction: column;
+		gap: 0.5rem;
 	}
 
 	img {
