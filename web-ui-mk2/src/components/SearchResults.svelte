@@ -20,6 +20,8 @@
 	/** @type {string[]}*/
 	let selectedVideoIds = $state([]);
 
+	let showPose = $state(false);
+
 	async function getPoseData() {
 		const queryParams = new URLSearchParams();
 		queryParams.append('pose', JSON.stringify(sourcePose));
@@ -40,6 +42,10 @@
 </script>
 
 <div>
+	<label>
+		Show Pose:
+		<input type="checkbox" bind:checked={showPose} />
+	</label>
 	<label>
 		Videos:
 		{#await getVideoData() then { videos }}
@@ -77,7 +83,7 @@
 			Searching...
 		{:then data}
 			{#each data as pose}
-				<PoseCard sourcePose={pose} />
+				<PoseCard sourcePose={pose} {showPose} />
 			{/each}
 		{:catch error}
 			<p style="color: red">{error.message}</p>

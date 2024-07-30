@@ -7,10 +7,11 @@
 	/**
 	 * @typedef {Object} SearchResultsProps
 	 * @property {PoseRecord} sourcePose Pose to be presented
+	 * @property {boolean} showPose
 	 */
 
 	/** @type {SearchResultsProps} */
-	let { sourcePose } = $props();
+	let { sourcePose, showPose } = $props();
 </script>
 
 <div>
@@ -28,13 +29,15 @@
 				}}
 			/>
 		</Html>
-		<Canvas zIndex={1}>
-			<Pose poseData={sourcePose.norm} normalizedPose={true} />
-		</Canvas>
+		{#if showPose}
+			<Canvas zIndex={1}>
+				<Pose poseData={sourcePose.norm} normalizedPose={true} />
+			</Canvas>
+		{/if}
 	</LayerCake>
 	<aside>
 		<span>{sourcePose.video_name}</span>
-		<!-- <span>Frame {sourcePose.frame} (#{sourcePose.pose_idx + 1})</span> -->
+		<span>Frame {sourcePose.frame} (#{sourcePose.pose_idx + 1})</span>
 		<!-- <span>Time: {formatSeconds(sourcePose.frame / sourcePose.video.fps)}</span> -->
 	</aside>
 </div>
