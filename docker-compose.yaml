@@ -80,6 +80,7 @@ services:
       - ./nginx.config:/etc/nginx/conf.d/default.conf
       - ${CACHE_FOLDER:-./mime-cache}:/static
       - ./web-ui:/app
+      - ./web-ui-mk2:/app2
 
     depends_on:
       - api

@@ -24,6 +24,7 @@ default:
 # Build a production bundle of the front-end code for faster UI
 @build-prod-ui:
   docker compose exec -T web-ui sh -c 'pnpm $MODULES_DIR/.bin/astro build'
+  docker compose exec -T web-ui-mk2 sh -c 'pnpm $MODULES_DIR/.bin/vite build'
 
 # Drop and rebuild the database (obviously use with caution!)
 @drop-and-rebuild-db:
