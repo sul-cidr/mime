@@ -49,6 +49,7 @@ async def search_poses(
                 pose.pose_idx,
                 pose.norm,
                 pose.keypoints,
+                pose.bbox,
                 {distance} AS distance,
                 RANK() OVER (ORDER BY {distance}) AS rank
 
@@ -67,6 +68,7 @@ async def search_poses(
                pose_idx,
                norm,
                keypoints,
+               bbox,
                distance,
                rank
         FROM ranked_poses

@@ -29,8 +29,8 @@
 <div {...props}>
 	<LayerCake>
 		<Html zIndex={0}>
-			{@const { video_id, frame, norm, keypoints, pose_idx } = sourcePose}
-			{@const dims = getKeypointsBounds(keypoints).join(',')}
+			{@const { video_id, frame, pose_idx, bbox } = sourcePose}
+			{@const dims = bbox.join(',')}
 			<img
 				src="{$page.data.apiBase}/frame/excerpt/{video_id}/{frame}/{dims}/"
 				alt="Frame {frame}, Pose: {pose_idx + 1}"
@@ -42,7 +42,7 @@
 		</Html>
 		{#if showPose}
 			<Canvas zIndex={1}>
-				<Pose poseData={sourcePose.norm} normalizedPose={true} />
+				<Pose poseData={sourcePose.norm} normalizedPose={true} bbox={sourcePose.bbox} />
 			</Canvas>
 		{/if}
 	</LayerCake>
