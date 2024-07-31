@@ -2,31 +2,40 @@
 	/**
 	 * @typedef {Object} ModalProps
 	 * @property {boolean} showModal
-	 * @property {import('svelte').Snippet} header
+	 * @property {import('svelte').Snippet} [header]
 	 * @property {import('svelte').Snippet} body
+	 * @property {string} [class]
 	 */
 
 	/** @type {ModalProps} */
-	let { showModal = $bindable(false), header, body } = $props();
+	let { showModal = $bindable(false), header, body, ...props } = $props();
 
 	let /** @type {HTMLDialogElement} */ dialog;
 
+	export const show = () => {
+		dialog.showModal();
+	};
+
+	export const close = () => {
+		dialog.close();
+	};
+
 	$effect(() => {
-		if (dialog && showModal) dialog.showModal();
+		if (dialog && showModal) show();
 	});
 </script>
 
 <!-- svelte-ignore a11y_click_events_have_key_events -->
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-<dialog bind:this={dialog} onclose={() => (showModal = false)}>
+<dialog bind:this={dialog} onclose={() => (showModal = false)} {...props}>
 	<!-- svelte-ignore a11y_no_static_element_interactions -->
-	<div>
+	{#if header}
 		{@render header()}
 		<hr />
-		{@render body()}
-		<hr />
-		<button onclick={() => dialog.close()}>close modal</button>
-	</div>
+	{/if}
+	{@render body()}
+	<hr />
+	<button onclick={() => dialog.close()}>close modal</button>
 </dialog>
 
 <style>
@@ -39,10 +48,6 @@
 
 	dialog::backdrop {
 		background: rgba(0, 0, 0, 0.3);
-	}
-
-	dialog > div {
-		padding: 1em;
 	}
 
 	dialog[open] {
