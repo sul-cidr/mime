@@ -31,9 +31,8 @@
 		<Html zIndex={0}>
 			{@const { video_id, frame, norm, keypoints, pose_idx } = sourcePose}
 			{@const dims = getKeypointsBounds(keypoints).join(',')}
-			{@const [, , h, w] = getKeypointsBounds(norm, false)}
 			<img
-				src="{$page.data.apiBase}/frame/resize/{video_id}/{frame}/{dims}|{h},{w}/"
+				src="{$page.data.apiBase}/frame/excerpt/{video_id}/{frame}/{dims}/"
 				alt="Frame {frame}, Pose: {pose_idx + 1}"
 				onload={({ target }) => {
 					/** @type {HTMLImageElement} */ (target).style.opacity = '1';
