@@ -1,8 +1,7 @@
 <script>
-	import { setContext } from 'svelte';
 	import { page } from '$app/stores';
-
-	import PoseCard from './PoseCard.svelte';
+	import { getVideoData } from '$lib/data-fetching';
+	import PoseCard from '$components/PoseCard.svelte';
 
 	/**
 	 * @typedef {Object} SearchResultsProps
@@ -36,12 +35,6 @@
 		const response = await fetch(query);
 		return await response.json();
 	}
-
-	const getVideoData = async () => {
-		const videoData = fetch(`${$page.data.apiBase}/videos/`).then((data) => data.json());
-		setContext('videoData', videoData);
-		return await videoData;
-	};
 </script>
 
 <div>
@@ -51,7 +44,7 @@
 	</label>
 	<label>
 		Videos:
-		{#await getVideoData() then { videos }}
+		{#await getVideoData() then videos}
 			<select multiple bind:value={selectedVideoIds}>
 				{#each videos as video}
 					<option value={video.id}>{video.video_name}</option>

@@ -1,8 +1,7 @@
 <script>
-	import { getContext } from 'svelte';
-
 	import { page } from '$app/stores';
 	import { LayerCake, Canvas, Html } from 'layercake';
+	import { getVideoData } from '$lib/data-fetching';
 	import { getKeypointsBounds } from '$lib/pose-utils';
 	import FrameModal from './FrameModal.svelte';
 	import Pose from './Pose.svelte';
@@ -18,10 +17,8 @@
 
 	let frameModal = $state();
 
-	const videoData = getContext('videoData');
-
 	const showFrameModal = async () => {
-		const video = (await videoData).videos.find(
+		const video = (await getVideoData()).find(
 			(/** @type {VideoRecord} */ video) => video.id === sourcePose.video_id
 		);
 		frameModal.show(video, sourcePose.frame, sourcePose.pose_idx);
