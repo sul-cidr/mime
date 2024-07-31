@@ -1,7 +1,7 @@
 <script>
 	/**
 	 * @typedef {Object} ModalProps
-	 * @property {boolean} showModal
+	 * @property {boolean} [showModal=false]
 	 * @property {import('svelte').Snippet} [header]
 	 * @property {import('svelte').Snippet} body
 	 * @property {string} [class]
@@ -34,8 +34,6 @@
 		<hr />
 	{/if}
 	{@render body()}
-	<hr />
-	<button onclick={() => dialog.close()}>close modal</button>
 </dialog>
 
 <style>
