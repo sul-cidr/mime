@@ -10,10 +10,11 @@
 	 * @typedef {Object} SearchResultsProps
 	 * @property {PoseRecord} sourcePose Pose to be presented
 	 * @property {boolean} showPose
+	 * @property {string} [class]
 	 */
 
 	/** @type {SearchResultsProps} */
-	let { sourcePose, showPose } = $props();
+	let { sourcePose, showPose, ...props } = $props();
 
 	let frameModal = $state();
 
@@ -25,7 +26,7 @@
 	};
 </script>
 
-<div>
+<div {...props}>
 	<LayerCake>
 		<Html zIndex={0}>
 			{@const { video_id, frame, norm, keypoints, pose_idx } = sourcePose}
