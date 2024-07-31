@@ -35,8 +35,8 @@
 			{@const dims = getKeypointsBounds(keypoints).join(',')}
 			{@const [, , h, w] = getKeypointsBounds(norm, false)}
 			<img
-				src={`${$page.data.apiBase}/frame/resize/${video_id}/${frame}/${dims}|${h},${w}/`}
-				alt={`Frame ${frame}, Pose: ${pose_idx + 1}`}
+				src="{$page.data.apiBase}/frame/resize/{video_id}/{frame}/{dims}|{h},{w}/"
+				alt="Frame {frame}, Pose: {pose_idx + 1}"
 				onload={({ target }) => {
 					/** @type {HTMLImageElement} */ (target).style.opacity = '1';
 					/** @type {HTMLImageElement} */ (target).style.transform = 'scale(1)';

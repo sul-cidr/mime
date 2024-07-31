@@ -6,8 +6,8 @@
 	let selected = $state(0);
 	let sourcePose = $state();
 
-	/** @param {MinimalPose} pose */
-	const setSourcePose = (pose) => {
+	/** @param {Coco13SkeletonNoConfidence} pose */
+	const setSourcePoseFromCoco13Skeleton = (pose) => {
 		sourcePose = pose;
 	};
 </script>
