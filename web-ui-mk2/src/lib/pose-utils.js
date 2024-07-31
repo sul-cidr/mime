@@ -111,8 +111,7 @@ export const shiftNormalizeRescaleKeypoints = (keypoints) => {
  * @param {boolean} fitToCanvas
  * @returns {void}
  */
-export const drawPoseOnCanvas = (context, poseData, fitToCanvas) => {
-	let scaleFactor = 1;
+export const drawPoseOnCanvas = (context, poseData, fitToCanvas, scaleFactor = 1) => {
 	const segments = segmentKeypoints(poseData, poseData.length / (COCO_13_SKELETON.length - 1));
 	let xAdjust = 0;
 	let yAdjust = 0;

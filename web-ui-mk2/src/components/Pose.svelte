@@ -1,7 +1,7 @@
 <script>
 	import { getContext } from 'svelte';
 	import { scaleCanvas } from 'layercake';
-	import { drawPoseOnCanvas, segmentKeypoints } from '$lib/pose-utils';
+	import { drawPoseOnCanvas } from '$lib/pose-utils';
 
 	/**
 	 * @typedef {Object} PoseProps
@@ -12,7 +12,7 @@
 	 */
 
 	/** @type {PoseProps} */
-	let { poseData, scaleFactor = 1, normalizedPose = false } = $props();
+	let { poseData, scaleFactor = 1, normalizedPose = false, fitToCanvas = true } = $props();
 
 	const { width, height } = getContext('LayerCake');
 	const { ctx } = getContext('canvas');
@@ -23,7 +23,7 @@
 			// (see https://layercake.graphics/guide#scalecanvas)
 			scaleCanvas($ctx, $width, $height);
 			$ctx.clearRect(0, 0, $width, $height);
-			drawPoseOnCanvas($ctx, poseData, true);
+			drawPoseOnCanvas($ctx, poseData, fitToCanvas, scaleFactor);
 		}
 	});
 </script>
