@@ -118,16 +118,16 @@ export const drawPoseOnCanvas = (context, poseData, fitToCanvas) => {
 	let yAdjust = 0;
 
 	if (fitToCanvas) {
-		const [xMin, yMin, width, height] = getKeypointsBounds(poseData, false)
+		const [xMin, yMin, width, height] = getKeypointsBounds(poseData, /* hasConfidence= */ false);
 		const xMid = (xMin * 2 + width) / 2;
 		const yMid = (yMin * 2 + height) / 2;
 
 		if (width > height) {
 			scaleFactor = context.canvas.width / width;
-			yAdjust = (yMin-yMid) * scaleFactor / 2;
+			yAdjust = ((yMin - yMid) * scaleFactor) / 2;
 		} else {
 			scaleFactor = context.canvas.height / height;
-			xAdjust = (xMin-xMid) * scaleFactor / 2;
+			xAdjust = ((xMin - xMid) * scaleFactor) / 2;
 		}
 	}
 
