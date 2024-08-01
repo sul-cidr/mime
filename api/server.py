@@ -2,6 +2,7 @@ import json
 import logging
 import os
 from pathlib import Path
+from typing import Literal, Set
 from uuid import UUID
 
 import cv2
@@ -9,7 +10,7 @@ import imageio.v3 as iio
 import numpy as np
 import uvicorn
 from dotenv import load_dotenv
-from fastapi import FastAPI, Request, Response
+from fastapi import FastAPI, Query, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_utils.timing import add_timing_middleware
 
@@ -387,6 +388,28 @@ async def get_nearest_movelets(
     )
     return Response(
         content=json.dumps(movelet_data, cls=MimeJSONEncoder),
+        media_type="application/json",
+    )
+
+
+@mime_api.get("/pose-search/")
+async def pose_search(
+    request: Request,
+    pose: str,
+    search_type: Literal["cosine", "euclidean", "view_invariant", "3d"] = "cosine",
+    videos: Set[str] = Query(None),  # noqa: B008
+    limit: int = 50,
+    exclude_within_frames: int = 30,
+):
+    results = await request.app.state.db.search_poses(
+        pose_coords=pose,
+        search_type=search_type,
+        videos=videos,
+        limit=limit,
+        exclude_within_frames=exclude_within_frames,
+    )
+    return Response(
+        content=json.dumps(results, cls=MimeJSONEncoder),
         media_type="application/json",
     )
 
