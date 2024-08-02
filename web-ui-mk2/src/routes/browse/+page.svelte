@@ -2,8 +2,6 @@
 	import { DataTable } from 'carbon-components-svelte';
 	import { page } from '$app/stores';
 
-	let videos = $state();
-
 	const headers = [
 		{ key: 'video_name', value: 'Name' },
 		{ key: 'meta', value: 'Meta' },
@@ -15,12 +13,12 @@
 		{ key: 'shot_ct', value: 'Shots' }
 	];
 
-	$effect(() => {
-		videos = fetch(`${$page.data.apiBase}/videos/`)
+	const getVideoRows = async () => {
+		return await fetch(`${$page.data.apiBase}/videos/`)
 			.then((data) => data.json())
 			.then((data) =>
-				data.videos.map((video, i) => ({
-					id: i,
+				data.videos.map((/** @type {VideoRecord} */ video) => ({
+					id: video.id,
 					video_name: video.video_name,
 					meta: `${video.width}x${video.height}@${video.fps.toFixed(2)}fps`,
 					length: new Date((video.frame_count / video.fps) * 1000).toISOString().slice(11, 19),
@@ -31,13 +29,11 @@
 					shot_ct: video.shot_ct.toLocaleString()
 				}))
 			);
-	});
+	};
 </script>
 
-{#if videos}
-	{#await videos}
-		<p>Loading...</p>
-	{:then videos}
-		<DataTable {headers} rows={videos} />
-	{/await}
-{/if}
+{#await getVideoRows()}
+	<p>Loading...</p>
+{:then rows}
+	<DataTable {headers} {rows} />
+{/await}
