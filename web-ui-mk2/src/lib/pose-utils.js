@@ -111,13 +111,27 @@ export const shiftNormalizeRescaleKeypoints = (keypoints) => {
  * @param {boolean} fitToCanvas
  * @returns {void}
  */
-export const drawPoseOnCanvas = (context, poseData, fitToCanvas, scaleFactor = 1) => {
+export const drawPoseOnCanvas = (
+	context,
+	poseData,
+	fitToCanvas,
+	scaleFactor = 1,
+	bboxOffset = null
+) => {
 	const segments = segmentKeypoints(poseData, poseData.length / (COCO_13_SKELETON.length - 1));
 	let xAdjust = 0;
 	let yAdjust = 0;
 
 	if (fitToCanvas) {
 		const [xMin, yMin, width, height] = getKeypointsBounds(poseData, /* hasConfidence= */ false);
+		console.log('kpb', xMin, yMin, width, height);
+		console.log(
+			'sf',
+			scaleFactor,
+			'bboxOffset',
+			bboxOffset.map((x) => x * scaleFactor)
+		);
+
 		const xMid = (xMin * 2 + width) / 2;
 		const yMid = (yMin * 2 + height) / 2;
 
@@ -128,7 +142,23 @@ export const drawPoseOnCanvas = (context, poseData, fitToCanvas, scaleFactor = 1
 			scaleFactor = context.canvas.height / height;
 			xAdjust = ((xMin - xMid) * scaleFactor) / 2;
 		}
+
+		// TODO: need a normed bbox here, not the original coords
+
+		if (bboxOffset !== null) {
+			xAdjust += bboxOffset[0] * scaleFactor;
+			yAdjust += bboxOffset[1] * scaleFactor;
+		}
 	}
+
+	// if (bbox !== null) {
+	// 	const [xMin, yMin, width, height] = bbox;
+	// 	const xMid = (xMin * 2 + width) / 2;
+	// 	const yMid = (yMin * 2 + height) / 2;
+
+	// 	yAdjust = ((yMin - yMid) * scaleFactor) / 2;
+	// 	xAdjust = ((xMin - xMid) * scaleFactor) / 2;
+	// }
 
 	COCO_13_SKELETON.forEach(([from, to], i) => {
 		let [fromX, fromY, fromConfidence = null] = segments[from - 1];

@@ -24,6 +24,46 @@
 		);
 		frameModal.show(video, sourcePose.frame, sourcePose.pose_idx);
 	};
+
+	const getBboxOffset = (bbox, keypoints) => {
+		const kpBB = getKeypointsBounds(sourcePose.keypoints);
+
+		const [x, y, w, h] = bbox;
+		const [x1, y1, x2, y2] = kpBB;
+
+		const POSE_MAX_DIM = 100;
+
+		const scaleFactor = 100 / 2160;
+
+		let y_recenter;
+		let x_recenter;
+
+		if (w >= h) {
+			x_recenter = 0;
+			y_recenter = Math.round((POSE_MAX_DIM - h * scaleFactor) / 2);
+		} else {
+			x_recenter = Math.round((POSE_MAX_DIM - w * scaleFactor) / 2);
+			y_recenter = 0;
+		}
+
+		// for i, coords in enumerate(pose_coords):
+		//     # Coordinates with confidence values of 0 are not modified; these should not
+		//     # be used in any pose representations or calculations, and often (but not
+		//     # always) already have 0,0 coordinates.
+		//     if coords[2] == 0:
+		//         continue
+		//     pose_coords[i] = [
+		//         round(coords[0] * scale_factor + x_recenter),
+		//         round(coords[1] * scale_factor + y_recenter),
+		//         coords[2],
+		//     ]
+
+		return [x_recenter, y_recenter];
+	};
+
+	console.log(sourcePose.keypoints);
+	console.log(sourcePose.bbox);
+	console.log(getKeypointsBounds(sourcePose.keypoints));
 </script>
 
 <div {...props}>
@@ -42,7 +82,11 @@
 		</Html>
 		{#if showPose}
 			<Canvas zIndex={1}>
-				<Pose poseData={sourcePose.norm} normalizedPose={true} bbox={sourcePose.bbox} />
+				<Pose
+					poseData={sourcePose.norm}
+					normalizedPose={true}
+					bboxOffset={getBboxOffset(sourcePose.bbox, sourcePose.keypoints)}
+				/>
 			</Canvas>
 		{/if}
 	</LayerCake>

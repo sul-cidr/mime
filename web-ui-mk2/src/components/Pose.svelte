@@ -13,7 +13,13 @@
 	 */
 
 	/** @type {PoseProps} */
-	let { poseData, scaleFactor = 1, normalizedPose = false, fitToCanvas = true, bbox } = $props();
+	let {
+		poseData,
+		scaleFactor = 1,
+		normalizedPose = false,
+		fitToCanvas = true,
+		bboxOffset
+	} = $props();
 
 	const { width, height } = getContext('LayerCake');
 	const { ctx } = getContext('canvas');
@@ -24,7 +30,7 @@
 			// (see https://layercake.graphics/guide#scalecanvas)
 			scaleCanvas($ctx, $width, $height);
 			$ctx.clearRect(0, 0, $width, $height);
-			drawPoseOnCanvas($ctx, poseData, fitToCanvas, scaleFactor, bbox);
+			drawPoseOnCanvas($ctx, poseData, fitToCanvas, scaleFactor, bboxOffset);
 		}
 	});
 </script>
