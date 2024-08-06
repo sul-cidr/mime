@@ -10,17 +10,16 @@
 	import {
 		BLAZE_33_TO_COCO_13,
 		drawPoseOnCanvas,
-		segmentKeypoints,
 		shiftNormalizeRescaleKeypoints
 	} from '$lib/pose-utils';
 
 	/**
 	 * @typedef {Object} WebcamPoseInputProps
-	 * @property {function} setSourcePose Function to set the selected pose in the parent component
+	 * @property {function} setSourcePoseFromCoco13Skeleton Function to set the selected pose in the parent component
 	 */
 
 	/** @type {WebcamPoseInputProps} */
-	let { setSourcePose } = $props();
+	let { setSourcePoseFromCoco13Skeleton } = $props();
 
 	let /** @type HTMLVideoElement */ videoElement;
 	let /** @type HTMLCanvasElement */ canvasElement;
@@ -156,7 +155,12 @@
 
 	<div class="captured" class:ready={capturedPose}>
 		<div class="controls">
-			<Button size="small" icon={Search} class="search" onclick={() => setSourcePose(capturedPose)}>
+			<Button
+				size="small"
+				icon={Search}
+				class="search"
+				onclick={() => setSourcePoseFromCoco13Skeleton(capturedPose)}
+			>
 				Search
 			</Button>
 			<Button
