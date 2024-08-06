@@ -111,23 +111,22 @@ export const shiftNormalizeRescaleKeypoints = (keypoints) => {
  * @param {boolean} fitToCanvas
  * @returns {void}
  */
-export const drawPoseOnCanvas = (context, poseData, fitToCanvas) => {
-	const segments = segmentKeypoints(poseData, 2);
-	let scaleFactor = 1;
+export const drawPoseOnCanvas = (context, poseData, fitToCanvas, scaleFactor = 1) => {
+	const segments = segmentKeypoints(poseData, poseData.length / (COCO_13_SKELETON.length - 1));
 	let xAdjust = 0;
 	let yAdjust = 0;
 
 	if (fitToCanvas) {
-		const [xMin, yMin, width, height] = getKeypointsBounds(poseData, false)
+		const [xMin, yMin, width, height] = getKeypointsBounds(poseData, /* hasConfidence= */ false);
 		const xMid = (xMin * 2 + width) / 2;
 		const yMid = (yMin * 2 + height) / 2;
 
 		if (width > height) {
 			scaleFactor = context.canvas.width / width;
-			yAdjust = (yMin-yMid) * scaleFactor / 2;
+			yAdjust = ((yMin - yMid) * scaleFactor) / 2;
 		} else {
 			scaleFactor = context.canvas.height / height;
-			xAdjust = (xMin-xMid) * scaleFactor / 2;
+			xAdjust = ((xMin - xMid) * scaleFactor) / 2;
 		}
 	}
 

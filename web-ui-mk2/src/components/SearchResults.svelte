@@ -1,4 +1,5 @@
 <script>
+	import { setContext } from 'svelte';
 	import { page } from '$app/stores';
 
 	import PoseCard from './PoseCard.svelte';
@@ -37,7 +38,9 @@
 	}
 
 	const getVideoData = async () => {
-		return await fetch(`${$page.data.apiBase}/videos/`).then((data) => data.json());
+		const videoData = fetch(`${$page.data.apiBase}/videos/`).then((data) => data.json());
+		setContext('videoData', videoData);
+		return await videoData;
 	};
 </script>
 
