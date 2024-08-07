@@ -23,7 +23,7 @@ from mime_db import MimeDb
 # respectively, so an image upsized from smaller than 100xH px is not useful.
 WIDTH_THRESHOLD = 100  # Desired face image width in pixels
 DEFAULT_CLUSTERS = 15  # Expected number of face clusters
-FACE_FEATURES = 512  # Previously used DeepFace, which has 4096
+FACE_FEATURES = 512  # For ArcFace, previously used DeepFace, which has 4096
 UPSCALE = 5
 FACE_SAMPLE_RATE = 2000  # Faces to skip when creating averages
 
@@ -186,7 +186,7 @@ async def main() -> None:
     for cluster_face in clustered_faces:
         i += 1
 
-        if i % FACE_SAMPLE_RATE != 0:
+        if i != 0 and i % FACE_SAMPLE_RATE != 0:
             continue
 
         logging.info(
