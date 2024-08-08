@@ -12,9 +12,11 @@ import cv2
 import jsonlines
 from deepface import DeepFace
 from deepface.modules import preprocessing
-from libs.deepface_utils import extract_face_regions
 from retinaface import RetinaFace
 from rich.logging import RichHandler
+
+from lib.deepface_utils import extract_face_regions
+
 
 FRONTEND_MODEL_NAME = "ArcFace"  # "DeepFace" (could be a cmd line param)
 

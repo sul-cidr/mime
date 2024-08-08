@@ -51,7 +51,7 @@ async def main() -> None:
 
     video_name = Path(args.video_path).name
 
-    faces_path = Path("api", "face_images", video_name)
+    faces_path = Path("face_images", video_name)
     if not os.path.isdir(faces_path):
         logging.error(f"No folder with labeled face images found at {faces_path}")
         return
@@ -113,7 +113,7 @@ async def main() -> None:
         cluster_id += 1
 
     with open(
-        Path("api", "face_images", video_name, "cluster_id_to_image.json"),
+        Path("face_images", video_name, "cluster_id_to_image.json"),
         "w",
         encoding="utf-8",
     ) as faces_json:
