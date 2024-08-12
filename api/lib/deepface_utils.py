@@ -1,23 +1,33 @@
-#!/usr/bin/env python3
-
-"""CLI to run face detection on a video file and write the output to a JSON file."""
-
-import argparse
-import asyncio
-import json
-import logging
-import os
-from pathlib import Path
-
 import cv2
 import numpy as np
-from deepface import DeepFace
-from deepface.commons import functions
+from deepface.commons import image_utils
+from PIL import Image
 from retinaface import RetinaFace  # this is not a must dependency
-from retinaface.commons import postprocess
-from rich.logging import RichHandler
 
-frontend_model_name = "ArcFace"  # "DeepFace" (could be a cmd line param)
+
+def get_alignment_angle_arctan2(left_eye, right_eye):
+    # this function aligns given face in img based on left and right eye coordinates
+    """
+    The left_eye is the eye to the left of the viewer,
+    left_eye_x, left_eye_y = left_eye
+    i.e., right eye of the person in the image.
+    right_eye_x, right_eye_y = right_eye
+    The top-left point of the frame is (0, 0).
+    """
+    # -----------------------
+    return float(
+        np.degrees(
+            # find rotation direction
+            np.arctan2(right_eye[1] - left_eye[1], right_eye[0] - left_eye[0])
+        )
+    )
+
+
+def alignment_procedure(img, left_eye, right_eye):
+    angle = get_alignment_angle_arctan2(left_eye, right_eye)
+    img = Image.fromarray(img)
+    img = np.array(img.rotate(angle))
+    return img
 
 
 def detect_retinaface(backend_model, img, align=True):
@@ -46,13 +56,11 @@ def detect_retinaface(backend_model, img, align=True):
                 landmarks = identity["landmarks"]
                 left_eye = landmarks["left_eye"]
                 right_eye = landmarks["right_eye"]
-                nose = landmarks["nose"]
+                # nose = landmarks["nose"]
                 # mouth_right = landmarks["mouth_right"]
                 # mouth_left = landmarks["mouth_left"]
 
-                detected_face = postprocess.alignment_procedure(
-                    detected_face, right_eye, left_eye, nose
-                )
+                detected_face = alignment_procedure(detected_face, right_eye, left_eye)
 
             resp.append((detected_face, img_region, confidence, identity["landmarks"]))
 
@@ -64,6 +72,7 @@ def detect_retinaface(backend_model, img, align=True):
 # by stand-in code for the rest of DeepFace.represent()
 def extract_face_regions(
     backend_model,
+    frontend_model,
     img,
     align=True,
     enforce_detection=False,
@@ -71,11 +80,11 @@ def extract_face_regions(
 ):
     extracted_faces = []
 
-    img = functions.load_image(img)
+    img = image_utils.load_image(img)[0]
     # Only used if no face sub-images are detected
     img_region = [0, 0, img.shape[1], img.shape[0]]
 
-    target_size = functions.find_target_size(model_name=frontend_model_name)
+    target_size = frontend_model.input_shape
 
     face_objs = detect_retinaface(backend_model, img, align)
 
@@ -90,7 +99,7 @@ def extract_face_regions(
         face_objs = [(img, img_region, 0, {})]
 
     for current_img, current_region, confidence, landmarks in face_objs:
-        if current_img.shape[0] > 0 and current_img.shape[1] > 0:
+        if confidence > 0 and current_img.shape[0] > 0 and current_img.shape[1] > 0:
             if grayscale is True:
                 current_img = cv2.cvtColor(current_img, cv2.COLOR_BGR2GRAY)
 
@@ -156,107 +165,3 @@ def extract_face_regions(
         )
 
     return extracted_faces
-
-
-async def main() -> None:
-    """Command-line entry-point."""
-
-    parser = argparse.ArgumentParser(description="Description: {}".format(__doc__))
-    parser.add_argument(
-        "-v",
-        "--verbose",
-        action="store_true",
-        default=False,
-        help="Enable debug logging",
-    )
-
-    parser.add_argument(
-        "--video-path",
-        action="store",
-        required=True,
-        help="The name of the video file (with extension)",
-    )
-
-    args = parser.parse_args()
-
-    log_level = logging.DEBUG if args.verbose else logging.INFO
-    logging.basicConfig(
-        level=log_level,
-        format="%(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
-        handlers=[RichHandler(rich_tracebacks=True)],
-    )
-
-    video_name = Path(args.video_path).name
-
-    faces_path = Path("api", "face_images", video_name)
-    if not os.path.isdir(faces_path):
-        logging.error(f"No folder with labeled face images found at {faces_path}")
-        return
-
-    face_files = [
-        f
-        for f in os.listdir(faces_path)
-        if os.path.isfile(Path(faces_path, f))
-        and Path(faces_path, f).suffix.lower() in [".png", ".jpg", ".jpeg", ".gif"]
-    ]
-    if not face_files:
-        logging.error(f"No face images found in {faces_path}")
-
-    frontend_model = DeepFace.build_model(frontend_model_name)
-    backend_model = RetinaFace.build_model()
-
-    cluster_id = 0
-    files_to_detections = []
-    for f in face_files:
-        face_image_path = Path(faces_path, f)
-
-        face_image = cv2.imread(str(face_image_path), cv2.IMREAD_COLOR)
-
-        img_objs = extract_face_regions(backend_model, face_image)
-
-        if not len(img_objs):
-            logging.info(f"Couldn't find a face in {f}")
-            continue
-
-        img, region, confidence, landmarks = img_objs[0]
-        # custom normalization
-        img = functions.normalize_input(img=img, normalization="base")
-        embedding = frontend_model.predict(img)[0].tolist()
-
-        face_bbox = [
-            region["x"],
-            region["y"],
-            region["w"],
-            region["h"],
-        ]
-
-        float_landmarks = {}
-        for part in landmarks:
-            float_coords = [round(float(num), 2) for num in landmarks[part]]
-            float_landmarks[part] = float_coords
-
-        files_to_detections.append(
-            {
-                f: {
-                    "bbox": face_bbox,
-                    "embedding": embedding,
-                    "landmarks": float_landmarks,
-                    "confidence": confidence,
-                    "cluster_id": cluster_id,
-                }
-            }
-        )
-
-        cluster_id += 1
-
-    with open(
-        Path("api", "face_images", video_name, "cluster_id_to_image.json"),
-        "w",
-        encoding="utf-8",
-    ) as faces_json:
-        json.dump(files_to_detections, faces_json)
-
-
-if __name__ == "__main__":
-    asyncio.run(main())

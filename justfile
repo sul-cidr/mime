@@ -66,7 +66,7 @@ default:
 
 # Video file is in $VIDEO_SRC_FOLDER; detected shots file will be [VIDEO_FILE_NAME].shots.TransNetV2.pkl
 @detect-shots path:
-  docker compose exec -T api sh -c "LOG_LEVEL=$LOG_LEVEL /app/detect_shots_offline.py --video-path \"\$VIDEO_SRC_FOLDER/$1\""
+  docker compose exec -T api sh -c "LOG_LEVEL=$LOG_LEVEL /app/detect_shots.py --video-path \"\$VIDEO_SRC_FOLDER/$1\""
 
 # Load detected shot boundary data; input file is in $VIDEO_SRC_FOLDER with extension .shots.TransNetV2.pkl
 @add-shots path: && refresh-db-views
@@ -86,7 +86,7 @@ default:
 
 # Video file is in $VIDEO_SRC_FOLDER; detected faces file will be [VIDEO_FILE_NAME].faces.ArcFace.jsonl
 @detect-faces path:
-  docker compose exec -T api sh -c "LOG_LEVEL=$LOG_LEVEL /app/detect_faces_offline.py --video-path \"\$VIDEO_SRC_FOLDER/$1\""
+  docker compose exec -T api sh -c "LOG_LEVEL=$LOG_LEVEL /app/detect_faces.py --video-path \"\$VIDEO_SRC_FOLDER/$1\""
 
 # Provide path to video file relative to $VIDEO_SRC_FOLDER; DO NOT RUN with 4DH data
 @add-tracks path: && refresh-db-views
@@ -96,21 +96,9 @@ default:
 @add-motion path: && refresh-db-views
   docker compose exec -T api sh -c "LOG_LEVEL=$LOG_LEVEL /app/track_video_motion.py --video-path \"\$VIDEO_SRC_FOLDER/$1\""
 
-# @add-faces path:
-#   docker compose exec -T api sh -c "LOG_LEVEL=$LOG_LEVEL /app/detect_pose_faces.py --video-path \"\$VIDEO_SRC_FOLDER/$1\""
-
-# @load-faces path:
-#   docker compose exec -T api sh -c "LOG_LEVEL=$LOG_LEVEL /app/load_face_data.py --json-path \"\$VIDEO_SRC_FOLDER/$1\""
-
-# @match-faces :
-#   docker compose exec -T api sh -c "LOG_LEVEL=$LOG_LEVEL /app/match_faces_to_poses.py --video-name \"\$VIDEO_SRC_FOLDER/$1\""
-
 # Load detected faces data; input file is in $VIDEO_SRC_FOLDER with extension .faces.ArcFace.jsonl
 @match-faces video_path: && refresh-db-views
-  docker compose exec -T api sh -c "LOG_LEVEL=$LOG_LEVEL /app/match_offline_faces_to_poses.py --video-name \"\$VIDEO_SRC_FOLDER/$1\""
-
-# @cluster-faces path:
-#   docker compose exec -T api sh -c "LOG_LEVEL=$LOG_LEVEL /app/cluster_pose_faces.py --video-path \"\$VIDEO_SRC_FOLDER/$1\""
+  docker compose exec -T api sh -c "LOG_LEVEL=$LOG_LEVEL /app/match_faces_to_poses.py --video-name \"\$VIDEO_SRC_FOLDER/$1\""
 
 # Provide path to video file relative to $VIDEO_SRC_FOLDER
 @cluster-faces path n_clusters: && refresh-db-views
@@ -118,7 +106,7 @@ default:
 
 # Provide path to video file relative to $VIDEO_SRC_FOLDER
 @detect-labeled-faces path:
-  docker compose exec -T api sh -c "LOG_LEVEL=$LOG_LEVEL /app/detect_labeled_faces_offline.py --video-path \"\$VIDEO_SRC_FOLDER/$1\""
+  docker compose exec -T api sh -c "LOG_LEVEL=$LOG_LEVEL /app/detect_labeled_faces.py --video-path \"\$VIDEO_SRC_FOLDER/$1\""
 
 # Provide path to video file relative to $VIDEO_SRC_FOLDER
 @match-labeled-faces path:
