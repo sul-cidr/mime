@@ -108,27 +108,31 @@ export const shiftNormalizeRescaleKeypoints = (keypoints) => {
 /**
  * @param {CanvasRenderingContext2D} context
  * @param {Array<number>} poseData
- * @param {boolean} fitToCanvas
+ * @param {number} [scaleFactor=1]
+ * @param {BoundingBox} [bbox]
  * @returns {void}
  */
-export const drawPoseOnCanvas = (context, poseData, fitToCanvas, scaleFactor = 1) => {
-	const segments = segmentKeypoints(poseData, poseData.length / (COCO_13_SKELETON.length - 1));
+export const drawPoseOnCanvas = (context, poseData, scaleFactor = 1, bbox) => {
 	let xAdjust = 0;
 	let yAdjust = 0;
 
-	if (fitToCanvas) {
-		const [xMin, yMin, width, height] = getKeypointsBounds(poseData, /* hasConfidence= */ false);
-		const xMid = (xMin * 2 + width) / 2;
-		const yMid = (yMin * 2 + height) / 2;
+	if (bbox) {
+		poseData = poseData
+			.filter((_, i) => (i + 1) % 3 !== 0) // filter out confidence
+			.map((v, i) => (i % 2 ? v - bbox[1] : v - bbox[0])); // shift with respect to bbox
 
+		// calculate scale factor and x/y adjustment based on whether the bbox is wide or tall
+		const [, , width, height] = bbox;
 		if (width > height) {
 			scaleFactor = context.canvas.width / width;
-			yAdjust = ((yMin - yMid) * scaleFactor) / 2;
+			xAdjust = (context.canvas.height - height * scaleFactor) / 2;
 		} else {
 			scaleFactor = context.canvas.height / height;
-			xAdjust = ((xMin - xMid) * scaleFactor) / 2;
+			xAdjust = (context.canvas.width - width * scaleFactor) / 2;
 		}
 	}
+
+	const segments = segmentKeypoints(poseData, poseData.length / (COCO_13_SKELETON.length - 1));
 
 	COCO_13_SKELETON.forEach(([from, to], i) => {
 		let [fromX, fromY, fromConfidence = null] = segments[from - 1];

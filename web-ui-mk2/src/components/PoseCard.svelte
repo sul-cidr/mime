@@ -2,7 +2,6 @@
 	import { page } from '$app/stores';
 	import { LayerCake, Canvas, Html } from 'layercake';
 	import { getVideoData } from '$lib/data-fetching';
-	import { getKeypointsBounds } from '$lib/pose-utils';
 	import FrameModal from './FrameModal.svelte';
 	import Pose from './Pose.svelte';
 
@@ -42,7 +41,7 @@
 		</Html>
 		{#if showPose}
 			<Canvas zIndex={1}>
-				<Pose poseData={sourcePose.norm} normalizedPose={true} bbox={sourcePose.bbox} />
+				<Pose poseData={sourcePose.keypoints} bbox={sourcePose.bbox} />
 			</Canvas>
 		{/if}
 	</LayerCake>
