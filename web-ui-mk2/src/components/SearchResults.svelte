@@ -71,8 +71,8 @@
 		<select bind:value={searchType}>
 			<option value="cosine">Cosine</option>
 			<option value="euclidean">Euclidean</option>
-			<!--
 			<option value="view_invariant">View Invariant</option>
+			<!--
 			<option value="3d">3D</option>
 			-->
 		</select>
