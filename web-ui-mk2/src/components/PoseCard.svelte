@@ -1,7 +1,9 @@
 <script>
 	import { page } from '$app/stores';
 	import { LayerCake, Canvas, Html } from 'layercake';
+	import ImageReference from 'carbon-icons-svelte/lib/ImageReference.svelte';
 	import { getVideoData } from '$lib/data-fetching';
+	import Overlay from '../ui-components/Overlay.svelte';
 	import FrameModal from './FrameModal.svelte';
 	import Pose from './Pose.svelte';
 
@@ -25,8 +27,18 @@
 	};
 </script>
 
-<div {...props}>
+<div class:pose-card={true} {...props}>
 	<LayerCake>
+		<Overlay>
+			{#snippet bottomLeft()}
+				Frame #{sourcePose.frame}
+				<br />
+				Pose #{sourcePose.pose_idx + 1}
+			{/snippet}
+			{#snippet topRight()}
+				<button onclick={() => showFrameModal()}><ImageReference /></button>
+			{/snippet}
+		</Overlay>
 		<Html zIndex={0}>
 			{@const { video_id, frame, pose_idx, bbox } = sourcePose}
 			{@const dims = bbox.join(',')}
@@ -46,17 +58,15 @@
 		{/if}
 	</LayerCake>
 	<aside>
-		<span>{sourcePose.video_name}</span>
-		<span>Frame {sourcePose.frame} (#{sourcePose.pose_idx + 1})</span>
+		<span>{sourcePose.video_name.split('.').slice(0, -1).join('.')}</span>
 		<!-- <span>Time: {formatSeconds(sourcePose.frame / sourcePose.video.fps)}</span> -->
-		<button onclick={() => showFrameModal()}>Show Frame</button>
 	</aside>
 </div>
 
 <FrameModal bind:this={frameModal} />
 
 <style>
-	div {
+	.pose-card {
 		aspect-ratio: 5 / 6;
 		background-color: rgba(0, 0, 0, 0.5);
 		display: flex;
@@ -64,6 +74,14 @@
 		outline: 1px solid var(--primary);
 		position: relative;
 		width: 180px;
+
+		&:hover :global(.overlay) {
+			opacity: 1;
+		}
+
+		& :global(.bottom-left) {
+			font-size: 0.8rem;
+		}
 	}
 
 	aside {
