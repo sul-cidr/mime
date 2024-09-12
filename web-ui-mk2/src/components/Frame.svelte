@@ -43,7 +43,6 @@
 						pose4dhData={pose.keypoints4dh}
 						faceData={pose.face_landmarks}
 						{scaleFactor}
-						fitToCanvas={false}
 					/>
 				</Canvas>
 			{/each}

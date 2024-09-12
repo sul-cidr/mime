@@ -6,13 +6,13 @@
 	/**
 	 * @typedef {Object} PoseProps
 	 * @property {Coco13SkeletonNoConfidence} poseData Pose data to be drawn
-	 * @property {number} [scaleFactor=1] Scale factor to be applied to the pose
-	 * @property {boolean} [normalizedPose=false] Whether the pose is normalized
+	 * @property {number} [scaleFactor] Scale factor to be applied to the pose
+	 * @property {BoundingBox} [bbox] Bounding box of the figure -- if supplied, the pose will be drawn with respect to the bbox
 	 * @returns {void}
 	 */
 
 	/** @type {PoseProps} */
-	let { poseData, scaleFactor = 1, normalizedPose = false, fitToCanvas = true } = $props();
+	let { poseData, scaleFactor, bbox } = $props();
 
 	const { width, height } = getContext('LayerCake');
 	const { ctx } = getContext('canvas');
@@ -23,7 +23,7 @@
 			// (see https://layercake.graphics/guide#scalecanvas)
 			scaleCanvas($ctx, $width, $height);
 			$ctx.clearRect(0, 0, $width, $height);
-			drawPoseOnCanvas($ctx, poseData, fitToCanvas, scaleFactor);
+			drawPoseOnCanvas($ctx, poseData, scaleFactor, bbox);
 		}
 	});
 </script>

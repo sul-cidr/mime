@@ -2,6 +2,8 @@
 /** @typedef {Array<number>} Coco13SkeletonWithConfidence */
 /** @typedef {Array<{x: number, y: number, z?: number}>} Coco13Pose */
 
+/** @typedef {Array<number>} BoundingBox */
+
 /**
  * @typedef {Object} MinimalPose
  * @property {Coco13SkeletonNoConfidence} keypoints

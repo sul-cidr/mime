@@ -401,8 +401,9 @@ async def pose_search(
     limit: int = 50,
     exclude_within_frames: int = 30,
 ):
+    pose_coords = json.loads(pose)
     results = await request.app.state.db.search_poses(
-        pose_coords=pose,
+        pose_coords=pose_coords,
         search_type=search_type,
         videos=videos,
         limit=limit,

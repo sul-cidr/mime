@@ -9,11 +9,11 @@
 
 	let selected = $state(0);
 	let sourcePose = $state();
-	let sourcePoseFromUrl = $state();
+	let sourcePoseFromUrl = $state(false);
 
-	/** @param {Coco13SkeletonNoConfidence} pose */
-	const setSourcePoseFromCoco13Skeleton = (pose) => {
-		sourcePose = pose;
+	/** @param {Coco13SkeletonNoConfidence} skeleton */
+	const setSourcePoseFromCoco13Skeleton = (skeleton) => {
+		sourcePose = { norm: skeleton };
 	};
 
 	/** @param {PoseRecord} pose */
@@ -22,8 +22,8 @@
 			(/** @type {VideoRecord} */ video) => video.id === pose.video_id
 		);
 		pose.video_name = /** @type {VideoRecord} */ (video).video_name;
-		sourcePoseFromUrl = pose;
-		setSourcePoseFromCoco13Skeleton(pose.norm);
+		sourcePose = pose;
+		sourcePoseFromUrl = true;
 	};
 
 	$effect(() => {
@@ -47,7 +47,7 @@
 	<div id="query-container">
 		<header>Source Pose</header>
 		{#if sourcePoseFromUrl}
-			<PoseCard sourcePose={sourcePoseFromUrl} showPose={false} class="source-pose-card" />
+			<PoseCard {sourcePose} showPose={false} class="source-pose-card" />
 		{:else}
 			<Tabs bind:selected>
 				<Tab label="Webcam" />
