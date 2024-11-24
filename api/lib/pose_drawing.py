@@ -50,6 +50,22 @@ COCO_17_SKELETON = [
     (5, 7),
 ]
 
+COCO_13_KEYPOINTS = [
+    "nose",  # 1
+    "left_shoulder",  # 2
+    "right_shoulder",  # 3
+    "left_elbow",  # 4
+    "right_elbow",  # 5
+    "left_wrist",  # 6
+    "right_wrist",  # 7
+    "left_hip",  # 8
+    "right_hip",  # 9
+    "left_knee",  # 10
+    "right_knee",  # 11
+    "left_ankle",  # 12
+    "right_ankle",  # 13
+]
+
 COCO_13_SKELETON = [
     (12, 10),
     (10, 8),

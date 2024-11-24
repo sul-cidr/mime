@@ -50,6 +50,13 @@ async def get_video_shot_boundaries(self, video_id: UUID) -> list:
     )
 
 
+async def get_video_shots(self, video_id: UUID) -> list:
+    return await self._pool.fetch(
+        "SELECT frame, shot FROM frame WHERE video_id = $1 ORDER BY frame ASC;",
+        video_id,
+    )
+
+
 async def get_clustered_face_data_from_video(self, video_id: UUID) -> list:
     return await self._pool.fetch(
         "SELECT frame, cluster_id, pose_idx, track_id, bbox FROM face WHERE video_id = $1 AND cluster_id IS NOT NULL ORDER BY frame ASC;",
