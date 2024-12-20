@@ -55,7 +55,7 @@ async def initialize_db(conn, drop=False) -> None:
             keypoints4dh vector(135) DEFAULT NULL,
             keypoints3d vector(39) DEFAULT NULL,
             global3d_phalp vector(135) DEFAULT NULL,
-            global3d_coco_13 vector(39) DEFAULT NULL,
+            global3d_coco13 vector(39) DEFAULT NULL,
             ava_action vector(60) DEFAULT NULL,
             action_labels text[3] DEFAULT NULL,
             bbox FLOAT[4] NOT NULL,
