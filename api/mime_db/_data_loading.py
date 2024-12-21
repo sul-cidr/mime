@@ -218,7 +218,12 @@ async def add_shot_boundaries(self, video_id: UUID | None, frames_data) -> None:
 
 
 async def add_frame_movement(
-    self, video_id: UUID | None, max_movement, movement_data
+    self,
+    video_id: UUID | None,
+    max_movement,
+    movement_data,
+    max_movement_3d,
+    movement_data_3d,
 ) -> None:
     async with self._pool.acquire() as conn:
         await conn.execute(
@@ -227,18 +232,26 @@ async def add_frame_movement(
             ;
             """
         )
+        await conn.execute(
+            """
+            ALTER TABLE frame ADD COLUMN IF NOT EXISTS total_movement3d FLOAT DEFAULT 0.0
+            ;
+            """
+        )
 
         safe_max = max(1, max_movement)  # Just in case a 0 sneaks in...
+        safe_max_3d = max(1, max_movement_3d)
 
         for frame in movement_data:
             await conn.execute(
                 """
                 UPDATE frame
-                SET total_movement = $1
-                WHERE video_id = $2 AND frame = $3
+                SET total_movement = $1, total_movement3d = $2
+                WHERE video_id = $3 AND frame = $4
                 ;
                 """,
                 movement_data[frame] / safe_max,
+                movement_data_3d[frame] / safe_max_3d,
                 video_id,
                 frame,
             )
@@ -372,14 +385,13 @@ async def add_video_movelets(self, movelets_data, reindex=True) -> None:
             start_frame,
             end_frame,
             pose_idx,
-            start_timecode,
-            end_timecode,
             prev_norm,
             norm,
             motion,
             movement,
+            movement3d,
             poem_embedding )
-            VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+            VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
         ;
         """,
         data,
@@ -563,50 +575,50 @@ async def annotate_pose(
     return
 
 
-async def annotate_movelet(
-    self,
-    column: str,
-    col_type: str,
-    video_id: UUID | None,
-    annotation_func: Callable,
-    reindex=True,
-) -> None:
-    async with self._pool.acquire() as conn:
-        await conn.execute(
-            f"ALTER TABLE movelet ADD COLUMN IF NOT EXISTS {column} {col_type};"
-        )
+# async def annotate_movelet(
+#     self,
+#     column: str,
+#     col_type: str,
+#     video_id: UUID | None,
+#     annotation_func: Callable,
+#     reindex=True,
+# ) -> None:
+#     async with self._pool.acquire() as conn:
+#         await conn.execute(
+#             f"ALTER TABLE movelet ADD COLUMN IF NOT EXISTS {column} {col_type};"
+#         )
 
-        movelets = await conn.fetch(
-            "SELECT * FROM movelets WHERE video_id = $1;", video_id
-        )
-        async with conn.transaction():
-            for i, movelet in enumerate(movelets):
-                if i % (len(movelets) // 10) == 0:
-                    logging.info(
-                        f"Annotating movelet {i:7}/{len(movelets)} "
-                        f"({10 * (i // (len(movelets) // 10)):3}%)..."
-                    )
-                annotation_value = annotation_func(movelet)
-                await conn.execute(
-                    f"""
-                    UPDATE movelet
-                    SET {column} = $1
-                    WHERE video_id = $2 AND tick = $3 AND track_id = $4
-                    ;
-                    """,
-                    annotation_value,
-                    video_id,
-                    movelet["tick"],
-                    movelet["track_id"],
-                )
+#         movelets = await conn.fetch(
+#             "SELECT * FROM movelets WHERE video_id = $1;", video_id
+#         )
+#         async with conn.transaction():
+#             for i, movelet in enumerate(movelets):
+#                 if i % (len(movelets) // 10) == 0:
+#                     logging.info(
+#                         f"Annotating movelet {i:7}/{len(movelets)} "
+#                         f"({10 * (i // (len(movelets) // 10)):3}%)..."
+#                     )
+#                 annotation_value = annotation_func(movelet)
+#                 await conn.execute(
+#                     f"""
+#                     UPDATE movelet
+#                     SET {column} = $1
+#                     WHERE video_id = $2 AND tick = $3 AND track_id = $4
+#                     ;
+#                     """,
+#                     annotation_value,
+#                     video_id,
+#                     movelet["tick"],
+#                     movelet["track_id"],
+#                 )
 
-        if reindex:
-            logging.info("Creating approximate index for cosine distance...")
-            await conn.execute(
-                f"""
-                CREATE INDEX ON movelet
-                USING ivfflat ({column} vector_cosine_ops)
-                ;
-                """,
-            )
-    return
+#         if reindex:
+#             logging.info("Creating approximate index for cosine distance...")
+#             await conn.execute(
+#                 f"""
+#                 CREATE INDEX ON movelet
+#                 USING ivfflat ({column} vector_cosine_ops)
+#                 ;
+#                 """,
+#             )
+#     return
