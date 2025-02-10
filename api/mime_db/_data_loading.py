@@ -282,7 +282,7 @@ async def add_video_tracks(self, video_id: UUID | None, track_data) -> None:
 
 
 async def load_lart_predictions(
-    self, video_id: UUID, pkl_path: Path, clear=True, reindex=True
+    self, video_id: UUID, pkl_path: Path, clear=True, reindex=False
 ) -> None:
     if clear:
         logging.debug(f"Clearing actions for video {video_id}")
@@ -374,7 +374,7 @@ async def add_pose_faces(self, faces_data) -> None:
     logging.info(f"Loaded {len(faces_data)} matched faces!")
 
 
-async def add_video_movelets(self, movelets_data, reindex=True) -> None:
+async def add_video_movelets(self, movelets_data, reindex=False) -> None:
     data = [tuple(movelet) for movelet in movelets_data]
     await self._pool.executemany(
         """
@@ -411,7 +411,7 @@ async def add_video_movelets(self, movelets_data, reindex=True) -> None:
             )
 
 
-async def assign_poem_embeddings(self, poem_data, reindex=True) -> None:
+async def assign_poem_embeddings(self, poem_data, reindex=False) -> None:
     async with self._pool.acquire() as conn:
         await conn.execute(
             "ALTER TABLE pose ADD COLUMN IF NOT EXISTS poem_embedding vector(16) DEFAULT NULL;"
@@ -531,7 +531,7 @@ async def annotate_pose(
     col_type: str,
     video_id: UUID | None,
     annotation_func: Callable,
-    reindex=True,
+    reindex=False,
     pose_tbl="pose",
 ) -> None:
     async with self._pool.acquire() as conn:
