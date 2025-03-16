@@ -27,6 +27,7 @@ async def get_pose_data_by_frame(self, video_id: UUID) -> list:
                avg_score AS "avgScore",
                is_shot AS "isShot",
                movement,
+               movement3d,
                pose_interest,
                action_interest
            FROM video_frame_meta
@@ -46,6 +47,13 @@ async def get_pose_data_from_video(self, video_id: UUID) -> list:
 async def get_video_shot_boundaries(self, video_id: UUID) -> list:
     return await self._pool.fetch(
         "SELECT frame FROM frame WHERE video_id = $1 AND is_shot_boundary ORDER BY frame ASC;",
+        video_id,
+    )
+
+
+async def get_video_shots(self, video_id: UUID) -> list:
+    return await self._pool.fetch(
+        "SELECT frame, shot FROM frame WHERE video_id = $1 ORDER BY frame ASC;",
         video_id,
     )
 

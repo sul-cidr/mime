@@ -5,7 +5,7 @@
 
 	/**
 	 * @typedef {Object} SearchResultsProps
-	 * @property {MinimalPose} sourcePose Source pose to be searched
+	 * @property {MinimalPose|PoseRecord} sourcePose Source pose to be searched
 	 */
 
 	/** @type {SearchResultsProps} */
@@ -22,13 +22,27 @@
 
 	let showPose = $state(false);
 
+	/** @param {PoseRecord[]} poses */
+	const excludeSourcePose = (poses) => {
+		return poses.filter(
+			(/** @type {PoseRecord} */ pose) =>
+				!(
+					pose.video_id === /** @type {PoseRecord} */ (sourcePose).video_id &&
+					pose.frame === /** @type {PoseRecord} */ (sourcePose).frame &&
+					pose.pose_idx === /** @type {PoseRecord} */ (sourcePose).pose_idx
+				)
+		);
+	};
+
 	async function getPoseData() {
 		const queryParams = new URLSearchParams();
-		queryParams.append('pose', JSON.stringify(sourcePose));
+		queryParams.append('pose', JSON.stringify(sourcePose.norm));
 		queryParams.append('search_type', searchType);
 		if (selectedVideoIds.length) selectedVideoIds.forEach((v) => queryParams.append('videos', v));
 		queryParams.append('exclude_within_frames', Math.max(excludeWithinFrames, 1).toString());
-		queryParams.append('limit', limit.toString());
+		// if sourcePose has a frame property then it's from the db -- add one to the limit so we
+		//  can exclude the source pose from the results and still end up with the requested number
+		queryParams.append('limit', (limit + +sourcePose.hasOwnProperty('frame')).toString());
 
 		const query = `${$page.data.apiBase}/pose-search/?${queryParams.toString()}`;
 
@@ -57,8 +71,8 @@
 		<select bind:value={searchType}>
 			<option value="cosine">Cosine</option>
 			<option value="euclidean">Euclidean</option>
-			<!--
 			<option value="view_invariant">View Invariant</option>
+			<!--
 			<option value="3d">3D</option>
 			-->
 		</select>
@@ -78,7 +92,7 @@
 		{#await getPoseData()}
 			Searching...
 		{:then data}
-			{#each data as pose}
+			{#each excludeSourcePose(data) as pose}
 				<PoseCard sourcePose={pose} {showPose} />
 			{/each}
 		{:catch error}

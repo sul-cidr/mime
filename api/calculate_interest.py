@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-"""CLI to calculate the average distance of some attribute of a frame (e.g., 
+"""CLI to calculate the average distance of some attribute of a frame (e.g.,
 the poses in it) from the global avg of that attribute for a video. This value
 is then presented as a proxy for the "interest" of that attribute across all
 frames in the vide. The two options available (currently) are pose and action.

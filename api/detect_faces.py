@@ -17,7 +17,6 @@ from rich.logging import RichHandler
 
 from lib.deepface_utils import extract_face_regions
 
-
 FRONTEND_MODEL_NAME = "ArcFace"  # "DeepFace" (could be a cmd line param)
 
 

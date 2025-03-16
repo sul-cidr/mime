@@ -75,6 +75,7 @@
    */
   const seriesToFit = [
     "movement",
+    "movement3d",
     "avgScore",
     "pose_interest",
     "action_interest",
@@ -133,6 +134,7 @@
           trackCt: 0,
           isShot: 0,
           movement: 0,
+          movement3d: 0,
           pose_interest: 0,
           action_interest: 0,
           sim_pose: 0,
@@ -163,6 +165,7 @@
         trackCt: 0,
         isShot: 0,
         movement: 0,
+        movement3d: 0,
         pose_interest: 0,
         action_interest: 0,
         sim_pose: 0,
@@ -270,6 +273,7 @@
           "isShot",
           "avgScore",
           "movement",
+          "movement3d",
           "pose_interest",
           "action_interest",
         ]}

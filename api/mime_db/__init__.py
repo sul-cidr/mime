@@ -71,6 +71,7 @@ class MimeDb:
         get_video_by_name,
         get_video_id,
         get_video_shot_boundaries,
+        get_video_shots,
         search_by_pose,
     )
 
