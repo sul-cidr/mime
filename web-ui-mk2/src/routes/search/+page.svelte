@@ -6,6 +6,7 @@
 	import PoseCard from '$components/PoseCard.svelte';
 	import SearchResults from '$components/SearchResults.svelte';
 	import WebcamPoseInput from '$components/WebcamPoseInput.svelte';
+	import ExamplePoses from '$components/ExamplePoses.svelte';
 
 	let selected = $state(0);
 	let sourcePose = $state();
@@ -53,14 +54,18 @@
 				<PoseCard {sourcePose} showPose={false} class="source-pose-card" />
 			{/if}
 		{:else}
-			<Tabs bind:selected>
+			<Tabs bind:selected autoWidth>
+				<Tab label="Examples" />
 				<Tab label="Webcam" />
 				<Tab label="Pose Editor" />
 				<svelte:fragment slot="content">
-					<TabContent>
-						{#if selected === 0}<WebcamPoseInput {setSourcePoseFromCoco13Skeleton} />{/if}
+					<TabContent class="tab-panel"
+						><ExamplePoses {setSourcePoseFromCoco13Skeleton} /></TabContent
+					>
+					<TabContent class="tab-panel">
+						{#if selected === 1}<WebcamPoseInput {setSourcePoseFromCoco13Skeleton} />{/if}
 					</TabContent>
-					<TabContent>Pose Editor goes here...</TabContent>
+					<TabContent class="tab-panel">Pose Editor goes here...</TabContent>
 				</svelte:fragment>
 			</Tabs>
 		{/if}
@@ -71,6 +76,16 @@
 </section>
 
 <style>
+	#query-container {
+		display: flex;
+		flex-direction: column;
+	}
+
+	:global(.tab-panel) {
+		min-height: 0;
+		overflow-y: auto;
+	}
+
 	section {
 		display: flex;
 		height: 100%;
