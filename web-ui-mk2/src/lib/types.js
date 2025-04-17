@@ -23,7 +23,7 @@
 
 /**
  * @typedef {Object} MinimalPose
- * @property {Coco13SkeletonNoConfidence} keypoints
+ * @property {Coco13SkeletonWithConfidence} keypoints
  * @property {Array<number>} bbox [x0, y0, width, height]
  * @property {Coco13SkeletonNoConfidence} norm
  */

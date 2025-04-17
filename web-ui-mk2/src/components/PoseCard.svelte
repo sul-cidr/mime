@@ -9,7 +9,7 @@
 
 	/**
 	 * @typedef {Object} SearchResultsProps
-	 * @property {PoseRecord} sourcePose Pose to be presented
+	 * @property {PoseRecord|MinimalPose} sourcePose Pose to be presented
 	 * @property {boolean} showPose
 	 * @property {string} [class]
 	 */
@@ -29,38 +29,42 @@
 
 <div class:pose-card={true} {...props}>
 	<LayerCake>
-		<Overlay>
-			{#snippet bottomLeft()}
-				Frame #{sourcePose.frame}
-				<br />
-				Pose #{sourcePose.pose_idx + 1}
-			{/snippet}
-			{#snippet topRight()}
-				<button onclick={() => showFrameModal()}><ImageReference /></button>
-			{/snippet}
-		</Overlay>
-		<Html zIndex={0}>
-			{@const { video_id, frame, pose_idx, bbox } = sourcePose}
-			{@const dims = bbox.join(',')}
-			<img
-				src="{$page.data.apiBase}/frame/excerpt/{video_id}/{frame}/{dims}/"
-				alt="Frame {frame}, Pose: {pose_idx + 1}"
-				onload={({ target }) => {
-					/** @type {HTMLImageElement} */ (target).style.opacity = '1';
-					/** @type {HTMLImageElement} */ (target).style.transform = 'scale(1)';
-				}}
-			/>
-		</Html>
+		{#if sourcePose.frame !== undefined && sourcePose.pose_idx !== undefined}
+			<Overlay>
+				{#snippet bottomLeft()}
+					Frame #{sourcePose.frame}
+					<br />
+					Pose #{sourcePose.pose_idx + 1}
+				{/snippet}
+				{#snippet topRight()}
+					<button onclick={() => showFrameModal()}><ImageReference /></button>
+				{/snippet}
+			</Overlay>
+			<Html zIndex={0}>
+				{@const { video_id, frame, pose_idx, bbox } = sourcePose}
+				{@const dims = bbox.join(',')}
+				<img
+					src="{$page.data.apiBase}/frame/excerpt/{video_id}/{frame}/{dims}/"
+					alt="Frame {frame}, Pose: {pose_idx + 1}"
+					onload={({ target }) => {
+						/** @type {HTMLImageElement} */ (target).style.opacity = '1';
+						/** @type {HTMLImageElement} */ (target).style.transform = 'scale(1)';
+					}}
+				/>
+			</Html>
+		{/if}
 		{#if showPose}
 			<Canvas zIndex={1}>
 				<Pose poseData={sourcePose.keypoints} bbox={sourcePose.bbox} />
 			</Canvas>
 		{/if}
 	</LayerCake>
-	<aside>
-		<span>{sourcePose.video_name.split('.').slice(0, -1).join('.')}</span>
-		<!-- <span>Time: {formatSeconds(sourcePose.frame / sourcePose.video.fps)}</span> -->
-	</aside>
+	{#if sourcePose.video_name}
+		<aside>
+			<span>{sourcePose.video_name.split('.').slice(0, -1).join('.')}</span>
+			<!-- <span>Time: {formatSeconds(sourcePose.frame / sourcePose.video.fps)}</span> -->
+		</aside>
+	{/if}
 </div>
 
 <FrameModal bind:this={frameModal} />
