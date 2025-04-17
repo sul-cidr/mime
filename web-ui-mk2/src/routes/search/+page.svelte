@@ -9,7 +9,7 @@
 
 	let selected = $state(0);
 	let sourcePose = $state();
-	let sourcePoseFromUrl = $state(false);
+	let sourcePoseFromUrl = $state(true);
 
 	/** @param {Coco13SkeletonNoConfidence} skeleton */
 	const setSourcePoseFromCoco13Skeleton = (skeleton) => {
@@ -39,6 +39,8 @@
 				}
 				setPoseFromURL(pose);
 			});
+		} else {
+			sourcePoseFromUrl = false;
 		}
 	});
 </script>
@@ -47,7 +49,9 @@
 	<div id="query-container">
 		<header>Source Pose</header>
 		{#if sourcePoseFromUrl}
-			<PoseCard {sourcePose} showPose={false} class="source-pose-card" />
+			{#if sourcePose}
+				<PoseCard {sourcePose} showPose={false} class="source-pose-card" />
+			{/if}
 		{:else}
 			<Tabs bind:selected>
 				<Tab label="Webcam" />
