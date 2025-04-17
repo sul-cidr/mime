@@ -50,8 +50,6 @@
 	};
 
 	const init = async () => {
-		delay = getLocalStorage('webcam-delay', 0);
-
 		const vision = await FilesetResolver.forVisionTasks('src/lib/wasm');
 		poseLandmarker = await PoseLandmarker.createFromOptions(vision, {
 			baseOptions: {
@@ -132,6 +130,7 @@
 		);
 	};
 
+	$effect(() => (delay = getLocalStorage('webcam-delay', 0)));
 	$effect(() => setLocalStorage('webcam-delay', delay));
 </script>
 
