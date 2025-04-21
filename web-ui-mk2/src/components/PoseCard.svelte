@@ -29,7 +29,7 @@
 
 <div class:pose-card={true} {...props}>
 	<LayerCake>
-		{#if sourcePose.frame !== undefined && sourcePose.pose_idx !== undefined}
+		{#if 'frame' in sourcePose && 'pose_idx' in sourcePose}
 			<Overlay>
 				{#snippet bottomLeft()}
 					Frame #{sourcePose.frame}
@@ -59,7 +59,7 @@
 			</Canvas>
 		{/if}
 	</LayerCake>
-	{#if sourcePose.video_name}
+	{#if 'video_name' in sourcePose}
 		<aside>
 			<span>{sourcePose.video_name.split('.').slice(0, -1).join('.')}</span>
 			<!-- <span>Time: {formatSeconds(sourcePose.frame / sourcePose.video.fps)}</span> -->
