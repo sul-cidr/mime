@@ -36,6 +36,7 @@ services:
 
     environment:
       PUBLIC_API_BASE: /api
+      COREPACK_ENABLE_AUTO_PIN: 0
 
   web-ui-mk2:
     container_name: mime-web-ui-mk2
@@ -47,6 +48,7 @@ services:
 
     environment:
       PUBLIC_API_BASE: /api
+      COREPACK_ENABLE_AUTO_PIN: 0
 
   db:
     container_name: mime-db
