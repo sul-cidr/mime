@@ -92,6 +92,28 @@ async def initialize_db(conn, drop=False) -> None:
 
     await conn.execute(
         """
+        CREATE TABLE IF NOT EXISTS hand (
+            video_id uuid NOT NULL REFERENCES video(id) ON DELETE CASCADE,
+            frame INTEGER NOT NULL,
+            pose_idx INTEGER DEFAULT NULL,
+            hand_personid INTEGER,
+            bbox FLOAT[4] NOT NULL,
+            is_right BOOLEAN DEFAULT TRUE,
+            confidence FLOAT NOT NULL DEFAULT 1.0,
+            camera FLOAT[3] NOT NULL,
+            camera_transform FLOAT[3] NOT NULL,
+            keypoints2d vector(42) NOT NULL,
+            keypoints3d vector(63) NOT NULL,
+            global_orient FLOAT[9] NOT NULL,
+            track_id INTEGER DEFAULT NULL,
+            cluster_id INTEGER DEFAULT NULL
+        )
+        ;
+        """
+    )
+
+    await conn.execute(
+        """
         CREATE TABLE IF NOT EXISTS movelet (
             video_id uuid NOT NULL REFERENCES video(id) ON DELETE CASCADE,
             track_id INTEGER NOT NULL,

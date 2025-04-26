@@ -112,6 +112,10 @@ default:
 @match-labeled-faces path:
   docker compose exec -T api sh -c "LOG_LEVEL=$LOG_LEVEL /app/match_labeled_faces.py --video-name \"\$VIDEO_SRC_FOLDER/$1\""
 
+# Load detected hands data; input file is in $VIDEO_SRC_FOLDER with extension .hands.WiLoR.jsonl
+@match-hands video_path: # && refresh-db-views
+  docker compose exec -T api sh -c "LOG_LEVEL=$LOG_LEVEL /app/match_hands_to_poses.py --video-name \"\$VIDEO_SRC_FOLDER/$1\""
+
 # Provide path to video file relative to $VIDEO_SRC_FOLDER
 @cluster-poses path n_clusters: && refresh-db-views
   docker compose exec -T api sh -c "LOG_LEVEL=$LOG_LEVEL /app/cluster_video_poses.py --video-name \"\$VIDEO_SRC_FOLDER/$1\" --n_clusters $2"

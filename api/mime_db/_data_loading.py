@@ -164,7 +164,7 @@ async def load_4dh_predictions(self, video_id: UUID, pkl_path: Path, clear=True)
                 [[coord[0], coord[1], 1.0] for coord in joints_2d]
             ).flatten()
 
-            # De-rotate/ormalize 3D keypoints by multiplying them by the
+            # De-rotate/normalize 3D keypoints by multiplying them by the
             # "global orientation" rotation matrix
             global3d_phalp = np.matmul(
                 frame["3d_joints"][pose_idx], frame["smpl"][pose_idx]["global_orient"]
@@ -350,6 +350,22 @@ async def add_video_faces(self, video_id: UUID | None, faces_data) -> None:
     logging.info(f"Loaded {len(faces_data)} faces!")
 
 
+async def add_video_hands(self, video_id: UUID | None, hands_data) -> None:
+    data = [(video_id,) + tuple(hand) for hand in hands_data]
+
+    await self._pool.executemany(
+        """
+        INSERT INTO hand (
+            video_id, frame, hand_personid, bbox, is_right, confidence, camera, camera_transform, keypoints2d, keypoints3d, global_orient)
+            VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+        ;
+        """,
+        data,
+    )
+
+    logging.info(f"Loaded {len(hands_data)} hands!")
+
+
 async def add_pose_faces(self, faces_data) -> None:
     data = [tuple(face) for face in faces_data]
 
@@ -372,6 +388,30 @@ async def add_pose_faces(self, faces_data) -> None:
         )
 
     logging.info(f"Loaded {len(faces_data)} matched faces!")
+
+
+async def add_pose_hands(self, hands_data) -> None:
+    data = [tuple(hand) for hand in hands_data]
+
+    async with self._pool.acquire() as conn:
+        await conn.execute(
+            """
+            ALTER TABLE hand ADD COLUMN IF NOT EXISTS track_id INTEGER DEFAULT NULL
+            ;
+            """
+        )
+
+        await conn.executemany(
+            """
+            INSERT INTO hand (
+                video_id, frame, pose_idx, hand_personid, bbox, is_right, confidence, camera, camera_transform, keypoints2d, keypoints3d, global_orient, track_id)
+                VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+            ;
+            """,
+            data,
+        )
+
+    logging.info(f"Loaded {len(hands_data)} matched hands!")
 
 
 async def add_video_movelets(self, movelets_data, reindex=False) -> None:
