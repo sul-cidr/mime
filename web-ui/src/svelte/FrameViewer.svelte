@@ -71,9 +71,11 @@
               if (hr.is_right) {
                 poseData[pi]!.rh_bbox = hr.bbox;
                 poseData[pi]!.rh_keypoints_2d = hr.keypoints2d;
+                poseData[pi]!.rh_keypoints_3d = hr.keypoints3d;
               } else {
                 poseData[pi]!.lh_bbox = hr.bbox;
                 poseData[pi]!.lh_keypoints_2d = hr.keypoints2d;
+                poseData[pi]!.lh_keypoints_3d = hr.keypoints3d;
               }
             }
           });

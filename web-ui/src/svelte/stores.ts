@@ -12,6 +12,7 @@ export const similarPoseFrames: Writable<{ [frameno: number]: number }> =
 export const currentMovelet: Writable<MoveletRecord | null> = writable();
 export const currentMoveletPose: Writable<PoseRecord | null> = writable();
 export const currentActionPose: Writable<PoseRecord | null> = writable();
+export const currentHandPose: Writable<PoseRecord | null> = writable();
 export const similarMoveletFrames: Writable<{ [frameno: number]: number }> =
   writable({});
 export const similarActionFrames: Writable<{ [frameno: number]: number }> =

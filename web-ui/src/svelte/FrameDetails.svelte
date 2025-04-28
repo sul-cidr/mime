@@ -5,6 +5,7 @@
     currentFrame,
     currentPose,
     currentActionPose,
+    currentHandPose,
     searchAllVideos,
     searchThresholds,
   } from "@svelte/stores";
@@ -28,6 +29,7 @@
       $searchThresholds[item.name] = parseFloat(item.value);
     });
   };
+
 </script>
 
 <div class="card variant-ghost-secondary w-full">
@@ -184,13 +186,34 @@
             | Track {pose.track_id}
           {/if}
           <div class="flex align-stretch gap-2">
+            <span class="font-bold self-center">Find similar:</span>
+            <button
+              class="button px-2 variant-filled"
+              disabled={pose.lh_keypoints_2d === undefined}
+              on:click={() => {
+                pose.search_is_right = false;
+                $currentHandPose = pose;
+              }}
+            >
+              hands <span style="color:red">(left)</span>
+            </button>
+            <button
+              class="button px-2 variant-filled"
+              disabled={pose.rh_keypoints_2d === undefined}
+              on:click={() => {
+                pose.search_is_right = true;
+                $currentHandPose = pose;
+              }}
+            >
+              hands <span style="color:green">(right)</span>
+            </button>
             <button
               class="button px-2 variant-filled"
               on:click={() => {
                 $currentPose = pose;
               }}
             >
-              similar poses
+              poses
             </button>
             {#if pose.track_id !== null}
               <button
@@ -199,7 +222,7 @@
                   $currentActionPose = pose;
                 }}
               >
-                similar actions
+                actions
               </button>
             {/if}
             <button

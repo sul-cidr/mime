@@ -56,8 +56,10 @@ type PoseRecord = {
   face_landmarks: FaceLandmarks | undefined; // if match is found
   rh_bbox: FixedLengthArray<number, 4> | undefined; // copied from HandRecord
   rh_keypoints_2d: HandJoints2D | undefined; // if match is found
+  rh_keypoints_3d: HandJoints3D | undefined; // if match is found
   lh_bbox: FixedLengthArray<number, 4> | undefined; // copied from HandRecord
   lh_keypoints_2d: HandJoints2D | undefined; // if match is found
+  lh_keypoints_3d: HandJoints3D | undefined; // if match is found
   keypoints4dh: SmplSkeletonWithConfidence | undefined;
   norm4dh: SmplSkeletonNoConfidence | undefined;
   ava_action: FixedLengthArray<number, 60> | undefined;
@@ -69,6 +71,7 @@ type PoseRecord = {
   pose_interest: number | 0;
   action_interest: number | 0;
   from_webcam: boolean | false;
+  search_is_right: boolean | undefined;
 };
 
 type ActionRecord = {
