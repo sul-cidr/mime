@@ -176,12 +176,12 @@ async def initialize_db(conn, drop=False) -> None:
     await conn.execute(
         """
         CREATE MATERIALIZED VIEW if not exists video_frame_meta as
-        SELECT  pose_faces.video_id,
-                pose_faces.frame,
-                pose_faces.track_ct,
-                pose_faces.face_ct,
-                pose_faces.hand_ct,
-                pose_faces.avg_score,
+        SELECT  pose_details.video_id,
+                pose_details.frame,
+                pose_details.track_ct,
+                pose_details.face_ct,
+                pose_details.hand_ct,
+                pose_details.avg_score,
                 CAST(frame.is_shot_boundary AS INT) AS is_shot,
                 frame.pose_interest,
                 frame.action_interest,
@@ -213,11 +213,11 @@ async def initialize_db(conn, drop=False) -> None:
                 pose.pose_idx = hand.pose_idx
             GROUP BY pose.video_id, pose.frame
             ORDER BY pose.frame
-        ) AS pose_faces
+        ) AS pose_details
         LEFT JOIN frame ON
-            pose_faces.video_id = frame.video_id AND
-            pose_faces.frame = frame.frame
-        ORDER BY pose_faces.frame
+            pose_details.video_id = frame.video_id AND
+            pose_details.frame = frame.frame
+        ORDER BY pose_details.frame
         WITH DATA;
 
         CREATE INDEX ON video_frame_meta (video_id);

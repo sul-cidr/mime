@@ -2,6 +2,10 @@
 
 """CLI to load hand detection data from a JSON lines file for a video in the db."""
 
+"""NOTE: This script has never been tested and is only provided as a skeleton
+in case the recommended path of using api/match_hands_to_poses.py provdes
+undesirable for some reason."""
+
 import argparse
 import asyncio
 import logging

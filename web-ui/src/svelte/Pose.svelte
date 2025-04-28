@@ -131,32 +131,22 @@
           $ctx.globalAlpha = 0.8;
           $ctx.fillStyle = SMPL_COLOR!;
           $ctx.fill();
+          // Just draw points for the SMPL+ vertices, not connections
           //$ctx.lineWidth = dotRadius;
           //$ctx.strokeStyle = SMPL_COLOR!;
           //$ctx.stroke();
         });
       }
 
-      // Two hands are generally better than one, but might want to DRY this up...
-      if (leftHandData) {
-        const dotRadius = scaleFactor > 0.8 ? 2 : 4;
-        // Draw a line on the canvas for each skeleton segment.
-        // If the confidence value for a given armature point is 0, skip related segments.
+      const drawHand = (handPoints: Array<number[]>, isRight: boolean) => {
         HAND_21_SKELETON.forEach(([from, to], i) => {
           let fromX, fromY, toX, toY;
-          // if (poseData.length === total_coco_coords * 3) {
-          //   let fromConfidence, toConfidence;
-          //   [fromX, fromY, fromConfidence] = segments[from! - 1]!;
-          //   [toX, toY, toConfidence] = segments[to! - 1]!;
-          //   if (fromConfidence == 0 || toConfidence == 0) return;
-          // } else {
-            [fromX, fromY] = leftHandPoints[from! - 1]!;
-            [toX, toY] = leftHandPoints[to! - 1]!;
-          //  if ([fromX, fromY, toX, toY].some((x) => x === -1)) return;
-          //}
+          [fromX, fromY] = handPoints[from! - 1]!;
+          [toX, toY] = handPoints[to! - 1]!;
 
           $ctx.lineWidth = scaleFactor > 0.8 ? 3 : 2;
-          $ctx.strokeStyle = "red"; // COCO_COLORS[i]!;
+          // port wine (left) is red, starboard is green
+          $ctx.strokeStyle = isRight ? "green" : "red ";
 
           $ctx.beginPath();
           $ctx.moveTo(
@@ -172,35 +162,10 @@
       }
 
       if (rightHandData) {
-        // Draw a line on the canvas for each skeleton segment.
-        // If the confidence value for a given armature point is 0, skip related segments.
-        HAND_21_SKELETON.forEach(([from, to], i) => {
-          let fromX, fromY, toX, toY;
-          // if (poseData.length === total_coco_coords * 3) {
-          //   let fromConfidence, toConfidence;
-          //   [fromX, fromY, fromConfidence] = segments[from! - 1]!;
-          //   [toX, toY, toConfidence] = segments[to! - 1]!;
-          //   if (fromConfidence == 0 || toConfidence == 0) return;
-          // } else {
-            [fromX, fromY] = rightHandPoints[from! - 1]!;
-            [toX, toY] = rightHandPoints[to! - 1]!;
-          //  if ([fromX, fromY, toX, toY].some((x) => x === -1)) return;
-          //}
-
-          $ctx.lineWidth = scaleFactor > 0.8 ? 3 : 2;
-          $ctx.strokeStyle = "green"; // COCO_COLORS[i]!;
-
-          $ctx.beginPath();
-          $ctx.moveTo(
-            fromX * normalizationFactor * scaleFactor,
-            fromY * normalizationFactor * scaleFactor,
-          );
-          $ctx.lineTo(
-            toX * normalizationFactor * scaleFactor,
-            toY * normalizationFactor * scaleFactor,
-          );
-          $ctx.stroke();
-        });
+        drawHand(rightHandPoints, true);
+      }
+      if (leftHandData) {
+        drawHand(leftHandPoints, false);
       }
 
       if (faceData) {
