@@ -67,7 +67,7 @@
   /* Series whose values are always normalized between 0 and 1 in the DB (e.g.,
    * movement and avg pose confidence score) can be scaled to between 0 and the
    * maximum of the integer-valued entries on the timeline (usually just pose
-   * count, face count or track count).
+   * count, face count, hand count or track count).
    * XXX BUT if the module hot-reloads, the scaling is run twice due to Svelte
    * weirdness, and the values are artificially inflated (though still clamped
    * to the max integer value from the DB). Hopefully this won't happen on the
@@ -131,6 +131,7 @@
           frame: i,
           avgScore: 0,
           faceCt: 0,
+          handCt: 0,
           trackCt: 0,
           isShot: 0,
           movement: 0,
@@ -162,6 +163,7 @@
         frame: i,
         avgScore: 0,
         faceCt: 0,
+        handCt: 0,
         trackCt: 0,
         isShot: 0,
         movement: 0,

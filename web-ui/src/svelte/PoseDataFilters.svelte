@@ -22,7 +22,7 @@
         ) {
           return p;
         }
-        return { frame: p.frame, avgScore: 0, trackCt: 0, faceCt: 0 };
+        return { frame: p.frame, avgScore: 0, trackCt: 0, faceCt: 0, handCt: 0 };
       });
     }
     if (filterByTrackCountActive) {
@@ -33,7 +33,7 @@
         ) {
           return p;
         }
-        return { frame: p.frame, avgScore: 0, trackCt: 0, faceCt: 0 };
+        return { frame: p.frame, avgScore: 0, trackCt: 0, faceCt: 0, handCt: 0 };
       });
     }
   };

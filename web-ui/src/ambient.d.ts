@@ -19,6 +19,8 @@ type CocoSkeletonNoConfidence =
   | Coco13SkeletonNoConfidence
   | Coco17SkeletonNoConfidence;
 type FaceLandmarks = FixedLengthArray<number, 10>;
+type HandJoints2D = FixedLengthArray<number, 42>;
+type HandJoints3D = FixedLengthArray<number, 63>;
 type FaceEmbedding = FixedLengthArray<number, 4096>;
 
 type VideoRecord = {
@@ -31,6 +33,7 @@ type VideoRecord = {
   pose_ct: number;
   poses_per_frame: number;
   face_ct: number;
+  hand_ct: number;
   track_ct: number;
   shot_ct: number;
 };
@@ -51,6 +54,10 @@ type PoseRecord = {
   norm: Coco13SkeletonNoConfidence;
   face_bbox: FixedLengthArray<number, 4> | undefined; // copied from FaceRecord
   face_landmarks: FaceLandmarks | undefined; // if match is found
+  rh_bbox: FixedLengthArray<number, 4> | undefined; // copied from HandRecord
+  rh_keypoints_2d: HandJoints2D | undefined; // if match is found
+  lh_bbox: FixedLengthArray<number, 4> | undefined; // copied from HandRecord
+  lh_keypoints_2d: HandJoints2D | undefined; // if match is found
   keypoints4dh: SmplSkeletonWithConfidence | undefined;
   norm4dh: SmplSkeletonNoConfidence | undefined;
   ava_action: FixedLengthArray<number, 60> | undefined;
@@ -80,6 +87,23 @@ type FaceRecord = {
   track_id: number;
   cluster_id: number;
   time: string | undefined;
+};
+
+type HandRecord = {
+  video_id: number;
+  frame: number;
+  pose_idx: number;
+  personid: number;
+  bbox: FixedLengthArray<number, 4>;
+  is_right: boolean;
+  confidence: number;
+  camera: FixedLengthArray<number, 3>;
+  camera_transform: FixedLengthArray<number, 3>;
+  keypoints2d: HandJoints2D;
+  keypoints3d: HandJoints3D;
+  global_orient: FixedLengthArray<number, 3>;
+  track_id: number | null;
+  cluster_id: number | null;
 };
 
 type FrameRecord = {

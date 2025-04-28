@@ -242,6 +242,13 @@ async def faces_by_frame(video_id: UUID, frame: int, request: Request):
         media_type="application/json",
     )
 
+@mime_api.get("/hands/{video_id}/{frame}/")
+async def hands_by_frame(video_id: UUID, frame: int, request: Request):
+    frame_data = await request.app.state.db.get_frame_hands(video_id, frame)
+    return Response(
+        content=json.dumps(frame_data, cls=MimeJSONEncoder),
+        media_type="application/json",
+    )
 
 # compares a known pose from the DB to others in the DB (c.f. "search_nearest_")
 @mime_api.get(

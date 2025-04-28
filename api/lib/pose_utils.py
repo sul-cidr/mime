@@ -83,11 +83,6 @@ phalp_to_reduced = [
     [44],
 ]
 
-phalp_to_blaze_33 = [
-
-    
-]
-
 phalp_to_coco_17 = [
     [0],
     [16],

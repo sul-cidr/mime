@@ -24,6 +24,7 @@ async def get_pose_data_by_frame(self, video_id: UUID) -> list:
         SELECT frame,
                track_ct AS "trackCt",
                face_ct AS "faceCt",
+               hand_ct AS "handCt",
                avg_score AS "avgScore",
                is_shot AS "isShot",
                movement,
@@ -110,6 +111,12 @@ async def get_frame_data(self, video_id: UUID, frame: int) -> list:
 async def get_frame_faces(self, video_id: UUID, frame: int) -> list:
     return await self._pool.fetch(
         "SELECT * FROM face WHERE video_id = $1 AND frame = $2;", video_id, frame
+    )
+
+
+async def get_frame_hands(self, video_id: UUID, frame: int) -> list:
+    return await self._pool.fetch(
+        "SELECT * FROM hand WHERE video_id = $1 AND frame = $2;", video_id, frame
     )
 
 

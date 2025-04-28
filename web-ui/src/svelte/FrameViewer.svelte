@@ -12,6 +12,7 @@
   let poseData: Array<PoseRecord>;
   let trackCt: number;
   let faceCt: number;
+  let handCt: number;
   let showFrame: boolean = true;
   let playInterval: number | undefined;
   let hoveredPoseIdx: number | undefined;
@@ -21,21 +22,23 @@
   let show3Dframe: boolean = false;
 
   const updatePoseData = (data: Array<PoseRecord>) => {
+    trackCt = 0;
     if (data) {
       poseData = data;
-      let trackCount = 0;
       if (data.length) {
         data.forEach((pr: PoseRecord) => {
-          if (pr.track_id !== null) trackCount += 1;
+          if (pr.track_id !== null) trackCt += 1;
           shot = pr.shot;
           pose_interest = pr.pose_interest;
           action_interest = pr.action_interest;
         });
       }
-      trackCt = trackCount;
     }
     getFaceData($currentVideo.id, $currentFrame!).then((data) =>
       integrateFaceData(data),
+    );
+    getHandsData($currentVideo.id, $currentFrame!).then((data) =>
+      integrateHandsData(data),
     );
   };
 
@@ -57,6 +60,28 @@
     }
   };
 
+  const integrateHandsData = (data: Array<HandRecord>) => {
+    handCt = 0;
+    if (data && poseData) {
+      if (data.length && poseData.length) {
+        data.forEach((hr: HandRecord) => {
+          poseData.forEach((pr: PoseRecord, pi: number) => {
+            if (hr.pose_idx == pr.pose_idx) {
+              handCt += 1;
+              if (hr.is_right) {
+                poseData[pi]!.rh_bbox = hr.bbox;
+                poseData[pi]!.rh_keypoints_2d = hr.keypoints2d;
+              } else {
+                poseData[pi]!.lh_bbox = hr.bbox;
+                poseData[pi]!.lh_keypoints_2d = hr.keypoints2d;
+              }
+            }
+          });
+        });
+      }
+    }
+  };
+
   async function getPoseData(videoId: string, frame: number) {
     if (!frame) {
       return null;
@@ -70,6 +95,14 @@
       return null;
     }
     const response = await fetch(`${API_BASE}/faces/${videoId}/${frame}/`);
+    return await response.json();
+  }
+
+  async function getHandsData(videoId: string, frame: number) {
+    if (!frame) {
+      return null;
+    }
+    const response = await fetch(`${API_BASE}/hands/${videoId}/${frame}/`);
     return await response.json();
   }
 
@@ -161,6 +194,7 @@
         bind:poses={poseData}
         {trackCt}
         {faceCt}
+        {handCt}
         bind:hoveredPoseIdx
         {shot}
         {pose_interest}

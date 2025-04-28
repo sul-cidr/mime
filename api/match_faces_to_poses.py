@@ -164,7 +164,7 @@ async def main() -> None:
     # Get video metadata
     video_name = video_name.name
     video_id = await db.get_video_id(video_name)
-
+    
     track_frame_records = await db.get_track_frames(video_id)
 
     track_frame_ids = {frame_record["frame"] for frame_record in track_frame_records}

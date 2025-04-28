@@ -14,6 +14,7 @@
   export let poses: Array<PoseRecord>;
   export let trackCt: number;
   export let faceCt: number;
+  export let handCt: number;
   export let hoveredPoseIdx: number | undefined;
   export let shot: number | 0;
   export let pose_interest: number | 0;
@@ -40,6 +41,8 @@
         <dd>{trackCt}</dd>
         <dt>#Detected Faces:</dt>
         <dd>{faceCt}</dd>
+        <dt>#Detected Hands:</dt>
+        <dd>{handCt}</dd>
         <dt>Time:</dt>
         <dd>{formatSeconds(($currentFrame || 0) / $currentVideo.fps)}</dd>
         <dt>Shot:</dt>

@@ -3,6 +3,7 @@
     COCO_13_SKELETON,
     COCO_17_SKELETON,
     COCO_COLORS,
+    HAND_21_SKELETON,
   } from "../lib/poseutils";
 
   const SMPL_COLOR = "white";
@@ -23,6 +24,8 @@
     | SmplSkeletonWithConfidence
     | SmplSkeletonNoConfidence = null;
   export let faceData: FaceLandmarks = null;
+  export let leftHandData: HandJoints2D = null;
+  export let rightHandData: HandJoints2D = null;
   export let scaleFactor = 1;
   export let normalizedPose = false;
   export let opacity = 1;
@@ -61,6 +64,9 @@
   $: smplPoints = segmentArray(pose4dhData, pose4dhData?.length / 45);
 
   $: facePoints = segmentArray(faceData, 2);
+
+  $: rightHandPoints = segmentArray(rightHandData, 2);
+  $: leftHandPoints  = segmentArray(leftHandData, 2);
 
   $: {
     if ($ctx) {
@@ -128,6 +134,72 @@
           //$ctx.lineWidth = dotRadius;
           //$ctx.strokeStyle = SMPL_COLOR!;
           //$ctx.stroke();
+        });
+      }
+
+      // Two hands are generally better than one, but might want to DRY this up...
+      if (leftHandData) {
+        const dotRadius = scaleFactor > 0.8 ? 2 : 4;
+        // Draw a line on the canvas for each skeleton segment.
+        // If the confidence value for a given armature point is 0, skip related segments.
+        HAND_21_SKELETON.forEach(([from, to], i) => {
+          let fromX, fromY, toX, toY;
+          // if (poseData.length === total_coco_coords * 3) {
+          //   let fromConfidence, toConfidence;
+          //   [fromX, fromY, fromConfidence] = segments[from! - 1]!;
+          //   [toX, toY, toConfidence] = segments[to! - 1]!;
+          //   if (fromConfidence == 0 || toConfidence == 0) return;
+          // } else {
+            [fromX, fromY] = leftHandPoints[from! - 1]!;
+            [toX, toY] = leftHandPoints[to! - 1]!;
+          //  if ([fromX, fromY, toX, toY].some((x) => x === -1)) return;
+          //}
+
+          $ctx.lineWidth = scaleFactor > 0.8 ? 3 : 2;
+          $ctx.strokeStyle = "red"; // COCO_COLORS[i]!;
+
+          $ctx.beginPath();
+          $ctx.moveTo(
+            fromX * normalizationFactor * scaleFactor,
+            fromY * normalizationFactor * scaleFactor,
+          );
+          $ctx.lineTo(
+            toX * normalizationFactor * scaleFactor,
+            toY * normalizationFactor * scaleFactor,
+          );
+          $ctx.stroke();
+        });
+      }
+
+      if (rightHandData) {
+        // Draw a line on the canvas for each skeleton segment.
+        // If the confidence value for a given armature point is 0, skip related segments.
+        HAND_21_SKELETON.forEach(([from, to], i) => {
+          let fromX, fromY, toX, toY;
+          // if (poseData.length === total_coco_coords * 3) {
+          //   let fromConfidence, toConfidence;
+          //   [fromX, fromY, fromConfidence] = segments[from! - 1]!;
+          //   [toX, toY, toConfidence] = segments[to! - 1]!;
+          //   if (fromConfidence == 0 || toConfidence == 0) return;
+          // } else {
+            [fromX, fromY] = rightHandPoints[from! - 1]!;
+            [toX, toY] = rightHandPoints[to! - 1]!;
+          //  if ([fromX, fromY, toX, toY].some((x) => x === -1)) return;
+          //}
+
+          $ctx.lineWidth = scaleFactor > 0.8 ? 3 : 2;
+          $ctx.strokeStyle = "green"; // COCO_COLORS[i]!;
+
+          $ctx.beginPath();
+          $ctx.moveTo(
+            fromX * normalizationFactor * scaleFactor,
+            fromY * normalizationFactor * scaleFactor,
+          );
+          $ctx.lineTo(
+            toX * normalizationFactor * scaleFactor,
+            toY * normalizationFactor * scaleFactor,
+          );
+          $ctx.stroke();
         });
       }
 

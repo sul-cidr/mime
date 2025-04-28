@@ -137,7 +137,7 @@ async def initialize_db(conn, drop=False) -> None:
     await conn.execute(
         """
         CREATE MATERIALIZED VIEW IF NOT EXISTS video_meta AS
-            SELECT video.*, pose_ct, track_ct, shot_ct, poses_per_frame, face_ct
+            SELECT video.*, pose_ct, track_ct, shot_ct, poses_per_frame, face_ct, hand_ct
             FROM video
             LEFT JOIN (
                 SELECT video.id, COUNT(*) AS face_ct
@@ -145,6 +145,12 @@ async def initialize_db(conn, drop=False) -> None:
                 INNER JOIN face ON video.id = face.video_id
                 GROUP BY video.id
             ) AS f ON video.id = f.id
+            LEFT JOIN (
+                SELECT video.id, COUNT(*) AS hand_ct
+                FROM video
+                INNER JOIN hand ON video.id = hand.video_id
+                GROUP BY video.id
+            ) AS h ON video.id = h.id
             LEFT JOIN (
                 SELECT video.id, COUNT(*) filter (where frame.is_shot_boundary) as shot_ct
                 FROM video
@@ -174,6 +180,7 @@ async def initialize_db(conn, drop=False) -> None:
                 pose_faces.frame,
                 pose_faces.track_ct,
                 pose_faces.face_ct,
+                pose_faces.hand_ct,
                 pose_faces.avg_score,
                 CAST(frame.is_shot_boundary AS INT) AS is_shot,
                 frame.pose_interest,
@@ -193,12 +200,17 @@ async def initialize_db(conn, drop=False) -> None:
                    pose.frame,
                    count(NULLIF(pose.track_id,0)) AS track_ct,
                    count(face.pose_idx) AS face_ct,
+                   count(hand.pose_idx) AS hand_ct,
                    ROUND(AVG(pose.score)::numeric, 2) AS avg_score
             FROM pose
             LEFT JOIN face ON
                 pose.video_id = face.video_id AND
                 pose.frame = face.frame AND
                 pose.pose_idx = face.pose_idx
+            LEFT JOIN hand ON
+                pose.video_id = hand.video_id AND
+                pose.frame = hand.frame AND
+                pose.pose_idx = hand.pose_idx
             GROUP BY pose.video_id, pose.frame
             ORDER BY pose.frame
         ) AS pose_faces
