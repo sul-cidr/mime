@@ -42,6 +42,8 @@
 						poseData={pose.keypoints}
 						pose4dhData={pose.keypoints4dh}
 						faceData={pose.face_landmarks}
+						leftHandData={pose.lh_keypoints_2d}
+						rightHandData={pose.rh_keypoints_2d}
 						{scaleFactor}
 					/>
 				</Canvas>

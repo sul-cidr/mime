@@ -9,6 +9,7 @@
 		{ key: 'pose_ct', value: 'Poses' },
 		{ key: 'poses_per_frame', value: 'Poses/Frame' },
 		{ key: 'face_ct', value: 'Faces' },
+		{ key: 'hand_ct', value: 'Hands' },
 		{ key: 'track_ct', value: 'Tracks' },
 		{ key: 'shot_ct', value: 'Shots' }
 	];
@@ -25,6 +26,7 @@
 					pose_ct: video.pose_ct.toLocaleString(),
 					poses_per_frame: video.poses_per_frame,
 					face_ct: video.face_ct.toLocaleString(),
+					hand_ct: video.hand_ct.toLocaleString(),
 					track_ct: video.track_ct.toLocaleString(),
 					shot_ct: video.shot_ct.toLocaleString()
 				}))

@@ -62,4 +62,5 @@
  * @property {number} shot_ct
  * @property {number} poses_per_frame
  * @property {number} face_ct
+ * @property {number} hand_ct
  */
