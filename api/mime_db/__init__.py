@@ -65,6 +65,7 @@ class MimeDb:
         get_nearest_actions,
         get_nearest_movelets,
         get_nearest_poses,
+        get_nearest_hands,
         get_pose_by_frame_and_track,
         get_pose_data_by_frame,
         get_pose_data_from_video,

@@ -4,10 +4,13 @@ export const currentVideo: Writable<VideoRecord> = writable();
 export const currentFrame: Writable<number | null> = writable();
 export const seriesNames: Writable<string[]> = writable([]);
 export const currentPose: Writable<PoseRecord | null> = writable();
+export const currentHand: Writable<HandRecord | null> = writable();
 
 export const webcamImage: Writable<string> = writable();
 
 export const similarPoseFrames: Writable<{ [frameno: number]: number }> =
+  writable({});
+export const similarHandFrames: Writable<{ [frameno: number]: number }> =
   writable({});
 export const currentMovelet: Writable<MoveletRecord | null> = writable();
 export const currentMoveletPose: Writable<PoseRecord | null> = writable();

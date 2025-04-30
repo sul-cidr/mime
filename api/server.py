@@ -332,6 +332,43 @@ async def search_nearest_poses(
     )
 
 
+# compares a known hand from the DB to others in the DB
+@mime_api.get(
+    "/hands/similar/{max_results}/{metric_and_max}/{video_param}/{frame}/{pose_idx}/{is_right}/{avoid_shot}/"
+)
+async def get_nearest_poses(
+    max_results: int,
+    metric_and_max: str,
+    video_param: UUID | str,
+    frame: int,
+    pose_idx: int,
+    is_right: bool,
+    avoid_shot: int,
+    request: Request,
+):
+    metric, max_distance = metric_and_max.split("|")
+
+    embedding = "hand.keypoints3d"
+    metric = "cosine"
+
+    frame_data = await request.app.state.db.get_nearest_hands(
+        video_param,
+        frame,
+        pose_idx,
+        is_right,
+        metric,
+        embedding,
+        float(max_distance),
+        avoid_shot,
+        max_results,
+    )
+
+    return Response(
+        content=json.dumps(frame_data, cls=MimeJSONEncoder),
+        media_type="application/json",
+    )
+
+
 @mime_api.get(
     "/actions/similar/{max_results}/{metric_and_max}/{video_param}/{frame}/{track_id}/{avoid_shot}/"
 )

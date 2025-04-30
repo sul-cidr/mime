@@ -20,6 +20,7 @@
     seriesNames,
     similarActionFrames,
     similarPoseFrames,
+    similarHandFrames,
   } from "@svelte/stores";
 
   export let timelineData: Array<FrameRecord>;

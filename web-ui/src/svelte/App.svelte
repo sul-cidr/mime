@@ -16,14 +16,17 @@
   import PosesTimeline from "./PosesTimeline.svelte";
   import SimilarActions from "@svelte/SimilarActions.svelte";
   import SimilarPoses from "@svelte/SimilarPoses.svelte";
+  import SimilarHands from "@svelte/SimilarHands.svelte";
   import Icon from "@svelte/Icon.svelte";
   import {
     currentVideo,
     currentFrame,
     currentPose,
     similarPoseFrames,
+    similarHandFrames,
     similarActionFrames,
     currentActionPose,
+    currentHandPose,
   } from "@svelte/stores";
   import { tooltip } from "@svelte/actions/tooltip";
 
@@ -192,6 +195,9 @@
             {/if}
             {#if $similarPoseFrames && $currentPose}
               <SimilarPoses {toggle3DPoseModal} />
+            {/if}
+            {#if $similarHandFrames && $currentHandPose}
+              <SimilarHands />
             {/if}
           {/if}
         {:else if tabSet === 2}

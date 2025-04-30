@@ -240,9 +240,11 @@
                 <li>
                   Time: {formatSeconds($currentPose.frame / $currentVideo.fps)}
                 </li>
-                <li>
-                  Face group: {$currentPose.face_cluster_id}
-                </li>
+                {#if $currentPose.face_cluster_id !== undefined}
+                  <li>
+                    Face group: {$currentPose.face_cluster_id}
+                  </li>
+                {/if}
               </ul>
               <span
                 ><strong
@@ -300,9 +302,11 @@
                       Time: {formatSeconds(pose.frame / $currentVideo.fps)}
                     </li>
                     <li>Distance: {pose.distance?.toFixed(5)}</li>
-                    <li>
-                      Face group: {pose.face_cluster_id}
-                    </li>
+                    {#if pose.face_cluster_id !== null}
+                      <li>
+                        Face group: {pose.face_cluster_id}
+                      </li>
+                    {/if}
                   </ul>
                   <span
                     ><strong

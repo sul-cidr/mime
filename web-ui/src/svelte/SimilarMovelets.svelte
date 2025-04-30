@@ -153,9 +153,11 @@
                   $currentMovelet.start_frame / $currentVideo.fps,
                 )}
               </li>
-              <li>
-                Face group: {$currentMoveletPose?.face_cluster_id}
-              </li>
+              {#if $currentMoveletPose.face_cluster_id !== undefined}
+                <li>
+                  Face group: {$currentMoveletPose?.face_cluster_id}
+                </li>
+              {/if}
             </ul>
             <span
               ><strong
@@ -192,9 +194,11 @@
                     )}
                   </li>
                   <li>Distance: {movelet.distance?.toFixed(4)}</li>
-                  <li>
-                    Face group: {movelet.face_cluster_id}
-                  </li>
+                  {#if movelet.face_cluster_id !== null}
+                    <li>
+                      Face group: {movelet.face_cluster_id}
+                    </li>
+                  {/if}
                 </ul>
                 <span
                   ><strong

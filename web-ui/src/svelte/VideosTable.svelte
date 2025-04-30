@@ -7,6 +7,7 @@
     videoTableData,
     currentVideo,
     similarPoseFrames,
+    similarHandFrames,
     similarMoveletFrames,
     currentFrame,
     currentPose,
@@ -96,6 +97,7 @@
     $currentMoveletPose = null;
     $currentActionPose = null;
     $similarPoseFrames = {};
+    $similarHandFrames = {};
     $similarMoveletFrames = {};
     $similarActionFrames = {};
   };

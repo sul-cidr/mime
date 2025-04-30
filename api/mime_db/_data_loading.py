@@ -350,7 +350,7 @@ async def add_video_faces(self, video_id: UUID | None, faces_data) -> None:
     logging.info(f"Loaded {len(faces_data)} faces!")
 
 
-async def add_video_hands(self, video_id: UUID | None, hands_data) -> None:
+async def add_video_hands(self, video_id: UUID | None, hands_data, reindex=False) -> None:
     data = [(video_id,) + tuple(hand) for hand in hands_data]
 
     await self._pool.executemany(
@@ -364,6 +364,16 @@ async def add_video_hands(self, video_id: UUID | None, hands_data) -> None:
     )
 
     logging.info(f"Loaded {len(hands_data)} hands!")
+
+    if reindex:
+        logging.info("Building hand search index")
+        await self._pool.execute(
+            """
+            CREATE INDEX ON hand
+            USING ivfflat (keypoints3d vector_cosine_ops)
+            ;
+            """,
+        )
 
 
 async def add_pose_faces(self, faces_data) -> None:
@@ -390,7 +400,7 @@ async def add_pose_faces(self, faces_data) -> None:
     logging.info(f"Loaded {len(faces_data)} matched faces!")
 
 
-async def add_pose_hands(self, hands_data) -> None:
+async def add_pose_hands(self, hands_data, reindex=False) -> None:
     data = [tuple(hand) for hand in hands_data]
 
     async with self._pool.acquire() as conn:
@@ -412,6 +422,16 @@ async def add_pose_hands(self, hands_data) -> None:
         )
 
     logging.info(f"Loaded {len(hands_data)} matched hands!")
+    
+    if reindex:
+        logging.info("Building action search index")
+        await self._pool.execute(
+            """
+            CREATE INDEX ON pose
+            USING ivfflat (ava_action vector_cosine_ops)
+            ;
+            """,
+        )
 
 
 async def add_video_movelets(self, movelets_data, reindex=False) -> None:
