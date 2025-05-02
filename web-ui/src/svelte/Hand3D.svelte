@@ -2,12 +2,12 @@
   import * as THREE from "three";
   import { T } from "@threlte/core";
   import { Gizmo, OrbitControls } from "@threlte/extras";
-  import { COCO_13_SKELETON, COCO_COLORS } from "../lib/poseutils";
+  import { HAND_21_SKELETON } from "../lib/poseutils";
 
-  export let pose: PoseRecord;
+  export let handPose: PoseRecord;
 
-  let posePoints = [];
-  let poseLines = [];
+  let handPoints = [];
+  let handLines = [];
 
   let autoRotate: boolean = false;
   let enableDamping: boolean = true;
@@ -18,13 +18,13 @@
   let maxPolarAngle: number = Math.PI;
   let enableZoom: boolean = true;
 
-  const updatePose = (posePoints) => {
+  const updateHand = (handPoints) => {
     // Draw lines connecting the armature points
-    poseLines = [];
-    poseLines = COCO_13_SKELETON.map(([from, to]) => {
+    handLines = [];
+    handLines = HAND_21_SKELETON.map(([from, to]) => {
       let fromX, fromY, fromZ, toX, toY, toZ;
-      [fromX, fromY, fromZ] = posePoints[from! - 1]!;
-      [toX, toY, toZ] = posePoints[to! - 1]!;
+      [fromX, fromY, fromZ] = handPoints[from! - 1]!;
+      [toX, toY, toZ] = handPoints[to! - 1]!;
 
       let geom = new THREE.BufferGeometry();
       const points = new Float32Array([fromX, fromY, fromZ, toX, toY, toZ]);
@@ -33,30 +33,28 @@
     });
   };
 
-  const updatePoseData = (pose: PoseRecord) => {
-    posePoints = [];
-    if (pose.global3d_coco13) {
-      for (let i = 0; i < pose.global3d_coco13.length; i += 3) {
-        posePoints.push(
-          pose.global3d_coco13
-            .slice(i, i + 3)
-            .map((point) => Math.round(point * 100)),
-        );
-      }
-    } else {
-      // Provides some degraded functionality if 3D pose data is not available
-      // (Pose appears in the 3D Pose pane, but is not available in 3D pose editor)
-      for (let i = 0; i < pose.norm.length; i += 2) {
-        posePoints.push([pose.norm[i] - 50, 50 - pose.norm[i + 1], 0]);
-      }
+  const updateHandData = (pose: PoseRecord) => {
+    let handCoords = [];
+    handPoints = [];
+    if (pose.search_is_right && pose.rh_keypoints_3d !== undefined) {
+      handCoords = pose.rh_keypoints_3d;
+    } else if (!pose.search_is_right && pose.lh_keypoints_3d !== undefined) {
+      handCoords = pose.lh_keypoints_3d;
     }
-    updatePose(posePoints);
+
+    for (let i = 0; i < handCoords.length; i += 3) {
+      handPoints.push(
+        handCoords.slice(i, i + 3).map((point) => Math.round(point * 1000)),
+      );
+    }
+
+    updateHand(handPoints);
   };
 
-  $: updatePoseData(pose);
+  $: updateHandData(handPose);
 </script>
 
-{#each posePoints as armaturePoint}
+{#each handPoints as armaturePoint}
   <T.Mesh
     position.x={armaturePoint[0]}
     position.y={armaturePoint[1]}
@@ -66,9 +64,9 @@
     <T.MeshPhongMaterial color={0x00ff00} />
   </T.Mesh>
 {/each}
-{#each poseLines as poseLine, i}
-  <T.Line geometry={poseLine}>
-    <T.LineBasicMaterial color={COCO_COLORS[i]} attach="material" />
+{#each handLines as handLine, i}
+  <T.Line geometry={handLine}>
+    <T.LineBasicMaterial color="black" attach="material" />
   </T.Line>
 {/each}
 <T.PerspectiveCamera
@@ -76,8 +74,8 @@
   aspect={1}
   fov={75}
   near={0.1}
-  far={300}
-  position={[0, 0, 150]}
+  far={500}
+  position={[0, 0, 250]}
   on:create={({ ref }) => {
     ref.lookAt(0, 0, 0);
   }}

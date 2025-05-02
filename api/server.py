@@ -336,7 +336,7 @@ async def search_nearest_poses(
 @mime_api.get(
     "/hands/similar/{max_results}/{metric_and_max}/{video_param}/{frame}/{pose_idx}/{is_right}/{avoid_shot}/"
 )
-async def get_nearest_poses(
+async def get_nearest_hands(
     max_results: int,
     metric_and_max: str,
     video_param: UUID | str,
@@ -351,7 +351,7 @@ async def get_nearest_poses(
     embedding = "hand.keypoints3d"
     metric = "cosine"
 
-    frame_data = await request.app.state.db.get_nearest_hands(
+    hand_data = await request.app.state.db.get_nearest_hands(
         video_param,
         frame,
         pose_idx,
@@ -364,7 +364,7 @@ async def get_nearest_poses(
     )
 
     return Response(
-        content=json.dumps(frame_data, cls=MimeJSONEncoder),
+        content=json.dumps(hand_data, cls=MimeJSONEncoder),
         media_type="application/json",
     )
 

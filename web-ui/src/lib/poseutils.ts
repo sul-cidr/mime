@@ -250,7 +250,19 @@ export const shiftNormalizeRescalePoseCoords = (
   return searchPose;
 };
 
-export const getNormDims = (keypoints: CocoSkeletonNoConfidence) => {
+const getXywh = (x_values: Array<number>, y_values: Array<number>) => {
+  let min_x = Math.min(...x_values);
+  let max_x = Math.max(...x_values);
+  let min_y = Math.min(...y_values);
+  let max_y = Math.max(...y_values);
+
+  let width = max_x - min_x;
+  let height = max_y - min_y;
+
+  return [min_x, min_y, width, height];
+}
+
+export const getNormDims = (keypoints: Array<number> = []) => {
   let x_values: Array<number> = [];
   let y_values: Array<number> = [];
   for (let i: number = 0; i < keypoints.length; i++) {
@@ -262,13 +274,8 @@ export const getNormDims = (keypoints: CocoSkeletonNoConfidence) => {
       }
     }
   }
-  let min_x = Math.min(...x_values);
-  let max_x = Math.max(...x_values);
-  let min_y = Math.min(...y_values);
-  let max_y = Math.max(...y_values);
 
-  let width = max_x - min_x;
-  let height = max_y - min_y;
+  let _, __, width, height = getXywh(x_values, y_values);
 
   return [width, height];
 };
@@ -283,14 +290,19 @@ export const getExtent = (keypoints: CocoSkeletonWithConfidence) => {
       y_values.push(keypoints[i]);
     }
   }
-
-  let min_x = Math.min(...x_values);
-  let max_x = Math.max(...x_values);
-  let min_y = Math.min(...y_values);
-  let max_y = Math.max(...y_values);
-
-  let width = max_x - min_x;
-  let height = max_y - min_y;
-
-  return [min_x, min_y, width, height];
+  return getXywh(x_values, y_values);
 };
+
+export const getExtentFlat = (keypoints: Array<number> = []) => {
+  let x_values: Array<number> = [];
+  let y_values: Array<number> = [];
+  for (let i: number = 0; i < keypoints.length; i++) {
+    if (i % 2 == 0) {
+      x_values.push(keypoints[i]);
+    } else {
+      y_values.push(keypoints[i]);
+    }
+  }
+  return getXywh(x_values, y_values);
+};
+
