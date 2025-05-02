@@ -223,12 +223,29 @@ async def get_nearest_poses(
 
     return await self._pool.fetch(
         f"""
-        WITH search_results AS(
-            SELECT pose.video_id, video.video_name, pose.frame, pose.pose_idx, pose.norm, pose.keypoints, {distance} AS distance, frame.shot AS shot, face.cluster_id AS face_cluster_id FROM pose, frame, face, video
-            WHERE {pose_subquery} AND video.id = pose.video_id AND frame.video_id = pose.video_id AND face.video_id = pose.video_id AND face.frame = pose.frame AND face.pose_idx = pose.pose_idx AND pose.frame = frame.frame AND NOT ((pose.frame = $1 AND pose.pose_idx = $2) OR frame.shot = $3) ORDER BY distance
-            LIMIT $4
+        WITH search_results AS (
+          SELECT pose.video_id,
+                 video.video_name,
+                 pose.frame,
+                 pose.pose_idx,
+                 pose.norm,
+                 pose.keypoints,
+                 {distance} AS distance,
+                 frame.shot AS shot,
+                 face.cluster_id AS face_cluster_id
+          FROM pose
+            INNER JOIN video ON video.id = pose.video_id
+            INNER JOIN frame ON frame.video_id = pose.video_id
+            AND frame.frame = pose.frame
+            LEFT JOIN face ON face.video_id = pose.video_id
+                          AND face.frame = pose.frame
+                          AND face.pose_idx = pose.pose_idx
+          WHERE {pose_subquery}
+            AND NOT ((pose.frame = $1 AND pose.pose_idx = $2) OR frame.shot = $3)
+          ORDER BY distance
+          LIMIT $4
         )
-        SELECT * from search_results where search_results.distance < {max_distance}
+        SELECT * FROM search_results WHERE search_results.distance < {max_distance}
         """,
         frame,
         pose_idx,
