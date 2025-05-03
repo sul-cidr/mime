@@ -37,6 +37,22 @@ export const COCO_13_SKELETON = [
   [1, 3],
 ];
 
+export const COCO_13_KEYPOINTS = [
+  "nose",  // 0
+  "left_shoulder",  // 1
+  "right_shoulder",  // 2
+  "left_elbow",  // 3
+  "right_elbow",  // 4
+  "left_wrist",  // 5
+  "right_wrist",  // 6
+  "left_hip",  // 7
+  "right_hip",  // 8
+  "left_knee",  // 9
+  "right_knee",  // 10
+  "left_ankle",  // 11
+  "right_ankle",  // 12
+]
+
 export const HAND_21_KEYPOINTS = [
   "ulnar_palm",
   "radial_palm",
@@ -262,7 +278,7 @@ const getXywh = (x_values: Array<number>, y_values: Array<number>) => {
   return [min_x, min_y, width, height];
 }
 
-export const getNormDims = (keypoints: Array<number> = []) => {
+export const getNormDims = (keypoints: CocoSkeletonNoConfidence) => {
   let x_values: Array<number> = [];
   let y_values: Array<number> = [];
   for (let i: number = 0; i < keypoints.length; i++) {
@@ -274,8 +290,13 @@ export const getNormDims = (keypoints: Array<number> = []) => {
       }
     }
   }
+  let min_x = Math.min(...x_values);
+  let max_x = Math.max(...x_values);
+  let min_y = Math.min(...y_values);
+  let max_y = Math.max(...y_values);
 
-  let _, __, width, height = getXywh(x_values, y_values);
+  let width = max_x - min_x;
+  let height = max_y - min_y;
 
   return [width, height];
 };
