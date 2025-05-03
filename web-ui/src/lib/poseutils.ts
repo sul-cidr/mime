@@ -327,3 +327,26 @@ export const getExtentFlat = (keypoints: Array<number> = []) => {
   return getXywh(x_values, y_values);
 };
 
+export const get3DPoseExtent = (
+  poses: Array<number>[] = [],
+  minsSoFar = [null, null, null],
+  maxsSoFar = [null, null, null],
+) => {
+  const poseMin = poses.reduce(
+    (poseMins, coords) => [
+      poseMins[0] === null ? coords[0] : Math.min(poseMins[0], coords[0]),
+      poseMins[1] === null ? coords[1] : Math.min(poseMins[1], coords[1]),
+      poseMins[2] === null ? coords[2] : Math.min(poseMins[2], coords[2]),
+    ],
+    minsSoFar,
+  );
+  const poseMax = poses.reduce(
+    (poseMaxs, coords) => [
+      poseMaxs[0] === null ? coords[0] : Math.max(poseMaxs[0], coords[0]),
+      poseMaxs[1] === null ? coords[1] : Math.max(poseMaxs[1], coords[1]),
+      poseMaxs[2] === null ? coords[2] : Math.max(poseMaxs[2], coords[2]),
+    ],
+    maxsSoFar,
+  );
+  return [poseMin, poseMax];
+};

@@ -2,12 +2,14 @@
   import * as THREE from "three";
   import { T } from "@threlte/core";
   import { Gizmo, OrbitControls } from "@threlte/extras";
-  import { HAND_21_SKELETON } from "../lib/poseutils";
+  import { HAND_21_SKELETON, get3DPoseExtent } from "../lib/poseutils";
 
   export let handPose: PoseRecord;
 
-  let handPoints = [];
+  let handPoints: number[][] = [];
   let handLines = [];
+
+  let sceneMidpoint = [0, 0, 0];
 
   let autoRotate: boolean = false;
   let enableDamping: boolean = true;
@@ -35,18 +37,59 @@
 
   const updateHandData = (pose: PoseRecord) => {
     let handCoords = [];
+    let zAdjust = 0;
     handPoints = [];
+
+    let minCoords = [null, null, null];
+    let maxCoords = [null, null, null];
+    sceneMidpoint = [0, 0, 0];
+
+    console.log("hand camera transform:", pose.hand_camera_transform);
+
     if (pose.search_is_right && pose.rh_keypoints_3d !== undefined) {
       handCoords = pose.rh_keypoints_3d;
     } else if (!pose.search_is_right && pose.lh_keypoints_3d !== undefined) {
       handCoords = pose.lh_keypoints_3d;
     }
 
+    let rawPoints: number[][] = [];
     for (let i = 0; i < handCoords.length; i += 3) {
-      handPoints.push(
-        handCoords.slice(i, i + 3).map((point) => Math.round(point * 1000)),
-      );
+      rawPoints.push([handCoords[i], handCoords[i + 1], handCoords[i + 2]]);
     }
+
+    // Project the 3D keypoints of the raw hand detection (which seems to have
+    // no particular orientation) into the scene so that they can be drawn
+    // with the same orientation as seen in the 2D image. Also scale up the
+    // distances between the points in every dimension and flip the Y and Z
+    // axes so that the hand appears correctly in the visualization.
+    let projPoints: number[][] = [];
+    rawPoints.forEach((point) => {
+      projPoints.push([
+        (point[0] + pose.hand_camera_transform[0]) * 100,
+        (point[1] + pose.hand_camera_transform[1]) * -100,
+        (point[2] + pose.hand_camera_transform[2]) * -100,
+      ]);
+    });
+
+    // Determine the midpoint of the hand in the projected 3D space
+    [minCoords, maxCoords] = get3DPoseExtent(projPoints, minCoords, maxCoords);
+
+    let anchorPoint = [
+      (minCoords[0] + maxCoords[0]) / 2,
+      (minCoords[1] + maxCoords[1]) / 2,
+      (minCoords[2] + maxCoords[2]) / 2,
+    ];
+
+    // Shift the projected points so that the hand midpoint is at [0,0,0]
+    projPoints.forEach((point) => {
+      handPoints.push([
+        point[0] - anchorPoint[0],
+        point[1] - anchorPoint[1],
+        point[2] - anchorPoint[2],
+      ]);
+    });
+
+    [minCoords, maxCoords] = get3DPoseExtent(handPoints, minCoords, maxCoords);
 
     updateHand(handPoints);
   };
@@ -60,8 +103,10 @@
     position.y={armaturePoint[1]}
     position.z={armaturePoint[2]}
   >
-    <T.BoxGeometry args={[10, 10, 10]} />
-    <T.MeshPhongMaterial color={0x00ff00} />
+    <T.BoxGeometry args={[1, 1, 1]} />
+    <T.MeshPhongMaterial
+      color={handPose.search_is_right ? 0x00ff00 : 0xff0000}
+    />
   </T.Mesh>
 {/each}
 {#each handLines as handLine, i}
@@ -75,9 +120,9 @@
   fov={75}
   near={0.1}
   far={500}
-  position={[0, 0, 250]}
+  position={[0, 0, 15]}
   on:create={({ ref }) => {
-    ref.lookAt(0, 0, 0);
+    ref.lookAt([0, 0, 0]);
   }}
 >
   <OrbitControls
@@ -92,5 +137,5 @@
   />
 </T.PerspectiveCamera>
 <Gizmo horizontalPlacement="left" size={56} paddingX={10} paddingY={10} />
-<T.DirectionalLight color={0xffffff} position={[0, 0, 2]} />
+<T.DirectionalLight color={0xffffff} position={[0, 0, 1]} />
 <T.AmbientLight intensity={0.3} />

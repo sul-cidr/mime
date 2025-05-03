@@ -45,7 +45,7 @@
       }
     } else {
       // Provides some degraded functionality if 3D pose data is not available
-      // (Pose appears in the 3D Pose pane, but is not available in 3D pose editor)
+      // (Pose appears as a flat 3D Pose, but is not available in 3D pose editor)
       for (let i = 0; i < pose.norm.length; i += 2) {
         posePoints.push([pose.norm[i] - 50, 50 - pose.norm[i + 1], 0]);
       }
@@ -94,5 +94,5 @@
   />
 </T.PerspectiveCamera>
 <Gizmo horizontalPlacement="left" size={56} paddingX={10} paddingY={10} />
-<T.DirectionalLight color={0xffffff} position={[0, 0, 2]} />
+<T.DirectionalLight color={0xffffff} position={[0, 0, 1]} />
 <T.AmbientLight intensity={0.3} />

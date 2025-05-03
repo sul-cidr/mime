@@ -9,6 +9,7 @@
     COCO_13_SKELETON,
     HAND_21_SKELETON,
     COCO_COLORS,
+    get3DPoseExtent,
   } from "../lib/poseutils";
 
   let poseData: PoseRecord[];
@@ -28,8 +29,6 @@
   let allHandLines: THREE.BufferGeometry[][] = [];
   let allHandExtents: number[][] = [];
   let handPointColors: number[] = [];
-
-  let zAdjust = 0;
 
   // Camera orbit controls settings
   let autoRotate: boolean = false;
@@ -59,32 +58,10 @@
     return await response.json();
   }
 
-  const get3DPoseExtent = (
-    pose: [],
-    minsSoFar = [null, null, null],
-    maxsSoFar = [null, null, null],
-  ) => {
-    const poseMin = pose.reduce(
-      (poseMins, coords) => [
-        poseMins[0] === null ? coords[0] : Math.min(poseMins[0], coords[0]),
-        poseMins[1] === null ? coords[1] : Math.min(poseMins[1], coords[1]),
-        poseMins[2] === null ? coords[2] : Math.min(poseMins[2], coords[2]),
-      ],
-      minsSoFar,
-    );
-    const poseMax = pose.reduce(
-      (poseMaxs, coords) => [
-        poseMaxs[0] === null ? coords[0] : Math.max(poseMaxs[0], coords[0]),
-        poseMaxs[1] === null ? coords[1] : Math.max(poseMaxs[1], coords[1]),
-        poseMaxs[2] === null ? coords[2] : Math.max(poseMaxs[2], coords[2]),
-      ],
-      maxsSoFar,
-    );
-    return [poseMin, poseMax];
-  };
-
   const updatePoseData = (data: Array<PoseRecord>) => {
     if (data && data.length) {
+      let zAdjust = 0;
+
       allPosePoints = [];
       allPoseExtents = [];
       minCoords = [null, null, null];
@@ -285,7 +262,7 @@
       $currentPose = poseData[pp];
     }}
     on:pointerover={() => {
-      posePointColors[pp] = 0xff0000;
+      posePointColors[pp] = 0xffff00;
     }}
     on:pointerout={() => {
       posePointColors[pp] = 0x00ff00;
@@ -395,8 +372,5 @@
   sectionThickness={2}
 />
 <Gizmo horizontalPlacement="left" size={56} paddingX={10} paddingY={10} />
-<T.DirectionalLight
-  color={0xffffff}
-  position={[sceneMidpoint[0], maxCoords[1], sceneMidpoint[2] + 50]}
-/>
+<T.DirectionalLight color={0xffffff} position={[0, 0, 1]} />
 <T.AmbientLight intensity={0.3} />

@@ -15,7 +15,6 @@
   import { API_BASE } from "@config";
   import {
     currentFrame,
-    currentHand,
     currentHandPose,
     currentVideo,
     similarHandFrames,
@@ -25,11 +24,10 @@
   } from "@svelte/stores";
 
   export let similarityMetric = "cosine";
-  //export let toggle3DHandModal;
+  //export let toggle3DHandModal; // May implement this eventually
 
   let avoidShotInResults: boolean = false;
   let poses: Array<PoseRecord>;
-  //let hands: Array<HandRecord>;
   let displayOption = "show_both";
 
   const simStep = 4;
@@ -42,7 +40,6 @@
   };
 
   const resetHands = () => {
-    $currentHand = null;
     $currentHandPose = null;
     $similarHandFrames = {};
   };
@@ -143,7 +140,6 @@
   }
 
   $: getHandData(
-    //$currentHand,
     $currentHandPose,
     similarityMetric,
     $searchAllVideos,
@@ -222,7 +218,7 @@
         <div
           class="card min-w-48 stretch-vert variant-ghost-tertiary drop-shadow-lg"
         >
-          <header class="p-2">3D Hand</header>
+          <header class="p-2">Query Hand (3D)</header>
           <div>
             <Canvas3D size={{ width: 200, height: 300 }}>
               <Hand3D handPose={$currentHandPose} />
@@ -234,7 +230,7 @@
                   ><button
                     class="btn-sm variant-filled"
                     type="button"
-                    on:click={toggle3DPoseModal}>Open in sketch editor</button
+                    on:click={toggle3DHandModal}>Open in sketch editor</button
                   ></strong
                 ></span
               >
@@ -258,17 +254,6 @@
               {#if displayOption == "show_background" || displayOption == "show_both"}
                 <Html zIndex={0}>
                   {#if !$currentHandPose.from_webcam}
-                    <!-- <img
-                        class="object-contain h-full w-full"
-                        src={`${API_BASE}/frame/resize/${$currentHandPose.video_id}/${
-                          $currentHandPose.frame
-                        }/${getExtent($currentHandPose.keypoints).join(
-                          ",",
-                        )}|${getNormDims($currentHandPose.norm).join(",")}/`}
-                        alt={`Frame ${$currentHandPose.frame}, Pose: ${
-                          $currentHandPose.pose_idx + 1
-                        }`}
-                      /> -->
                     <img
                       class="object-contain h-full w-full"
                       src={`${API_BASE}/frame/excerpt/${$currentHandPose.video_id}/${
@@ -282,7 +267,7 @@
                     <!-- <img
                         class="object-contain h-full w-full"
                         src={$webcamImage}
-                        alt="Pose excerpt from webcam"
+                        alt="Hand from webcam"
                       /> -->
                   {:else}
                     <div class="object-contain h-full w-full frame-display" />
@@ -291,7 +276,6 @@
               {/if}
               {#if displayOption == "show_hand" || displayOption == "show_both"}
                 <Canvas zIndex={1}>
-                  <!-- <Pose poseData={$currentHandPose.norm} normalizedPose={true} /> -->
                   <Pose
                     poseData={$currentHandPose.keypoints}
                     pose4dhData={$currentHandPose.keypoints4dh}
