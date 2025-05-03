@@ -72,7 +72,7 @@ type PoseRecord = {
   action_interest: number | 0;
   from_webcam: boolean | false;
   search_is_right: boolean | undefined;
-  hand_camera_transform: FixedLengthArray<number, 3>;
+  hand_global_orient: FixedLengthArray<number, 3>;
 };
 
 type ActionRecord = {

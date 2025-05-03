@@ -37,14 +37,11 @@
 
   const updateHandData = (pose: PoseRecord) => {
     let handCoords = [];
-    let zAdjust = 0;
     handPoints = [];
 
     let minCoords = [null, null, null];
     let maxCoords = [null, null, null];
     sceneMidpoint = [0, 0, 0];
-
-    console.log("hand camera transform:", pose.hand_camera_transform);
 
     if (pose.search_is_right && pose.rh_keypoints_3d !== undefined) {
       handCoords = pose.rh_keypoints_3d;
@@ -57,17 +54,18 @@
       rawPoints.push([handCoords[i], handCoords[i + 1], handCoords[i + 2]]);
     }
 
-    // Project the 3D keypoints of the raw hand detection (which seems to have
-    // no particular orientation) into the scene so that they can be drawn
-    // with the same orientation as seen in the 2D image. Also scale up the
-    // distances between the points in every dimension and flip the Y and Z
-    // axes so that the hand appears correctly in the visualization.
+    // Translate the 3D keypoints of the raw hand detection (which seems to have
+    // no particular orientation) into the scene using the "global orientation"
+    // vector, which flips them around so that (with a bit more manipulation)
+    // they will appear in the same orientation as seen in the 2D image.
+    // Also scale up the distances between the points in every dimension and
+    // flip the Y and Z axes so that the hand appears correctly in the viz.
     let projPoints: number[][] = [];
     rawPoints.forEach((point) => {
       projPoints.push([
-        (point[0] + pose.hand_camera_transform[0]) * 100,
-        (point[1] + pose.hand_camera_transform[1]) * -100,
-        (point[2] + pose.hand_camera_transform[2]) * -100,
+        (point[0] + pose.hand_global_orient[0]) * 100,
+        (point[1] + pose.hand_global_orient[1]) * -100,
+        (point[2] + pose.hand_global_orient[2]) * -100,
       ]);
     });
 
@@ -80,7 +78,8 @@
       (minCoords[2] + maxCoords[2]) / 2,
     ];
 
-    // Shift the projected points so that the hand midpoint is at [0,0,0]
+    // Recenter the projected points so that the hand midpoint is at [0,0,0]
+    // and thus pivots/rotates nicely around this point in the viz.
     projPoints.forEach((point) => {
       handPoints.push([
         point[0] - anchorPoint[0],

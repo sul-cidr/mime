@@ -68,7 +68,7 @@
           poseData.forEach((pr: PoseRecord, pi: number) => {
             if (hr.pose_idx == pr.pose_idx) {
               handCt += 1;
-              poseData[pi]!.hand_camera_transform = hr.camera_transform;
+              poseData[pi]!.hand_global_orient = hr.global_orient;
               if (hr.is_right) {
                 poseData[pi]!.rh_bbox = hr.bbox;
                 poseData[pi]!.rh_keypoints_2d = hr.keypoints2d;
