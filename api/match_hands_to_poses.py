@@ -5,15 +5,74 @@
 import argparse
 import asyncio
 import logging
+import math
 from pathlib import Path
+import tensorflow as tf
 
 import jsonlines
 import numpy as np
 from rich.logging import RichHandler
 
 from mime_db import MimeDb
+from lib.pose_utils import HAND_21_ANGLES
 
 BATCH_SIZE = 1000
+
+model_path = "lib/hands/keypoint_classifier.hdf5"
+
+
+def get_class_weights(keypoints_2d, model):
+
+    wrist_coords = [keypoints_2d[0], keypoints_2d[1]]
+    shifted_coords = []
+    for i in range(0, len(keypoints_2d), 2):
+        shifted_coords.extend([keypoints_2d[i] - wrist_coords[0], keypoints_2d[i+1] - wrist_coords[1]])
+
+    abs_val = max([abs(val) for val in shifted_coords])
+    normed_coords = [val / abs_val for val in shifted_coords]
+
+    # Coords need to be shifted relative to point 0 (wrist) and normalized
+    predict_result = model.predict(np.array([normed_coords]), verbose = 0)
+
+    return np.squeeze(predict_result)
+
+
+# Inspired by https://www.geeksforgeeks.org/angle-between-a-pair-of-lines-in-3d/
+def calculate_angle_in_3d(arm1, vertex, arm2):
+    
+    x1, y1, z1 = arm1
+    x2, y2, z2 = vertex
+    x3, y3, z3 = arm2
+                        
+    # Find direction ratio of line AB
+    ABx = x1 - x2
+    ABy = y1 - y2
+    ABz = z1 - z2
+ 
+    # Find direction ratio of line BC
+    BCx = x3 - x2
+    BCy = y3 - y2
+    BCz = z3 - z2
+ 
+    # Find magnitudes of lines AB and BC
+    magnitude_AB = ABx * ABx + ABy * ABy + ABz * ABz
+    magnitude_BC = BCx * BCx + BCy * BCy + BCz * BCz
+
+    # Find the cosine of the angle formed by lines AB and BC
+    magnitude = magnitude_AB * magnitude_BC
+
+    if magnitude == 0:
+        return 0
+
+    # Find the dot product of lines AB & BC
+    dot_product = ABx * BCx + ABy * BCy + ABz * BCz
+
+    angle = dot_product / math.sqrt(magnitude_AB * magnitude_BC)
+ 
+    # Get the angle in radians
+    angle = (angle * 180) / 3.14
+ 
+    return round(abs(angle), 4)
 
 
 def triplets_to_pairs(kpts):
@@ -54,7 +113,7 @@ def get_extend_2d_xyxy(points, extend=.2):
 
 
 def get_hand_center(hand, frameno=0):
-    # Find the center point of a hand's bounding box
+    # Find the center point of a hand's 2D bounding box
     xmin, ymin, xmax, ymax = get_2d_xyxy(hand)
 
     return np.array([(xmax + xmin)/2, (ymax + ymin)/2])
@@ -68,13 +127,14 @@ def do_xyxys_overlap(xyxy1, xyxy2):
                 or xyxy1[1] > xyxy2[3])
 
 
-async def match_hands_in_frames(video_id, hands_to_match, min_frameno, max_frameno, db):
+async def match_hands_in_frames(video_id, hands_to_match, min_frameno, max_frameno, db, model):
     """Hands are matched to poses based on the distance of each detected
     hand's centroid from each pose's wrist, considering only right wrists
     if the hand is estimated to be a right hand, etc. Matches are calculated
-    based upon 2D image coordinates only. When/if we understand better how
-    both the hands and the poses are being projected into 3D by their respective
-    models, we may try to do the matching in 3D eventually."""
+    based upon 2D image coordinates only, which is not ideal when hands overlap,
+    but matching in 3D seems unlikely to work better given that the body and
+    hands keypoints are derived from different models whose depth estimation
+    results may vary widely."""
 
     logging.info(
         f"Running match_hands_in_frames with start frame {min_frameno} end {max_frameno}"
@@ -104,7 +164,8 @@ async def match_hands_in_frames(video_id, hands_to_match, min_frameno, max_frame
         pose_to_hands = {}
 
         for h, hand in enumerate(frame_hands):
-            hand_center = get_hand_center(hand["kpts_2d"], frameno)
+            #hand_center = get_hand_center(hand["kpts_2d"], frameno)
+            hand_base = hand["kpts_2d"][0]
 
             closest_dist = -1
             best_pose_match = -1
@@ -122,7 +183,8 @@ async def match_hands_in_frames(video_id, hands_to_match, min_frameno, max_frame
                 else:
                     target_wrist = triplets_to_pairs(pose["keypoints"])[5]
 
-                wrist_hand_dist = np.linalg.norm(target_wrist - hand_center)
+                #wrist_hand_dist = np.linalg.norm(target_wrist - hand_center)
+                wrist_hand_dist = np.linalg.norm(np.array(target_wrist) - np.array(hand_base))
 
                 if closest_dist >= 0 and closest_dist < wrist_hand_dist:
                     continue
@@ -130,6 +192,7 @@ async def match_hands_in_frames(video_id, hands_to_match, min_frameno, max_frame
                     closest_dist = wrist_hand_dist
                     best_pose_match = p
 
+            # If the hand's bbox doesn't overlap with the pose at all, ignore it
             expanded_pose_xyxy = extend_2d_xyxy(xywh_to_xyxy(frame_poses[best_pose_match]["bbox"]))
             expanded_hand_xyxy = get_extend_2d_xyxy(hand["kpts_2d"])
 
@@ -139,7 +202,7 @@ async def match_hands_in_frames(video_id, hands_to_match, min_frameno, max_frame
 
             # Sometimes there are multiple detections of the same hand, so
             # if a pose has already been assigned a right or left hand and a
-            # new match is found for it, ignore the match.
+            # new match is found for it, ignore the new match.
             if best_pose_match in pose_to_hands:
                 if is_right in pose_to_hands[best_pose_match]:
                     duplicate_hands += 1
@@ -170,6 +233,12 @@ async def match_hands_in_frames(video_id, hands_to_match, min_frameno, max_frame
                 coord for triplet in hand["global_orient"] for coord in triplet
             ]
 
+            # Calculate angles between hand joints
+            joint_angles_3d = [calculate_angle_in_3d(hand["kpts_3d"][triad[0]], hand["kpts_3d"][triad[1]], hand["kpts_3d"][triad[2]]) for triad in HAND_21_ANGLES]
+
+            # Maybe also generate embeddings/category weights here?
+            class_weights = get_class_weights(kpts_2d, model)
+
             matched_hands += 1
 
             matches_to_assign.append(
@@ -185,13 +254,15 @@ async def match_hands_in_frames(video_id, hands_to_match, min_frameno, max_frame
                     hand["cam_t"],
                     kpts_2d,
                     kpts_3d,
+                    joint_angles_3d,
+                    class_weights,
                     global_orient,
                     frame_poses[best_pose_match]["track_id"],
                 ]
             )
 
     if len(matches_to_assign) > 0:
-        await db.add_pose_hands(matches_to_assign)
+        await db.add_pose_hands(matches_to_assign, reindex=True)
 
     logging.info(f"Duplicate hand-to-pose matches (rejected): {duplicate_hands}")
     logging.info(f"Rejected based upon lack of overlapping bounding boxes: {rejected_matches}")
@@ -246,6 +317,9 @@ async def main() -> None:
     min_frameno = None
     max_frameno = None
 
+    logging.info("Loading classification model")
+    model = tf.keras.models.load_model(model_path, compile=False)
+
     logging.info("Matching tracked poses to hands detected in video")
 
     with jsonlines.open(hands_file) as reader:
@@ -273,7 +347,7 @@ async def main() -> None:
 
             if len(hands_to_match) >= BATCH_SIZE:
                 await match_hands_in_frames(
-                    video_id, hands_to_match, min_frameno, max_frameno, db
+                    video_id, hands_to_match, min_frameno, max_frameno, db, model
                 )
                 hands_to_match = {}
                 min_frameno = None
@@ -281,7 +355,7 @@ async def main() -> None:
 
         if len(hands_to_match) > 0:
             await match_hands_in_frames(
-                video_id, hands_to_match, min_frameno, max_frameno, db
+                video_id, hands_to_match, min_frameno, max_frameno, db, model
             )
 
 

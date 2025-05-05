@@ -350,7 +350,7 @@ async def add_video_faces(self, video_id: UUID | None, faces_data) -> None:
     logging.info(f"Loaded {len(faces_data)} faces!")
 
 
-async def add_video_hands(self, video_id: UUID | None, hands_data, reindex=False) -> None:
+async def add_video_hands(self, video_id: UUID | None, hands_data) -> None:
     data = [(video_id,) + tuple(hand) for hand in hands_data]
 
     await self._pool.executemany(
@@ -364,16 +364,6 @@ async def add_video_hands(self, video_id: UUID | None, hands_data, reindex=False
     )
 
     logging.info(f"Loaded {len(hands_data)} hands!")
-
-    if reindex:
-        logging.info("Building hand search index")
-        await self._pool.execute(
-            """
-            CREATE INDEX ON hand
-            USING ivfflat (keypoints3d vector_cosine_ops)
-            ;
-            """,
-        )
 
 
 async def add_pose_faces(self, faces_data) -> None:
@@ -404,18 +394,11 @@ async def add_pose_hands(self, hands_data, reindex=False) -> None:
     data = [tuple(hand) for hand in hands_data]
 
     async with self._pool.acquire() as conn:
-        await conn.execute(
-            """
-            ALTER TABLE hand ADD COLUMN IF NOT EXISTS track_id INTEGER DEFAULT NULL
-            ;
-            """
-        )
-
         await conn.executemany(
             """
             INSERT INTO hand (
-                video_id, frame, pose_idx, hand_personid, bbox, is_right, confidence, camera, camera_transform, keypoints2d, keypoints3d, global_orient, track_id)
-                VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+                video_id, frame, pose_idx, hand_personid, bbox, is_right, confidence, camera, camera_transform, keypoints2d, keypoints3d, joint_angles3d, class_weights, global_orient, track_id)
+                VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
             ;
             """,
             data,
@@ -424,11 +407,18 @@ async def add_pose_hands(self, hands_data, reindex=False) -> None:
     logging.info(f"Loaded {len(hands_data)} matched hands!")
     
     if reindex:
-        logging.info("Building action search index")
+        logging.info("Building hand search index")
         await self._pool.execute(
             """
-            CREATE INDEX ON pose
-            USING ivfflat (ava_action vector_cosine_ops)
+            CREATE INDEX ON hand
+            USING ivfflat (joint_angles3d vector_cosine_ops)
+            ;
+            """,
+        )
+        await self._pool.execute(
+            """
+            CREATE INDEX ON hand
+            USING ivfflat (class_weights vector_cosine_ops)
             ;
             """,
         )
