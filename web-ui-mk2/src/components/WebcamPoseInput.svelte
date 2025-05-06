@@ -1,4 +1,6 @@
 <script>
+	import { onDestroy } from 'svelte';
+
 	import { PoseLandmarker, FilesetResolver, DrawingUtils } from '@mediapipe/tasks-vision';
 	import { NumberInput, Button, Loading } from 'carbon-components-svelte';
 	import Camera from 'carbon-icons-svelte/lib/Camera.svelte';
@@ -30,6 +32,7 @@
 
 	let capturedPose = $state();
 	let delay = $state(0);
+	let webcamStream;
 
 	/**
 	 * @param {Coco13Pose[]} landmarks
@@ -50,8 +53,6 @@
 	};
 
 	const init = async () => {
-		delay = getLocalStorage('webcam-delay', 0);
-
 		const vision = await FilesetResolver.forVisionTasks('src/lib/wasm');
 		poseLandmarker = await PoseLandmarker.createFromOptions(vision, {
 			baseOptions: {
@@ -74,7 +75,7 @@
 
 		navigator.mediaDevices
 			.getUserMedia({ video: true, audio: false })
-			.then((stream) => (videoElement.srcObject = stream))
+			.then((stream) => (videoElement.srcObject = webcamStream = stream))
 			.catch((err) => {
 				console.error(`Error during webcam setup: ${err}`);
 			});
@@ -132,6 +133,11 @@
 		);
 	};
 
+	onDestroy(() => {
+		webcamStream.getTracks().forEach((track) => track.stop());
+	});
+
+	$effect(() => (delay = getLocalStorage('webcam-delay', 0)));
 	$effect(() => setLocalStorage('webcam-delay', delay));
 </script>
 

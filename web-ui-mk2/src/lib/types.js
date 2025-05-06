@@ -1,12 +1,29 @@
-/** @typedef {Array<number>} Coco13SkeletonNoConfidence */
-/** @typedef {Array<number>} Coco13SkeletonWithConfidence */
+/**
+ * @typedef {[
+ *   number, number, number, number, number, number, number, number,
+ *   number, number, number, number, number, number, number, number,
+ *   number, number, number, number, number, number, number, number,
+ *   number, number
+ * ]} Coco13SkeletonNoConfidence 13 x,y coordinates for 26 array elements
+ */
+
+/**
+ * @typedef {[
+ *    number, number, number, number, number, number, number, number,
+ *    number, number, number, number, number, number, number, number,
+ *    number, number, number, number, number, number, number, number,
+ *    number, number, number, number, number, number, number, number,
+ *    number, number, number, number, number, number, number
+ * ]} Coco13SkeletonWithConfidence 13 x,y,confidence coordinates for 39 array elements
+ */
+
 /** @typedef {Array<{x: number, y: number, z?: number}>} Coco13Pose */
 
 /** @typedef {Array<number>} BoundingBox */
 
 /**
  * @typedef {Object} MinimalPose
- * @property {Coco13SkeletonNoConfidence} keypoints
+ * @property {Coco13SkeletonWithConfidence} keypoints
  * @property {Array<number>} bbox [x0, y0, width, height]
  * @property {Coco13SkeletonNoConfidence} norm
  */

@@ -36,17 +36,18 @@ services:
 
     environment:
       PUBLIC_API_BASE: /api
+      COREPACK_ENABLE_AUTO_PIN: 0
 
   web-ui-mk2:
     container_name: mime-web-ui-mk2
     build: ./web-ui-mk2
-    user: 1000:1000
 
     volumes:
       - ./web-ui-mk2:/app2:Z
 
     environment:
       PUBLIC_API_BASE: /api
+      COREPACK_ENABLE_AUTO_PIN: 0
 
   db:
     container_name: mime-db
@@ -71,6 +72,9 @@ services:
     stop_grace_period: 0s
 
   web-proxy:
+    &proxy
+    profiles:
+        - ''
     container_name: mime-web-proxy
     image: nginx:alpine
     ports:
@@ -88,6 +92,20 @@ services:
       - web-ui
 
     stop_grace_period: 0s
+
+  web-proxy-tls:
+    <<: *proxy
+    profiles:
+      - tls
+    ports:
+      - ${APP_HOST:-127.0.0.1}:${APP_PORT:-8080}:80
+      - ${APP_HOST:-127.0.0.1}:443:443
+    volumes:
+      - ./nginx.tls.config:/etc/nginx/conf.d/default.conf
+      - ${CACHE_FOLDER:-./mime-cache}:/static
+      - ./web-ui:/app
+      - ./web-ui-mk2:/app2
+      - ../ssl:/ssl
 
 volumes:
   mime-db-data:

@@ -1,5 +1,6 @@
 <script>
 	import { page } from '$app/stores';
+	import { Loading } from 'carbon-components-svelte';
 	import { getVideoData } from '$lib/data-fetching';
 	import PoseCard from '$components/PoseCard.svelte';
 
@@ -51,7 +52,7 @@
 	}
 </script>
 
-<div>
+<div class="controls">
 	<label>
 		Show Pose:
 		<input type="checkbox" bind:checked={showPose} />
@@ -90,7 +91,10 @@
 {#if sourcePose}
 	<div class="results">
 		{#await getPoseData()}
-			Searching...
+			<div class="loading">
+				Searching...
+				<Loading withOverlay={false} />
+			</div>
 		{:then data}
 			{#each excludeSourcePose(data) as pose}
 				<PoseCard sourcePose={pose} {showPose} />
@@ -102,12 +106,20 @@
 {/if}
 
 <style>
-	div {
+	.controls,
+	.results {
 		display: flex;
 		flex-wrap: wrap;
 		gap: 1rem;
 		justify-content: center;
 		padding: 1rem;
+	}
+
+	.loading {
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+		text-align: center;
 	}
 
 	label {

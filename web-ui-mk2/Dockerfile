@@ -10,6 +10,7 @@ ENV VITE_CACHE_DIR=/tmp
 # Store all of pnpm's stores, caches, and runtime data outside /app, so that the host filesystem can be 
 #  bind mounted over the top without complications.  Note that absolute paths won't work here.
 ENV MODULES_DIR=../node_modules
+ENV IBM_TELEMETRY_DISABLED='true'
 
 WORKDIR /app2
 EXPOSE 5173
