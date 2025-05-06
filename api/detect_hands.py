@@ -8,7 +8,6 @@ import numpy as np
 import torch
 from rich.logging import RichHandler
 from ultralytics import YOLO
-
 from wilor.datasets.vitdet_dataset import ViTDetDataset
 from wilor.models import load_wilor
 from wilor.utils import recursive_to

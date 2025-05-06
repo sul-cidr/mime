@@ -7,14 +7,14 @@ import asyncio
 import logging
 import math
 from pathlib import Path
-import tensorflow as tf
 
 import jsonlines
 import numpy as np
+import tensorflow as tf
 from rich.logging import RichHandler
 
-from mime_db import MimeDb
 from lib.pose_utils import HAND_21_ANGLES
+from mime_db import MimeDb
 
 BATCH_SIZE = 1000
 
@@ -39,21 +39,21 @@ def get_class_weights(keypoints_2d, model):
 
 # Inspired by https://www.geeksforgeeks.org/angle-between-a-pair-of-lines-in-3d/
 def calculate_angle_in_3d(arm1, vertex, arm2):
-    
+
     x1, y1, z1 = arm1
     x2, y2, z2 = vertex
     x3, y3, z3 = arm2
-                        
+
     # Find direction ratio of line AB
     ABx = x1 - x2
     ABy = y1 - y2
     ABz = z1 - z2
- 
+
     # Find direction ratio of line BC
     BCx = x3 - x2
     BCy = y3 - y2
     BCz = z3 - z2
- 
+
     # Find magnitudes of lines AB and BC
     magnitude_AB = ABx * ABx + ABy * ABy + ABz * ABz
     magnitude_BC = BCx * BCx + BCy * BCy + BCz * BCz
@@ -68,10 +68,10 @@ def calculate_angle_in_3d(arm1, vertex, arm2):
     dot_product = ABx * BCx + ABy * BCy + ABz * BCz
 
     angle = dot_product / math.sqrt(magnitude_AB * magnitude_BC)
- 
+
     # Get the angle in radians
     angle = (angle * 180) / 3.14
- 
+
     return round(abs(angle), 4)
 
 
@@ -357,7 +357,7 @@ async def main() -> None:
             await match_hands_in_frames(
                 video_id, hands_to_match, min_frameno, max_frameno, db, model
             )
-    
+
     await db.index_pose_hands()
 
 

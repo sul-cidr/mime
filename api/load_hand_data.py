@@ -2,10 +2,6 @@
 
 """CLI to load hand detection data from a JSON lines file for a video in the db."""
 
-"""NOTE: This script has never been tested and is only provided as a skeleton
-in case the recommended path of using api/match_hands_to_poses.py provdes
-undesirable for some reason."""
-
 import argparse
 import asyncio
 import logging
@@ -17,6 +13,10 @@ from rich.logging import RichHandler
 from mime_db import MimeDb
 
 BATCH_SIZE = 1000  # How many hands to load into DB at one time
+
+"""NOTE: This script has never been tested and is only provided as a skeleton
+in case the recommended path of using api/match_hands_to_poses.py provdes
+undesirable for some reason."""
 
 
 async def main() -> None:
