@@ -137,7 +137,7 @@ async def match_hands_in_frames(video_id, hands_to_match, min_frameno, max_frame
     results may vary widely."""
 
     logging.info(
-        f"Running match_hands_in_frames with start frame {min_frameno} end {max_frameno}"
+        f"Matching hands in frame {min_frameno} to {max_frameno}"
     )
 
     matched_hands = 0
@@ -262,7 +262,7 @@ async def match_hands_in_frames(video_id, hands_to_match, min_frameno, max_frame
             )
 
     if len(matches_to_assign) > 0:
-        await db.add_pose_hands(matches_to_assign, reindex=True)
+        await db.add_pose_hands(matches_to_assign)
 
     logging.info(f"Duplicate hand-to-pose matches (rejected): {duplicate_hands}")
     logging.info(f"Rejected based upon lack of overlapping bounding boxes: {rejected_matches}")
@@ -357,6 +357,9 @@ async def main() -> None:
             await match_hands_in_frames(
                 video_id, hands_to_match, min_frameno, max_frameno, db, model
             )
+    
+    await db.index_pose_hands()
+
 
 
 if __name__ == "__main__":

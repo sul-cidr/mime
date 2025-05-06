@@ -390,7 +390,7 @@ async def add_pose_faces(self, faces_data) -> None:
     logging.info(f"Loaded {len(faces_data)} matched faces!")
 
 
-async def add_pose_hands(self, hands_data, reindex=False) -> None:
+async def add_pose_hands(self, hands_data) -> None:
     data = [tuple(hand) for hand in hands_data]
 
     async with self._pool.acquire() as conn:
@@ -405,23 +405,24 @@ async def add_pose_hands(self, hands_data, reindex=False) -> None:
         )
 
     logging.info(f"Loaded {len(hands_data)} matched hands!")
-    
-    if reindex:
-        logging.info("Building hand search index")
-        await self._pool.execute(
-            """
-            CREATE INDEX ON hand
-            USING ivfflat (joint_angles3d vector_cosine_ops)
-            ;
-            """,
-        )
-        await self._pool.execute(
-            """
-            CREATE INDEX ON hand
-            USING ivfflat (class_weights vector_cosine_ops)
-            ;
-            """,
-        )
+
+
+async def index_pose_hands(self) -> None:
+    logging.info("Building hand search index")
+    await self._pool.execute(
+        """
+        CREATE INDEX ON hand
+        USING ivfflat (joint_angles3d vector_cosine_ops)
+        ;
+        """,
+    )
+    await self._pool.execute(
+        """
+        CREATE INDEX ON hand
+        USING ivfflat (class_weights vector_cosine_ops)
+        ;
+        """,
+    )
 
 
 async def add_video_movelets(self, movelets_data, reindex=False) -> None:

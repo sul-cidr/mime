@@ -70,7 +70,7 @@
                 class:selected={hoveredPoseIdx === i}
                 on:mouseover={() => (hoveredPoseIdx = i)}
                 on:mouseout={() => (hoveredPoseIdx = undefined)}
-                on:click={() => $currentPose = poses[i]}
+                on:click={() => ($currentPose = poses[i])}
                 pointer-events="visible"
                 style="cursor: pointer"
               />

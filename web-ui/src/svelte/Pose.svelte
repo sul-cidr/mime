@@ -24,11 +24,13 @@
     | SmplSkeletonWithConfidence
     | SmplSkeletonNoConfidence = null;
   export let faceData: FaceLandmarks = null;
-  export let leftHandData: HandJoints2D = null;
   export let rightHandData: HandJoints2D = null;
+  export let leftHandData: HandJoints2D = null;
   export let scaleFactor = 1;
   export let normalizedPose = false;
   export let maxXywh: FixedLengthArray<number, 4> = [0, 0, null, null];
+  export let searchHandData: HandJoints2D = null;
+  export let searchHandIsRight: boolean = undefined;
   export let opacity = 1;
 
   let heightOffset = 0;
@@ -71,6 +73,7 @@
 
   $: rightHandPoints = segmentArray(rightHandData, 2);
   $: leftHandPoints = segmentArray(leftHandData, 2);
+  $: searchHandPoints = segmentArray(searchHandData, 2);
 
   $: {
     if ($ctx) {
@@ -155,6 +158,8 @@
       }
 
       const drawHand = (handPoints: Array<number[]>, isRight: boolean) => {
+        if (handPoints === null) return;
+
         HAND_21_SKELETON.forEach(([from, to], i) => {
           let fromX, fromY, toX, toY;
           [fromX, fromY] = handPoints[from! - 1]!;
@@ -181,10 +186,12 @@
         });
       };
 
-      if (rightHandData) {
+      if (rightHandData === null && leftHandData === null) {
+        if (searchHandData !== null) {
+          drawHand(searchHandPoints, searchHandIsRight);
+        }
+      } else {
         drawHand(rightHandPoints, true);
-      }
-      if (leftHandData) {
         drawHand(leftHandPoints, false);
       }
 

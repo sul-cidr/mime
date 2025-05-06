@@ -268,7 +268,7 @@ async def get_nearest_hands(
     pose_idx: int,
     is_right: bool,
     metric="cosine",
-    embedding="hand.keypoints3d",
+    embedding="joint_angles3d",
     max_distance="Infinity",
     avoid_shot=-1,
     limit=500,
@@ -294,10 +294,10 @@ async def get_nearest_hands(
         "innerproduct": f"({embedding} <#> ({distance_subquery}) * -1",
     }[metric]
 
-    if is_right is True:
-        handedness_clause = "search_results.keypoints2d AS rh_keypoints_2d"
-    else:
-        handedness_clause = "search_results.keypoints2d AS lh_keypoints_2d"
+    # if is_right is True:
+    #     handedness_clause = "search_results.keypoints2d AS rh_keypoints_2d"
+    # else:
+    #     handedness_clause = "search_results.keypoints2d AS lh_keypoints_2d"
 
     return await self._pool.fetch(
         f"""
@@ -307,7 +307,7 @@ async def get_nearest_hands(
                 WHERE {hand_subquery} AND video.id = hand.video_id AND pose.video_id = hand.video_id AND frame.video_id = hand.video_id AND pose.frame = hand.frame AND pose.pose_idx = hand.pose_idx AND frame.frame = hand.frame AND NOT ((hand.frame = $1 AND hand.pose_idx = $2) OR frame.shot = $3) ORDER BY distance
                 LIMIT $4
             )
-            SELECT search_results.*, {handedness_clause} FROM search_results WHERE search_results.distance < {max_distance}
+            SELECT search_results.* FROM search_results WHERE search_results.distance < {max_distance}
         )
         SELECT hand_results.*, face.landmarks AS face_landmarks, face.cluster_id AS face_cluster_id FROM hand_results LEFT JOIN face ON face.video_id = hand_results.video_id AND face.frame = hand_results.frame AND face.pose_idx = hand_results.pose_idx
         """,

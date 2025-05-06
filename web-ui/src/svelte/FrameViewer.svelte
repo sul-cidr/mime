@@ -64,8 +64,8 @@
     handCt = 0;
     if (data && poseData) {
       if (data.length && poseData.length) {
-        data.forEach((hr: HandRecord) => {
-          poseData.forEach((pr: PoseRecord, pi: number) => {
+        poseData.forEach((pr: PoseRecord, pi: number) => {
+          data.forEach((hr: HandRecord) => {
             if (hr.pose_idx == pr.pose_idx) {
               handCt += 1;
               poseData[pi]!.hand_global_orient = hr.global_orient;

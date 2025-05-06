@@ -29,7 +29,6 @@
       $searchThresholds[item.name] = parseFloat(item.value);
     });
   };
-
 </script>
 
 <div class="card variant-ghost-secondary w-full">

@@ -37,6 +37,7 @@ class MimeDb:
         add_video_hands,
         add_video_movelets,
         add_video_tracks,
+        index_pose_hands,
         annotate_pose,
         assign_face_clusters_by_track,
         assign_frame_interest,
