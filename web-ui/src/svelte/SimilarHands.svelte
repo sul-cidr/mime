@@ -309,81 +309,84 @@
       </div>
 
       <span class="divider-vertical !border-l-8 !border-double" />
-
-      {#each poses as pose, p}
-        {#if p >= simPager.offset * simPager.limit && p < simPager.offset * simPager.limit + simPager.limit}
-          <div
-            class="card min-w-48 flex flex-col justify-between drop-shadow-lg"
-          >
-            <header class="p-2">
-              Frame {pose.frame}, Pose: {pose.pose_idx + 1}
-            </header>
-            <div class="w-full aspect-[5/6] frame-display py-[30px] px-[10px]">
-              <LayerCake>
-                {#if displayOption == "show_background" || displayOption == "show_both"}
-                  <Html zIndex={0}>
-                    <img
-                      class="object-contain h-full w-full"
-                      src={`${API_BASE}/frame/excerpt/${pose.video_id}/${
-                        pose.frame
-                      }/${getMaxXywh(pose).join(",")}/`}
-                      alt={`Frame ${pose.frame}, Pose: ${pose.pose_idx + 1}`}
-                    />
-                  </Html>
-                {/if}
-                {#if displayOption == "show_hand" || displayOption == "show_both"}
-                  <Canvas zIndex={1}>
-                    <Pose
-                      poseData={pose.keypoints}
-                      pose4dhData={pose.keypoints4dh}
-                      faceData={pose.face_landmarks}
-                      rightHandData={pose.rh_keypoints_2d}
-                      leftHandData={pose.lh_keypoints_2d}
-                      normalizedPose={false}
-                      maxXywh={getMaxXywh(pose)}
-                      searchHandData={pose.keypoints2d}
-                      searchHandIsRight={pose.search_is_right}
-                    />
-                  </Canvas>
-                {/if}
-              </LayerCake>
-            </div>
-            <footer class="p-2">
-              {#if pose.video_id.toString() == $currentVideo.id}
-                <ul>
-                  <li>
-                    Time: {formatSeconds(pose.frame / $currentVideo.fps)}
-                  </li>
-                  <li>Distance: {pose.distance?.toFixed(5)}</li>
-                  <li>
-                    Hand: {pose.search_is_right ? "right" : "left"}
-                  </li>
-                  {#if pose.face_cluster_id !== null}
-                    <li>
-                      Face group: {pose.face_cluster_id}
-                    </li>
+      {#key poses}
+        {#each poses as pose, p}
+          {#if p >= simPager.offset * simPager.limit && p < simPager.offset * simPager.limit + simPager.limit}
+            <div
+              class="card min-w-48 flex flex-col justify-between drop-shadow-lg"
+            >
+              <header class="p-2">
+                Frame {pose.frame}, Pose: {pose.pose_idx + 1}
+              </header>
+              <div
+                class="w-full aspect-[5/6] frame-display py-[30px] px-[10px]"
+              >
+                <LayerCake>
+                  {#if displayOption == "show_background" || displayOption == "show_both"}
+                    <Html zIndex={0}>
+                      <img
+                        class="object-contain h-full w-full"
+                        src={`${API_BASE}/frame/excerpt/${pose.video_id}/${
+                          pose.frame
+                        }/${getMaxXywh(pose).join(",")}/`}
+                        alt={`Frame ${pose.frame}, Pose: ${pose.pose_idx + 1}`}
+                      />
+                    </Html>
                   {/if}
-                </ul>
-                <span
-                  ><strong
-                    ><button
-                      class="btn-sm variant-filled"
-                      type="button"
-                      value={pose.frame}
-                      on:click={goToFrame}>Go to frame {pose.frame}</button
-                    ></strong
-                  ></span
-                >
-              {:else}
-                <ul>
-                  <li>{pose.video_name}</li>
-                  <li>Distance: {pose.distance?.toFixed(5)}</li>
-                </ul>
-              {/if}
-            </footer>
-          </div>
-        {/if}
-      {/each}
+                  {#if displayOption == "show_hand" || displayOption == "show_both"}
+                    <Canvas zIndex={1}>
+                      <Pose
+                        poseData={pose.keypoints}
+                        pose4dhData={pose.keypoints4dh}
+                        faceData={pose.face_landmarks}
+                        rightHandData={pose.rh_keypoints_2d}
+                        leftHandData={pose.lh_keypoints_2d}
+                        normalizedPose={false}
+                        maxXywh={getMaxXywh(pose)}
+                        searchHandData={pose.keypoints2d}
+                        searchHandIsRight={pose.search_is_right}
+                      />
+                    </Canvas>
+                  {/if}
+                </LayerCake>
+              </div>
+              <footer class="p-2">
+                {#if pose.video_id.toString() == $currentVideo.id}
+                  <ul>
+                    <li>
+                      Time: {formatSeconds(pose.frame / $currentVideo.fps)}
+                    </li>
+                    <li>Distance: {pose.distance?.toFixed(5)}</li>
+                    <li>
+                      Hand: {pose.search_is_right ? "right" : "left"}
+                    </li>
+                    {#if pose.face_cluster_id !== null}
+                      <li>
+                        Face group: {pose.face_cluster_id}
+                      </li>
+                    {/if}
+                  </ul>
+                  <span
+                    ><strong
+                      ><button
+                        class="btn-sm variant-filled"
+                        type="button"
+                        value={pose.frame}
+                        on:click={goToFrame}>Go to frame {pose.frame}</button
+                      ></strong
+                    ></span
+                  >
+                {:else}
+                  <ul>
+                    <li>{pose.video_name}</li>
+                    <li>Distance: {pose.distance?.toFixed(5)}</li>
+                  </ul>
+                {/if}
+              </footer>
+            </div>
+          {/if}
+        {/each}
+      {/key}
     </div>
     <div class="flex items-center space-x-5">
       <SlideToggle
