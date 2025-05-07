@@ -33,9 +33,10 @@
     "black",
     "gray",
     "orange",
-    "#964B00BB", // brown
+    "tan",
     "#fA8072BB", // salmon
-    "fbceb1", // apricot
+    "brown",
+    "deeppink",
   ];
   const formatTickXAsTime = (d: number) => {
     return new Date((d / $currentVideo.fps) * 1000)
