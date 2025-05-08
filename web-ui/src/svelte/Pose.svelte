@@ -186,10 +186,8 @@
         });
       };
 
-      if (rightHandData === null && leftHandData === null) {
-        if (searchHandData !== null) {
-          drawHand(searchHandPoints, searchHandIsRight);
-        }
+      if (searchHandData !== null && searchHandIsRight !== undefined) {
+        drawHand(searchHandPoints, searchHandIsRight);
       } else {
         drawHand(rightHandPoints, true);
         drawHand(leftHandPoints, false);

@@ -87,7 +87,7 @@
       face_landmarks: facePoints,
       rh_keypoints_2d: rightHandPoints,
       lh_keypoints_2d: leftHandPoints,
-      keypoints2d: searchHandPoints,
+      search_hand_keypoints2d: searchHandPoints,
     } = thisPose);
 
     const bboxPoints = [poseBbox, faceBbox].flatMap((xywh) =>
@@ -271,6 +271,10 @@
                   leftHandData={$currentHandPose.lh_keypoints_2d}
                   normalizedPose={false}
                   maxXywh={getMaxXywh($currentHandPose)}
+                  searchHandData={$currentHandPose.search_is_right
+                    ? $currentHandPose.rh_keypoints_2d
+                    : $currentHandPose.lh_keypoints_2d}
+                  searchHandIsRight={$currentHandPose.search_is_right}
                 />
               </Canvas>
             {/if}
@@ -343,7 +347,7 @@
                         leftHandData={pose.lh_keypoints_2d}
                         normalizedPose={false}
                         maxXywh={getMaxXywh(pose)}
-                        searchHandData={pose.keypoints2d}
+                        searchHandData={pose.search_hand_keypoints2d}
                         searchHandIsRight={pose.search_is_right}
                       />
                     </Canvas>
