@@ -17,6 +17,7 @@
     currentVideo,
     currentPose,
     currentActionPose,
+    currentHandPose,
     seriesNames,
     similarActionFrames,
     similarPoseFrames,
@@ -37,6 +38,7 @@
     "#fA8072BB", // salmon
     "brown",
     "deeppink",
+    "forestgreen",
   ];
   const formatTickXAsTime = (d: number) => {
     return new Date((d / $currentVideo.fps) * 1000)
@@ -113,6 +115,7 @@
     data: Array<FrameRecord>,
     similarPoseFrames: { [frameno: number]: number },
     similarActionFrames: { [frameno: number]: number },
+    similarHandFrames: { [frameno: number]: number },
     startFrame = 1,
     endFrame = $currentVideo.frame_count,
   ) => {
@@ -142,6 +145,7 @@
           action_interest: 0,
           sim_pose: 0,
           sim_action: 0,
+          sim_hand: 0,
         });
         i++;
       }
@@ -152,6 +156,7 @@
       // method at all for highlighting matching frames.
       thisFrame["sim_pose"] = i in similarPoseFrames ? maxValue : 0;
       thisFrame["sim_action"] = i in similarActionFrames ? maxValue : 0;
+      thisFrame["sim_hand"] = i in similarHandFrames ? maxValue : 0;
       if (!normalizedSeriesAlreadyScaled) {
         seriesToFit.forEach((series) => {
           thisFrame[series] = scaleToFit(frame[series]);
@@ -174,6 +179,7 @@
         action_interest: 0,
         sim_pose: 0,
         sim_action: 0,
+        sim_hand: 0,
       });
       i++;
     }
@@ -211,12 +217,27 @@
     }
   }
 
+  $: if ($currentHandPose) {
+    if (
+      Object.keys($similarHandFrames).length &&
+      !$seriesNames.includes("sim_hand")
+    ) {
+      $seriesNames.push("sim_hand");
+    } else if (
+      !Object.keys($similarHandFrames).length &&
+      $seriesNames.includes("sim_hand")
+    ) {
+      $seriesNames.splice($seriesNames.indexOf("sim_hand", 1));
+    }
+  }
+
   $: maxValue = getMaxValue(timelineData);
 
   $: framesArray = fillEmptyFrames(
     timelineData,
     $similarPoseFrames,
     $similarActionFrames,
+    $similarHandFrames,
   );
 
   $: {
@@ -274,6 +295,7 @@
         hiddenKeys={[
           "sim_pose",
           "sim_action",
+          "sim_hand",
           "isShot",
           "avgScore",
           "movement",

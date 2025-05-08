@@ -121,6 +121,7 @@ type FrameRecord = {
   action_interest: number | undefined;
   sim_pose: number | undefined;
   sim_move: number | undefined;
+  sim_hand: number | undefined;
   time: string | undefined;
   shot: number | 0;
 };

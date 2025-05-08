@@ -287,7 +287,7 @@
               <li>
                 Hand: {$currentHandPose.search_is_right ? "right" : "left"}
               </li>
-              {#if $currentHandPose.face_cluster_id !== null}
+              {#if $currentHandPose.face_cluster_id !== undefined}
                 <li>
                   Face group: {$currentHandPose.face_cluster_id}
                 </li>

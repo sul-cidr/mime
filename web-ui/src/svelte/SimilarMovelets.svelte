@@ -194,7 +194,7 @@
                     )}
                   </li>
                   <li>Distance: {movelet.distance?.toFixed(4)}</li>
-                  {#if movelet.face_cluster_id !== null}
+                  {#if movelet.face_cluster_id !== undefined}
                     <li>
                       Face group: {movelet.face_cluster_id}
                     </li>
