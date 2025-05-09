@@ -189,7 +189,7 @@
       {:else}
         <div>
           <Canvas3D size={{ width: 640, height: 480 }}>
-            <Scene3D></Scene3D>
+            <Scene3D bind:hoveredPoseIdx></Scene3D>
           </Canvas3D>
         </div>
       {/if}
