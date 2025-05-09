@@ -3,7 +3,12 @@
   import Pose from "./Pose.svelte";
 
   import { API_BASE } from "@config";
-  import { currentVideo, currentFrame, currentPose } from "@svelte/stores";
+  import {
+    currentVideo,
+    currentFrame,
+    currentPose,
+    currentHandPose,
+  } from "@svelte/stores";
 
   const { id: videoId, width: frameWidth, height: frameHeight } = $currentVideo;
 
@@ -106,6 +111,10 @@
                   on:focus={() => (hoveredPoseIdx = i)}
                   on:mouseout={() => (hoveredPoseIdx = undefined)}
                   on:blur={() => (hoveredPoseIdx = undefined)}
+                  on:click={() => {
+                    poses[i].search_is_right = true;
+                    $currentHandPose = poses[i];
+                  }}
                   pointer-events="visible"
                   style="cursor: pointer"
                 />
@@ -124,6 +133,10 @@
                   on:focus={() => (hoveredPoseIdx = i)}
                   on:mouseout={() => (hoveredPoseIdx = undefined)}
                   on:blur={() => (hoveredPoseIdx = undefined)}
+                  on:click={() => {
+                    poses[i].search_is_right = false;
+                    $currentHandPose = poses[i];
+                  }}
                   pointer-events="visible"
                   style="cursor: pointer"
                 />

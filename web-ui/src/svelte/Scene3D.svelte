@@ -2,7 +2,12 @@
   import * as THREE from "three";
   import { T } from "@threlte/core";
   import { Gizmo, Grid, interactivity, OrbitControls } from "@threlte/extras";
-  import { currentVideo, currentFrame, currentPose } from "@svelte/stores";
+  import {
+    currentVideo,
+    currentFrame,
+    currentPose,
+    currentHandPose,
+  } from "@svelte/stores";
   import { API_BASE } from "@config";
 
   import {
@@ -57,6 +62,23 @@
     const response = await fetch(`${API_BASE}/hands/${videoId}/${frame}/`);
     return await response.json();
   }
+
+  const setSearchHandPose = (hr: HandRecord) => {
+    poseData.every((pr: PoseRecord) => {
+      if (hr.pose_idx === pr.pose_idx) {
+        pr.search_is_right = hr.is_right;
+        pr.search_hand_keypoints2d = hr.keypoints2d;
+        pr.rh_keypoints_2d = hr.is_right ? hr.keypoints2d : undefined;
+        pr.rh_keypoints_3d = hr.is_right ? hr.keypoints3d : undefined;
+        pr.lh_keypoints_2d = hr.is_right ? undefined : hr.keypoints2d;
+        pr.lh_keypoints_3d = hr.is_right ? undefined : hr.keypoints3d;
+        pr.hand_global_orient = hr.global_orient;
+        $currentHandPose = pr;
+        return false;
+      }
+      return true;
+    });
+  };
 
   const updatePoseData = (data: Array<PoseRecord>) => {
     if (data && data.length) {
@@ -302,7 +324,7 @@
     position.y={(allHandExtents[hp][0][1] + allHandExtents[hp][1][1]) / 2}
     position.z={(allHandExtents[hp][0][2] + allHandExtents[hp][1][2]) / 2}
     on:click={() => {
-      //$currentHand = handData[hp];
+      setSearchHandPose(handData[hp]);
     }}
     on:pointerover={() => {
       handPointColors[hp] = 0xffff00;
