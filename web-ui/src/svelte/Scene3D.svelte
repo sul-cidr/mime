@@ -17,6 +17,8 @@
     get3DPoseExtent,
   } from "../lib/poseutils";
 
+  export let hoveredPoseIdx: number | undefined;
+
   let poseData: PoseRecord[];
   let handData: HandRecord[];
 
@@ -285,9 +287,11 @@
     }}
     on:pointerover={() => {
       posePointColors[pp] = 0xffff00;
+      hoveredPoseIdx = pp;
     }}
     on:pointerout={() => {
       posePointColors[pp] = 0x00ff00;
+      hoveredPoseIdx = undefined;
     }}
   >
     <T.BoxGeometry
