@@ -17,10 +17,9 @@
     get3DPoseExtent,
   } from "../lib/poseutils";
 
+  export let poses: Array<PoseRecord>;
+  export let hands: Array<HandRecord>;
   export let hoveredPoseIdx: number | undefined;
-
-  let poseData: PoseRecord[];
-  let handData: HandRecord[];
 
   let minCoords = [null, null, null];
   let maxCoords = [null, null, null];
@@ -49,14 +48,6 @@
 
   interactivity();
 
-  async function getPoseData(videoId: string, frame: number) {
-    if (!frame) {
-      return null;
-    }
-    const response = await fetch(`${API_BASE}/poses/${videoId}/${frame}/`);
-    return await response.json();
-  }
-
   async function getHandData(videoId: string, frame: number) {
     if (!frame) {
       return null;
@@ -66,7 +57,7 @@
   }
 
   const setSearchHandPose = (hr: HandRecord) => {
-    poseData.every((pr: PoseRecord) => {
+    poses.every((pr: PoseRecord) => {
       if (hr.pose_idx === pr.pose_idx) {
         pr.search_is_right = hr.is_right;
         pr.search_hand_keypoints2d = hr.keypoints2d;
@@ -92,11 +83,12 @@
       maxCoords = [null, null, null];
       sceneMidpoint = [0, 0, 0];
 
-      poseData = data;
       const newPosePoints: number[][][] = [];
       posePointColors = [];
-      data.forEach((pr: PoseRecord) => {
-        if (!pr.keypoints3d) return;
+
+      data.forEach((pr: PoseRecord, p: number) => {
+        if (!pr.keypoints3d || pr.hidden === true) return;
+
         let projCoords: number[][] = [];
         for (let k = 0; k < pr.keypoints3d?.length; k += 3) {
           const kp = [
@@ -138,9 +130,8 @@
           ]);
         }
         shiftedPosePoints.push(reprojCoords);
+        allPosePoints.push(reprojCoords);
       }
-      allPosePoints = shiftedPosePoints;
-      //allPosePoints = newPosePoints;
 
       for (let a = 0; a < allPosePoints.length; a += 1) {
         allPoseExtents.push(get3DPoseExtent(allPosePoints[a]));
@@ -152,6 +143,7 @@
         (minCoords[2] + maxCoords[2]) / 2,
       ];
     }
+    updateHandData(hands);
   };
 
   const updateHandData = (data: Array<HandRecord>) => {
@@ -159,16 +151,17 @@
       allHandPoints = [];
       allHandExtents = [];
 
-      handData = data;
       const newHandPoints: number[][][] = [];
       handPointColors = [];
-      let wristCoords = null;
-      data.forEach((hr: HandRecord) => {
+      data.forEach((hr: HandRecord, h: number) => {
         if (!hr.keypoints3d) return;
         let projCoords: number[][] = [];
+        let wristCoords = null;
 
-        poseData.forEach((pr: PoseRecord, p) => {
+        poses.forEach((pr: PoseRecord, p) => {
           if (hr.pose_idx === pr.pose_idx) {
+            if (pr.hidden === true) return;
+
             const w = hr.is_right ? 6 : 5; // * 3;
             wristCoords = [
               allPosePoints[p][w][0],
@@ -178,6 +171,8 @@
             return;
           }
         });
+
+        if (wristCoords === null) return;
 
         for (let k = 0; k < hr.keypoints3d?.length; k += 3) {
           const kp = [
@@ -219,6 +214,16 @@
         (minCoords[2] + maxCoords[2]) / 2,
       ];
     }
+  };
+
+  const updatePointColors = (hoveredPoseIdx: number) => {
+    posePointColors.forEach((_, p) => {
+      if (hoveredPoseIdx === p) {
+        posePointColors[p] = 0xffff00;
+      } else {
+        posePointColors[p] = 0x00ff00;
+      }
+    });
   };
 
   const updatePoseLines = (thesePosePoints: number[][][]) => {
@@ -265,16 +270,17 @@
     }
   };
 
+  $: updatePoseData(poses);
+  $: updateHandData(hands);
+
   $: updatePoseLines(allPosePoints);
   $: updateHandLines(allHandPoints);
 
-  $: getPoseData($currentVideo.id, $currentFrame!).then((data) =>
-    updatePoseData(data),
-  );
+  $: updatePointColors(hoveredPoseIdx);
 
-  $: getHandData($currentVideo.id, $currentFrame!).then((data) =>
-    updateHandData(data),
-  );
+  // $: getHandData($currentVideo.id, $currentFrame!).then((data) =>
+  //   updateHandData(data),
+  // );
 </script>
 
 {#each allPosePoints as posePoints, pp}
@@ -283,14 +289,14 @@
     position.y={(allPoseExtents[pp][0][1] + allPoseExtents[pp][1][1]) / 2}
     position.z={(allPoseExtents[pp][0][2] + allPoseExtents[pp][1][2]) / 2}
     on:click={() => {
-      $currentPose = poseData[pp];
+      $currentPose = poses[pp];
     }}
     on:pointerover={() => {
-      posePointColors[pp] = 0xffff00;
+      //posePointColors[pp] = 0xffff00;
       hoveredPoseIdx = pp;
     }}
     on:pointerout={() => {
-      posePointColors[pp] = 0x00ff00;
+      //posePointColors[pp] = 0x00ff00;
       hoveredPoseIdx = undefined;
     }}
   >
@@ -328,13 +334,13 @@
     position.y={(allHandExtents[hp][0][1] + allHandExtents[hp][1][1]) / 2}
     position.z={(allHandExtents[hp][0][2] + allHandExtents[hp][1][2]) / 2}
     on:click={() => {
-      setSearchHandPose(handData[hp]);
+      setSearchHandPose(hands[hp]);
     }}
     on:pointerover={() => {
       handPointColors[hp] = 0xffff00;
     }}
     on:pointerout={() => {
-      handPointColors[hp] = handData[hp].is_right ? 0x00ff00 : 0xff0000;
+      handPointColors[hp] = hands[hp].is_right ? 0x00ff00 : 0xff0000;
     }}
   >
     <T.BoxGeometry

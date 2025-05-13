@@ -10,6 +10,7 @@
   import { currentVideo, currentFrame } from "@svelte/stores";
 
   let poseData: Array<PoseRecord>;
+  let handsData: Array<HandRecord>;
   let trackCt: number;
   let faceCt: number;
   let handCt: number;
@@ -62,6 +63,7 @@
 
   const integrateHandsData = (data: Array<HandRecord>) => {
     handCt = 0;
+    handsData = data;
     if (data && poseData) {
       if (data.length && poseData.length) {
         poseData.forEach((pr: PoseRecord, pi: number) => {
@@ -189,7 +191,11 @@
       {:else}
         <div>
           <Canvas3D size={{ width: 640, height: 480 }}>
-            <Scene3D bind:hoveredPoseIdx></Scene3D>
+            <Scene3D
+              bind:poses={poseData}
+              bind:hands={handsData}
+              bind:hoveredPoseIdx
+            ></Scene3D>
           </Canvas3D>
         </div>
       {/if}
