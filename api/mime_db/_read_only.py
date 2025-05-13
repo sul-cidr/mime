@@ -304,7 +304,7 @@ async def get_nearest_hands(
                 hand.is_right,
                 pose.norm,
                 pose.keypoints,
-                hand.keypoints2d,
+                hand.keypoints2d AS search_hand_keypoints2d,
                 hand.is_right AS search_is_right,
                 hand.global_orient AS hand_global_orient,
                 {distance} AS distance,

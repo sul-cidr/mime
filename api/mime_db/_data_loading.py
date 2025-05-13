@@ -397,8 +397,8 @@ async def add_pose_hands(self, hands_data) -> None:
         await conn.executemany(
             """
             INSERT INTO hand (
-                video_id, frame, pose_idx, hand_personid, bbox, is_right, confidence, camera, camera_transform, keypoints2d, keypoints3d, joint_angles3d, class_weights, global_orient, track_id)
-                VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+                video_id, frame, pose_idx, hand_personid, bbox, is_right, confidence, camera, camera_transform, keypoints2d, keypoints3d, joint_angles3d, class_weights, rectified3d, global_orient, track_id)
+                VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
             ;
             """,
             data,

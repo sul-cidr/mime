@@ -21,8 +21,81 @@ BATCH_SIZE = 1000
 model_path = "lib/hands/keypoint_classifier.hdf5"
 
 
+def get_segment_midpoint_3d(seg1, seg2):
+    return [seg1[0] + seg2[0],
+            seg1[1] + seg2[1],
+            seg1[2] + seg2[2]]
+
+
+def project_hand_keypoints(hand, pose):
+    """PHALP provides body keypoints in 3D in a local context, albeit from the
+    perspective of the camera (3d_joints/keypoints3d), if the camera that
+    took the original 2D image were located directly in front of the pose.
+    PHALP also provides a "global_orient" matrix transform that rotates the
+    3d_joints so that the plane formed by the hips and ankles is aligned
+    with the X,Y axis (and perpendicular to the Z axis), basically facing the
+    "close-up" camera. Finally, PHALP provides a "camera" 3D transform that
+    can be used to project the 3d_joints into a 3D scene that includes the
+    estimated camera position (greatly increasing the depth of the space).
+
+    WiLoR's keypoints3d output provides the hand keypoints in 3D, in a
+    seemingly arbitrary orientation. These coordinates can be summed with WiLoR's
+    global_orient vector (its "global" apparently has a different meaning than
+    PHALP's) to rotate the hand to appear from the perspective of the camera
+    that took the 2D iamge, as if the camera were immediately in front of the
+    hand. WiLoR also provides a camera transform and estimated camera position
+    that can be used to project the hand coordinates into the estimated 3D scene,
+    but we don't use this for the Scene3D viz; instead we just match the raw 3D
+    hand coords + the hand global_orient vector (getting the hand into the
+    "viewed from camera" orientation) to the nearest pose's wrist, then shift
+    the hand coords to align with the pose's wrists in the 3D scene projection.
+
+    How to project the hand coords into the same "global" context as the
+    3D pose?
+    Probably the simplest approach is similar to the Scene3D manipulations:
+    - project the pose into the camera scene
+    - add the raw hand coords to the hand's global_orient vector to rotate the
+      hand so that it is viewed from the camera's perspective
+    - shift the hand coords so the wrist point matches the projected pose's
+    - "de-project" the hand coords by applying the inverse of the pose camera
+      transform
+    - apply the pose's "global_orient" transform to get the "global" hand
+      coords
+    """
+
+    pose_kpts_3d = unflatten_triplets(pose["keypoints3d"])
+
+    pose_proj = [[p[0] + pose["camera"][0],
+                 p[1] + pose["camera"][1],
+                 p[2] + pose["camera"][2]]
+                 for p in pose_kpts_3d]
+    
+    hand_rot = [[h[0] + hand["global_orient"][0],
+                 h[1] + hand["global_orient"][1],
+                 h[2] + hand["global_orient"][2]]
+                 for h in hand["keypoints3d"]]
+    
+    hand_base = hand["kpts_3d"][0]
+
+    if hand["is_right"]:
+        pose_wrist_coords = pose_proj[6]
+    else:
+        pose_wrist_coords = pose_proj[5]
+
+    hand_zeroed = [[trio[0] - hand_base[0], trio[1] - hand_base[1], trio[2] - hand_base[2]] for trio in hand_rot]
+    hand_trans = [[trio[0] + pose_wrist_coords[0], trio[1] + pose_wrist_coords[1], trio[2] + pose_wrist_coords[2]] for trio in hand_zeroed]
+    hand_deproj = [[trio[0] - pose["camera"][0], trio[1] - pose["camera"][1], trio[2] - pose["camera"][2]] for trio in hand_trans]
+    
+    hand_global = np.matmul(hand_deproj, pose["global_orient"]).flatten()
+    
+    return hand_global
+
+
+
+# Derived from https://github.com/Kazuhito00/hand-gesture-recognition-using-mediapipe
 def get_class_weights(keypoints_2d, model):
 
+    # Coords need to be shifted relative to point 0 (wrist) and normalized
     wrist_coords = [keypoints_2d[0], keypoints_2d[1]]
     shifted_coords = []
     for i in range(0, len(keypoints_2d), 2):
@@ -31,7 +104,6 @@ def get_class_weights(keypoints_2d, model):
     abs_val = max([abs(val) for val in shifted_coords])
     normed_coords = [val / abs_val for val in shifted_coords]
 
-    # Coords need to be shifted relative to point 0 (wrist) and normalized
     predict_result = model.predict(np.array([normed_coords]), verbose = 0)
 
     return np.squeeze(predict_result)
@@ -78,6 +150,10 @@ def calculate_angle_in_3d(arm1, vertex, arm2):
 def triplets_to_pairs(kpts):
     # Convert a flattened vector of [x1, y1, c1, x2, y2, c2, ...] to [[x1, y1], [x2, y2], ...]
     return [[k[0], k[1]] for k in np.array_split(kpts, len(kpts) / 3)]
+
+
+def unflatten_triplets(kpts):
+    return [[k[0], k[1], k[2]] for k in np.array_split(kpts, len(kpts) / 3)]
 
 
 def xywh_to_xyxy(bbox):
@@ -129,7 +205,7 @@ def do_xyxys_overlap(xyxy1, xyxy2):
 
 async def match_hands_in_frames(video_id, hands_to_match, min_frameno, max_frameno, db, model):
     """Hands are matched to poses based on the distance of each detected
-    hand's centroid from each pose's wrist, considering only right wrists
+    hand's wrist (base) from each pose's wrist, considering only right wrists
     if the hand is estimated to be a right hand, etc. Matches are calculated
     based upon 2D image coordinates only, which is not ideal when hands overlap,
     but matching in 3D seems unlikely to work better given that the body and
@@ -233,10 +309,13 @@ async def match_hands_in_frames(video_id, hands_to_match, min_frameno, max_frame
                 coord for triplet in hand["global_orient"] for coord in triplet
             ]
 
+            # Get the rectified/global hand coordinates in the pose's frame of reference
+            projected_hand_keypoints = project_hand_keypoints(hand, frame_poses[best_pose_match])
+
             # Calculate angles between hand joints
             joint_angles_3d = [calculate_angle_in_3d(hand["kpts_3d"][triad[0]], hand["kpts_3d"][triad[1]], hand["kpts_3d"][triad[2]]) for triad in HAND_21_ANGLES]
 
-            # Maybe also generate embeddings/category weights here?
+            # Get the logits (linear class scores) from a hand gesture classification model
             class_weights = get_class_weights(kpts_2d, model)
 
             matched_hands += 1
@@ -256,6 +335,7 @@ async def match_hands_in_frames(video_id, hands_to_match, min_frameno, max_frame
                     kpts_3d,
                     joint_angles_3d,
                     class_weights,
+                    projected_hand_keypoints,
                     global_orient,
                     frame_poses[best_pose_match]["track_id"],
                 ]
@@ -319,6 +399,10 @@ async def main() -> None:
 
     logging.info("Loading classification model")
     model = tf.keras.models.load_model(model_path, compile=False)
+
+    # Consider getting the linear weights of the categories to use as embeddings,
+    # rather than running softmax to get their probabilities
+    model.layers[-1].activation = tf.keras.activations.linear
 
     logging.info("Matching tracked poses to hands detected in video")
 

@@ -107,6 +107,7 @@ async def initialize_db(conn, drop=False) -> None:
             global_orient FLOAT[9] NOT NULL,
             joint_angles3d vector(21) DEFAULT NULL,
             class_weights vector(7) DEFAULT NULL,
+            rectified3d vector(63) DEFAULT NULL,
             track_id INTEGER DEFAULT NULL,
             cluster_id INTEGER DEFAULT NULL
         )
