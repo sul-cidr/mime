@@ -54,20 +54,41 @@
       rawPoints.push([handCoords[i], handCoords[i + 1], handCoords[i + 2]]);
     }
 
+    let handGlobalOrient: number[][] = [];
+    for (let i = 0; i < pose.hand_global_orient.length; i += 3) {
+      handGlobalOrient.push([
+        pose.hand_global_orient[i],
+        pose.hand_global_orient[i + 1],
+        pose.hand_global_orient[i + 2],
+      ]);
+    }
+
     // Translate the 3D keypoints of the raw hand detection (which seems to have
-    // no particular orientation) into the scene using the "global orientation"
-    // vector, which flips them around so that (with a bit more manipulation)
-    // they will appear in the same orientation as seen in the 2D image.
-    // Also scale up the distances between the points in every dimension and
-    // flip the Y and Z axes so that the hand appears correctly in the viz.
+    // no particular orientation) into the scene so that the hand will appear
+    // in the same orientation as seen in the 2D image (just with added depth).
+    // This can be accomplished by adding the first row of the 3x3 global
+    // orientation matrix to each hand point and then flipping the sign of
+    // the Y and Z values. It is not clear why this works.
+    // Also scale up the distances between the points in every dimension.
     let projPoints: number[][] = [];
     rawPoints.forEach((point) => {
       projPoints.push([
-        (point[0] + pose.hand_global_orient[0]) * 100,
-        (point[1] + pose.hand_global_orient[1]) * -100,
-        (point[2] + pose.hand_global_orient[2]) * -100,
+        (point[0] + handGlobalOrient[0][0]) * 100,
+        (point[1] + handGlobalOrient[0][1]) * -100,
+        (point[2] + handGlobalOrient[0][2]) * -100,
       ]);
     });
+
+    // Alternative approach: theoretically, taking the dot product of the global
+    // orientation matrix and the raw hand keypoints *should* project the
+    // the hand into a meaningful 3D orientation, but it's not clear what the
+    // result of this is supposed to represent.
+    // let rawProjPoints: number[][] = matrixProd(rawPoints, handGlobalOrient);
+    // let projPoints: number[][] = rawProjPoints.map((point) => [
+    //   point[0] * 100,
+    //   point[1] * 100,
+    //   point[2] * 100,
+    // ]);
 
     // Determine the midpoint of the hand in the projected 3D space
     [minCoords, maxCoords] = get3DPoseExtent(projPoints, minCoords, maxCoords);

@@ -136,7 +136,8 @@
       videoParam = `ALL|${thisHandPose.video_id}`;
     }
 
-    query = `${API_BASE}/hands/similar/${searchThresholds.total_results}/${similarityMetric}|${searchThresholds[similarityMetric]}/${videoParam}/${thisHandPose.frame}/${thisHandPose.pose_idx}/${thisHandPose.search_is_right}/${avoidShot ? thisHandPose.shot : -1}/`;
+    // NOTE: cosine is hard-coded as the vector comparison metric for now
+    query = `${API_BASE}/hands/similar/${searchThresholds.total_results}/${similarityMetric}|${searchThresholds["cosine"]}/${videoParam}/${thisHandPose.frame}/${thisHandPose.pose_idx}/${thisHandPose.search_is_right}/${avoidShot ? thisHandPose.shot : -1}/`;
 
     const response = await fetch(query);
     return await response.json();
@@ -162,12 +163,17 @@
           <RadioItem
             bind:group={similarityMetric}
             name="similarity-metric"
-            value="cosine">Joint angles</RadioItem
+            value="joint_angles">Joint angles</RadioItem
           >
           <RadioItem
             bind:group={similarityMetric}
             name="similarity-metric"
-            value="view_invariant">Embedding</RadioItem
+            value="cosine">Embedding</RadioItem
+          >
+          <RadioItem
+            bind:group={similarityMetric}
+            name="similarity-metric"
+            value="global3d">Global 3D</RadioItem
           >
         </RadioGroup>
       </div>

@@ -121,7 +121,7 @@ async def load_4dh_predictions(self, video_id: UUID, pkl_path: Path, clear=True)
 
         # We only want the pose data about the tracked poses in each frame; the raw
         # output also contains data about previously tracked poses ("ghosts") that we
-        # really don't want to include. The 2d and 3d joints data  includes these
+        # really don't want to include. The 2d and 3d joints data includes these
         # "ghosts", so need to filter those entries out. This can be done by only using
         # the indices of the "tracked_ids" in the larger "tid" list to get the joints
         # and conf data.
@@ -420,6 +420,13 @@ async def index_pose_hands(self) -> None:
         """
         CREATE INDEX ON hand
         USING ivfflat (class_weights vector_cosine_ops)
+        ;
+        """,
+    )
+    await self._pool.execute(
+        """
+        CREATE INDEX ON hand
+        USING ivfflat (rectified3d vector_cosine_ops)
         ;
         """,
     )

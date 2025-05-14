@@ -27,23 +27,44 @@ def get_segment_midpoint_3d(seg1, seg2):
             seg1[2] + seg2[2]]
 
 
+# Trying this from https://www.mathworks.com/matlabcentral/answers/445994-how-to-calculate-a-rotation-matrix-between-two-3d-points
+def derive_rotation_matrix(p0, p1):
+
+    C = np.cross(p0, p1)
+    D = np.dot(p0, p1)
+    NP0 = np.linalg.norm(p0)
+
+    Z = [[0, -C[2], C[1]], [C[2], 0, -C[0]], [-C[1], C[0], 0]]
+    R = np.eye(3) + Z + np.square(Z) * (1-D)/np.square(np.linalg.norm(C)) / np.square(NP0)
+
+    # A simpler case that doesn't seem to apply here
+    #R = np.sign(D) * (np.linalg.norm(p1) / NP0)
+
+    return R
+
+
 def project_hand_keypoints(hand, pose):
     """PHALP provides body keypoints in 3D in a local context, albeit from the
-    perspective of the camera (3d_joints/keypoints3d), if the camera that
-    took the original 2D image were located directly in front of the pose.
-    PHALP also provides a "global_orient" matrix transform that rotates the
+    perspective of the camera, if the camera that took the original 2D image
+    were "zoomed in" on the pose. These are stored as 13 x 3 COCO keypoints
+    (flat) in pose.keypoints3d in the DB.
+    PHALP also has a "global_orient" matrix transform that rotates the
     3d_joints so that the plane formed by the hips and ankles is aligned
     with the X,Y axis (and perpendicular to the Z axis), basically facing the
-    "close-up" camera. Finally, PHALP provides a "camera" 3D transform that
-    can be used to project the 3d_joints into a 3D scene that includes the
-    estimated camera position (greatly increasing the depth of the space).
+    "close-up" camera. The transform is not saved into the DB, but the field
+    pose.global3d_coco13 includes the transformed version, so presumably the
+    transform can be derived from them.
+    Finally, PHALP provides an [X,Y,Z] "camera" 3D transform that can be used to
+    project the raw pose.keypoints3d into a 3D scene that includes the estimated
+    camera position (greatly increasing the depth of the space).
 
     WiLoR's keypoints3d output provides the hand keypoints in 3D, in a
-    seemingly arbitrary orientation. These coordinates can be summed with WiLoR's
-    global_orient vector (its "global" apparently has a different meaning than
-    PHALP's) to rotate the hand to appear from the perspective of the camera
-    that took the 2D iamge, as if the camera were immediately in front of the
-    hand. WiLoR also provides a camera transform and estimated camera position
+    seemingly arbitrary orientation. These coordinates can be summed with the
+    first row of WiLoR's global_orient matrix (its "global" apparently has a
+    different meaning than PHALP's) to rotate the hand to appear from the
+    perspective of the camera that took the 2D iamge, as if the camera were
+    immediately in front of the hand.
+    WiLoR also provides a camera transform and estimated camera position
     that can be used to project the hand coordinates into the estimated 3D scene,
     but we don't use this for the Scene3D viz; instead we just match the raw 3D
     hand coords + the hand global_orient vector (getting the hand into the
@@ -64,30 +85,50 @@ def project_hand_keypoints(hand, pose):
     """
 
     pose_kpts_3d = unflatten_triplets(pose["keypoints3d"])
+    pose_global_3d = unflatten_triplets(pose["global3d_coco13"])
 
+    # Project the pose into the camera space
     pose_proj = [[p[0] + pose["camera"][0],
                  p[1] + pose["camera"][1],
                  p[2] + pose["camera"][2]]
                  for p in pose_kpts_3d]
-    
-    hand_rot = [[h[0] + hand["global_orient"][0],
-                 h[1] + hand["global_orient"][1],
-                 h[2] + hand["global_orient"][2]]
-                 for h in hand["keypoints3d"]]
-    
-    hand_base = hand["kpts_3d"][0]
 
-    if hand["is_right"]:
+    # hand_rot = np.matmul(hand["kpts_3d"], hand["global_orient"])
+
+    # Rotate the 3D hand so that it appears from the angle in the orig 2D image
+    hand_rot = [[h[0] + hand["global_orient"][0][0],
+                 h[1] + hand["global_orient"][0][1],
+                 h[2] + hand["global_orient"][0][2]]
+                 for h in hand["kpts_3d"]]
+    
+    # Get the wrist coordinates of the rotated hand
+    hand_base = hand_rot[0]
+
+    # Get the wrist coordinates of the correct hand of the projected pose
+    if hand["right"]:
         pose_wrist_coords = pose_proj[6]
     else:
         pose_wrist_coords = pose_proj[5]
 
+    # Express the rotated hand coordinates relative to the base of the hand's wrist
     hand_zeroed = [[trio[0] - hand_base[0], trio[1] - hand_base[1], trio[2] - hand_base[2]] for trio in hand_rot]
+
+    # Translate the wrist-origin rotated hand coords to the pose's wrist
     hand_trans = [[trio[0] + pose_wrist_coords[0], trio[1] + pose_wrist_coords[1], trio[2] + pose_wrist_coords[2]] for trio in hand_zeroed]
+    
+    # "Deproject" the hand coordinates (now in the pose's reference frame)
+    # so the camera is not a factor.
     hand_deproj = [[trio[0] - pose["camera"][0], trio[1] - pose["camera"][1], trio[2] - pose["camera"][2]] for trio in hand_trans]
+
+    # Finally, need to apply the same transform to the pose-referenced hand
+    # coordinates that was applied to get the pose coordinates (keypoints3d)
+    # into the de-rotated/"squared up" representation.
+    pose_global_xform = derive_rotation_matrix(pose_kpts_3d[0], pose_global_3d[0])
+
+    hand_global = np.matmul(hand_deproj, pose_global_xform).flatten()
     
-    hand_global = np.matmul(hand_deproj, pose["global_orient"]).flatten()
-    
+    #hand_global = np.array(hand_deproj).flatten()
+
     return hand_global
 
 
@@ -188,7 +229,7 @@ def get_extend_2d_xyxy(points, extend=.2):
    return extend_2d_xyxy(get_2d_xyxy(points), extend)
 
 
-def get_hand_center(hand, frameno=0):
+def get_hand_center(hand):
     # Find the center point of a hand's 2D bounding box
     xmin, ymin, xmax, ymax = get_2d_xyxy(hand)
 
@@ -240,7 +281,6 @@ async def match_hands_in_frames(video_id, hands_to_match, min_frameno, max_frame
         pose_to_hands = {}
 
         for h, hand in enumerate(frame_hands):
-            #hand_center = get_hand_center(hand["kpts_2d"], frameno)
             hand_base = hand["kpts_2d"][0]
 
             closest_dist = -1

@@ -12,3 +12,13 @@ export const formatSeconds = (seconds: number) => {
 
 export const clamp = (num: number, min: number, max: number): number =>
   num < min ? min : num > max ? max : num;
+
+// Adapted from https://stackoverflow.com/questions/27205018/multiply-2-matrices-in-javascript
+export const matrixProd = (A: number[][], B: number[][]): number[][] =>
+  A.map((row, i) =>
+    B[0].map((_, j) =>
+      row.reduce((acc, _, n) =>
+        acc + A[i][n] * B[n][j], 0
+      )
+    )
+  )

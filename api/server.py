@@ -347,14 +347,17 @@ async def get_nearest_hands(
     request: Request,
 ):
     metric, max_distance = metric_and_max.split("|")
+    print("METRIC AND MAX", metric_and_max)
 
     embedding = "joint_angles3d"
-    if metric == "view_invariant":
-        metric = "cosine"
+    if metric == "cosine":
         embedding = "class_weights"
     elif metric == "joint_angles":
         metric = "cosine"
         embedding = "joint_angles3d"
+    elif metric == "global3d":
+        metric = "cosine"
+        embedding = "rectified3d"
 
     hand_data = await request.app.state.db.get_nearest_hands(
         video_param,
