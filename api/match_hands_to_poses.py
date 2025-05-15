@@ -100,7 +100,7 @@ def project_hand_keypoints(hand, pose):
                  h[1] + hand["global_orient"][0][1],
                  h[2] + hand["global_orient"][0][2]]
                  for h in hand["kpts_3d"]]
-    
+
     # Get the wrist coordinates of the rotated hand
     hand_base = hand_rot[0]
 
@@ -115,7 +115,7 @@ def project_hand_keypoints(hand, pose):
 
     # Translate the wrist-origin rotated hand coords to the pose's wrist
     hand_trans = [[trio[0] + pose_wrist_coords[0], trio[1] + pose_wrist_coords[1], trio[2] + pose_wrist_coords[2]] for trio in hand_zeroed]
-    
+
     # "Deproject" the hand coordinates (now in the pose's reference frame)
     # so the camera is not a factor.
     hand_deproj = [[trio[0] - pose["camera"][0], trio[1] - pose["camera"][1], trio[2] - pose["camera"][2]] for trio in hand_trans]
@@ -126,7 +126,7 @@ def project_hand_keypoints(hand, pose):
     pose_global_xform = derive_rotation_matrix(pose_kpts_3d[0], pose_global_3d[0])
 
     hand_global = np.matmul(hand_deproj, pose_global_xform).flatten()
-    
+
     #hand_global = np.array(hand_deproj).flatten()
 
     return hand_global
@@ -483,7 +483,6 @@ async def main() -> None:
             )
 
     await db.index_pose_hands()
-
 
 
 if __name__ == "__main__":

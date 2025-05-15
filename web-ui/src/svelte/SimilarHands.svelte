@@ -23,7 +23,7 @@
     webcamImage,
   } from "@svelte/stores";
 
-  export let similarityMetric = "cosine";
+  export let similarityMetric = "global3d";
   //export let toggle3DHandModal; // May implement this eventually
 
   let avoidShotInResults: boolean = false;
@@ -136,7 +136,11 @@
       videoParam = `ALL|${thisHandPose.video_id}`;
     }
 
-    // NOTE: cosine is hard-coded as the vector comparison metric for now
+    // NOTE: "cosine" is hardcoded as the hands vector comparison metric for now
+    // The terms "metric" and "embedding" are becoming somewhat overloaded in
+    // the API and "Search Settings" widget/stores as new search modalities are
+    // added, and arguably it all should be refactored, or just dropped entirely
+    // in favor of the mk2 API.
     query = `${API_BASE}/hands/similar/${searchThresholds.total_results}/${similarityMetric}|${searchThresholds["cosine"]}/${videoParam}/${thisHandPose.frame}/${thisHandPose.pose_idx}/${thisHandPose.search_is_right}/${avoidShot ? thisHandPose.shot : -1}/`;
 
     const response = await fetch(query);
@@ -158,7 +162,7 @@
   >
     <div class="p-1 inline-flex items-center rounded-token space-x-10">
       <div class="flex items-center space-x-1">
-        <span><strong>Hands similarity:</strong></span>
+        <span><strong>Hands similarity</strong> (cosine):</span>
         <RadioGroup>
           <RadioItem
             bind:group={similarityMetric}

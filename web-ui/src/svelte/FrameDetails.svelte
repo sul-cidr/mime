@@ -176,8 +176,8 @@
         <!-- svelte-ignore a11y-mouse-events-have-key-events -->
         <li
           class="py-1 px-2 flex items-center gap-2 justify-between cursor-pointer"
-          class:variant-ghost={hoveredPoseIdx === i}
-          on:mouseover={() => (hoveredPoseIdx = i)}
+          class:variant-ghost={hoveredPoseIdx === pose.pose_idx}
+          on:mouseover={() => (hoveredPoseIdx = pose.pose_idx)}
           on:mouseout={() => (hoveredPoseIdx = undefined)}
         >
           Pose #{i + 1} | Confidence: {pose.score.toFixed(3)}

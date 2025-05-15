@@ -2,13 +2,7 @@
   import * as THREE from "three";
   import { T } from "@threlte/core";
   import { Gizmo, Grid, interactivity, OrbitControls } from "@threlte/extras";
-  import {
-    currentVideo,
-    currentFrame,
-    currentPose,
-    currentHandPose,
-  } from "@svelte/stores";
-  import { API_BASE } from "@config";
+  import { currentPose, currentHandPose } from "@svelte/stores";
 
   import {
     COCO_13_SKELETON,
@@ -26,14 +20,16 @@
 
   let sceneMidpoint = [0, 0, 0];
 
-  let allPosePoints: number[][][] = [];
+  let allPosePoints: { [pose_idx: number]: number[][] } = {};
+
   let allPoseLines: THREE.BufferGeometry[][] = [];
-  let allPoseExtents: number[][] = [];
-  let posePointColors: number[] = [];
+  let allPoseExtents: { [pose_idx: number]: number[][] } = {};
+  let posePointColors: { [pose_idx: number]: number } = {};
 
   let allHandPoints: number[][][] = [];
+  let handPointsToHand: { [handPointIdx: number]: number } = {};
   let allHandLines: THREE.BufferGeometry[][] = [];
-  let allHandExtents: number[][] = [];
+  let allHandExtents: number[][][] = [];
   let handPointColors: number[] = [];
 
   // Camera orbit controls settings
@@ -47,14 +43,6 @@
   let enableZoom: boolean = true;
 
   interactivity();
-
-  async function getHandData(videoId: string, frame: number) {
-    if (!frame) {
-      return null;
-    }
-    const response = await fetch(`${API_BASE}/hands/${videoId}/${frame}/`);
-    return await response.json();
-  }
 
   const setSearchHandPose = (hr: HandRecord) => {
     poses.every((pr: PoseRecord) => {
@@ -77,16 +65,16 @@
     if (data && data.length) {
       let zAdjust = 0;
 
-      allPosePoints = [];
-      allPoseExtents = [];
+      allPosePoints = {};
+      allPoseExtents = {};
       minCoords = [null, null, null];
       maxCoords = [null, null, null];
       sceneMidpoint = [0, 0, 0];
 
-      const newPosePoints: number[][][] = [];
-      posePointColors = [];
+      let newPosePoints: { [pose_idx: number]: number[][] } = {};
+      posePointColors = {};
 
-      data.forEach((pr: PoseRecord, p: number) => {
+      data.forEach((pr: PoseRecord) => {
         if (!pr.keypoints3d || pr.hidden === true) return;
 
         let projCoords: number[][] = [];
@@ -102,13 +90,13 @@
             (kp[2] + pr.camera[2]) * -1,
           ]);
         }
-        posePointColors.push(0x00ff00);
-        newPosePoints.push(projCoords);
+        posePointColors[pr.pose_idx] = 0x00ff00;
+        newPosePoints[pr.pose_idx] = projCoords;
       });
 
-      for (let l = 0; l < newPosePoints.length; l += 1) {
+      for (const posePoints of Object.values(newPosePoints)) {
         [minCoords, maxCoords] = get3DPoseExtent(
-          newPosePoints[l],
+          posePoints,
           minCoords,
           maxCoords,
         );
@@ -119,22 +107,20 @@
       maxCoords[2] += zAdjust;
 
       let reprojCoords: number[][] = [];
-      const shiftedPosePoints: number[][][] = [];
-      for (let n = 0; n < newPosePoints.length; n += 1) {
+      for (const [pose_idx, posePoints] of Object.entries(newPosePoints)) {
         reprojCoords = [];
-        for (let r = 0; r < newPosePoints[n].length; r += 1) {
+        for (let r = 0; r < posePoints.length; r += 1) {
           reprojCoords.push([
-            newPosePoints[n][r][0],
-            newPosePoints[n][r][1],
-            newPosePoints[n][r][2] + zAdjust,
+            posePoints[r][0],
+            posePoints[r][1],
+            posePoints[r][2] + zAdjust,
           ]);
         }
-        shiftedPosePoints.push(reprojCoords);
-        allPosePoints.push(reprojCoords);
+        allPosePoints[pose_idx] = reprojCoords;
       }
 
-      for (let a = 0; a < allPosePoints.length; a += 1) {
-        allPoseExtents.push(get3DPoseExtent(allPosePoints[a]));
+      for (const [pose_idx, posePoints] of Object.entries(allPosePoints)) {
+        allPoseExtents[pose_idx] = get3DPoseExtent(posePoints);
       }
 
       sceneMidpoint = [
@@ -150,6 +136,7 @@
     if (data && data.length) {
       allHandPoints = [];
       allHandExtents = [];
+      handPointsToHand = {};
 
       const newHandPoints: number[][][] = [];
       handPointColors = [];
@@ -158,15 +145,15 @@
         let projCoords: number[][] = [];
         let wristCoords = null;
 
-        poses.forEach((pr: PoseRecord, p) => {
+        poses.forEach((pr: PoseRecord) => {
           if (hr.pose_idx === pr.pose_idx) {
             if (pr.hidden === true) return;
 
             const w = hr.is_right ? 6 : 5; // * 3;
             wristCoords = [
-              allPosePoints[p][w][0],
-              allPosePoints[p][w][1],
-              allPosePoints[p][w][2],
+              allPosePoints[hr.pose_idx][w][0],
+              allPosePoints[hr.pose_idx][w][1],
+              allPosePoints[hr.pose_idx][w][2],
             ];
             return;
           }
@@ -192,6 +179,8 @@
           handPointColors.push(0xff0000);
         }
         newHandPoints.push(projCoords);
+
+        handPointsToHand[newHandPoints.length - 1] = h;
       });
 
       for (let l = 0; l < newHandPoints.length; l += 1) {
@@ -217,22 +206,20 @@
   };
 
   const updatePointColors = (hoveredPoseIdx: number) => {
-    posePointColors.forEach((_, p) => {
-      if (hoveredPoseIdx === p) {
-        posePointColors[p] = 0xffff00;
-      } else {
-        posePointColors[p] = 0x00ff00;
-      }
-    });
+    for (const pose_idx of Object.keys(posePointColors)) {
+      posePointColors[pose_idx] =
+        hoveredPoseIdx === parseInt(pose_idx) ? 0xff00ff : 0x00ff00;
+    }
   };
 
-  const updatePoseLines = (thesePosePoints: number[][][]) => {
+  const updatePoseLines = (thesePosePoints: {
+    [pose_idx: number]: number[][];
+  }) => {
     // Given a set of pose points, make lines connecting the armature points.
     // Drawing these declaratively/reactively, as is done for the actual
     // armature points, doesn't seem to work well with threlte.
     allPoseLines = [];
-    for (let p = 0; p < allPosePoints.length; p += 1) {
-      const posePoints: number[] = thesePosePoints[p];
+    for (const [_, posePoints] of Object.entries(thesePosePoints)) {
       let thesePoseLines: THREE.BufferGeometry[] = [];
       for (let pp = 0; pp < COCO_13_SKELETON.length; pp += 1) {
         let [from, to] = COCO_13_SKELETON[pp];
@@ -253,8 +240,8 @@
     // Drawing these declaratively/reactively, as is done for the actual
     // armature points, doesn't seem to work well with threlte.
     allHandLines = [];
-    for (let h = 0; h < allHandPoints.length; h += 1) {
-      const handPoints: number[] = theseHandPoints[h];
+    for (let h = 0; h < theseHandPoints.length; h += 1) {
+      const handPoints: number[][] = theseHandPoints[h];
       let theseHandLines: THREE.BufferGeometry[] = [];
       for (let hh = 0; hh < HAND_21_SKELETON.length; hh += 1) {
         let [from, to] = HAND_21_SKELETON[hh];
@@ -277,34 +264,49 @@
   $: updateHandLines(allHandPoints);
 
   $: updatePointColors(hoveredPoseIdx);
-
-  // $: getHandData($currentVideo.id, $currentFrame!).then((data) =>
-  //   updateHandData(data),
-  // );
 </script>
 
-{#each allPosePoints as posePoints, pp}
+{#each Object.entries(allPosePoints) as [pose_idx, posePoints], pp}
   <T.Mesh
-    position.x={(allPoseExtents[pp][0][0] + allPoseExtents[pp][1][0]) / 2}
-    position.y={(allPoseExtents[pp][0][1] + allPoseExtents[pp][1][1]) / 2}
-    position.z={(allPoseExtents[pp][0][2] + allPoseExtents[pp][1][2]) / 2}
+    position.x={(allPoseExtents[pose_idx][0][0] +
+      allPoseExtents[pose_idx][1][0]) /
+      2}
+    position.y={(allPoseExtents[pose_idx][0][1] +
+      allPoseExtents[pose_idx][1][1]) /
+      2}
+    position.z={(allPoseExtents[pose_idx][0][2] +
+      allPoseExtents[pose_idx][1][2]) /
+      2}
     on:click={() => {
-      $currentPose = poses[pp];
+      poses.every((pose) => {
+        if (pose.pose_idx === parseInt(pose_idx)) {
+          $currentPose = pose;
+          return false;
+        }
+        return true;
+      });
     }}
     on:pointerover={() => {
-      //posePointColors[pp] = 0xffff00;
-      hoveredPoseIdx = pp;
+      hoveredPoseIdx = parseInt(pose_idx);
     }}
     on:pointerout={() => {
-      //posePointColors[pp] = 0x00ff00;
       hoveredPoseIdx = undefined;
     }}
   >
     <T.BoxGeometry
       args={[
-        2 + Math.abs(allPoseExtents[pp][0][0] - allPoseExtents[pp][1][0]),
-        2 + Math.abs(allPoseExtents[pp][0][1] - allPoseExtents[pp][1][1]),
-        2 + Math.abs(allPoseExtents[pp][0][2] - allPoseExtents[pp][1][2]),
+        2 +
+          Math.abs(
+            allPoseExtents[pose_idx][0][0] - allPoseExtents[pose_idx][1][0],
+          ),
+        2 +
+          Math.abs(
+            allPoseExtents[pose_idx][0][1] - allPoseExtents[pose_idx][1][1],
+          ),
+        2 +
+          Math.abs(
+            allPoseExtents[pose_idx][0][2] - allPoseExtents[pose_idx][1][2],
+          ),
       ]}
     />
     <T.MeshBasicMaterial visible={false} />
@@ -316,7 +318,7 @@
       position.z={armaturePoint[2]}
     >
       <T.BoxGeometry args={[0.5, 0.5, 0.5]} />
-      <T.MeshPhongMaterial color={posePointColors[pp]} />
+      <T.MeshPhongMaterial color={posePointColors[pose_idx]} />
     </T.Mesh>
   {/each}
 {/each}
@@ -334,10 +336,10 @@
     position.y={(allHandExtents[hp][0][1] + allHandExtents[hp][1][1]) / 2}
     position.z={(allHandExtents[hp][0][2] + allHandExtents[hp][1][2]) / 2}
     on:click={() => {
-      setSearchHandPose(hands[hp]);
+      setSearchHandPose(hands[handPointsToHand[hp]]);
     }}
     on:pointerover={() => {
-      handPointColors[hp] = 0xffff00;
+      handPointColors[hp] = 0xff00ff;
     }}
     on:pointerout={() => {
       handPointColors[hp] = hands[hp].is_right ? 0x00ff00 : 0xff0000;

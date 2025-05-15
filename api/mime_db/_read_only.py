@@ -288,15 +288,11 @@ async def get_nearest_hands(
             WHERE video_id = '{video_param}' AND frame = $1 AND pose_idx = $2 and is_right = {is_right}
         """
 
-    print("DISTANCE SUBQUERY", distance_subquery)
-
     distance = {
         "cosine": f"{embedding} <=> ({distance_subquery})",
         # "euclidean": f"{embedding} <-> ({distance_subquery})",
         # "innerproduct": f"({embedding} <#> ({distance_subquery}) * -1",
     }[metric]
-
-    print("DISTANCE:", distance)
 
     return await self._pool.fetch(
         f"""

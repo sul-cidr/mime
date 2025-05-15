@@ -23,7 +23,7 @@
     webcamImage,
   } from "@svelte/stores";
 
-  export let similarityMetric = "cosine";
+  export let similarityMetric = "global";
   export let toggle3DPoseModal;
 
   let avoidShotInResults: boolean = false;
@@ -111,12 +111,12 @@
           <RadioItem
             bind:group={similarityMetric}
             name="similarity-metric"
-            value="cosine">Cosine</RadioItem
+            value="cosine">2D Cosine</RadioItem
           >
           <RadioItem
             bind:group={similarityMetric}
             name="similarity-metric"
-            value="euclidean">Euclidean</RadioItem
+            value="euclidean">2D Euclidean</RadioItem
           >
           <!-- <RadioItem
             bind:group={similarityMetric}

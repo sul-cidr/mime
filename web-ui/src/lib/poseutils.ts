@@ -328,11 +328,11 @@ export const getExtentFlat = (keypoints: Array<number> = []) => {
 };
 
 export const get3DPoseExtent = (
-  poses: Array<number>[] = [],
+  poses: number[][],
   minsSoFar = [null, null, null],
   maxsSoFar = [null, null, null],
-) => {
-  const poseMin = poses.reduce(
+): number[][] => {
+  const poseMin: number[] = poses.reduce(
     (poseMins, coords) => [
       poseMins[0] === null ? coords[0] : Math.min(poseMins[0], coords[0]),
       poseMins[1] === null ? coords[1] : Math.min(poseMins[1], coords[1]),
@@ -340,7 +340,7 @@ export const get3DPoseExtent = (
     ],
     minsSoFar,
   );
-  const poseMax = poses.reduce(
+  const poseMax: number[] = poses.reduce(
     (poseMaxs, coords) => [
       poseMaxs[0] === null ? coords[0] : Math.max(poseMaxs[0], coords[0]),
       poseMaxs[1] === null ? coords[1] : Math.max(poseMaxs[1], coords[1]),

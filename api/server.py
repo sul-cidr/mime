@@ -347,7 +347,6 @@ async def get_nearest_hands(
     request: Request,
 ):
     metric, max_distance = metric_and_max.split("|")
-    print("METRIC AND MAX", metric_and_max)
 
     embedding = "joint_angles3d"
     if metric == "cosine":
