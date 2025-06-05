@@ -43,6 +43,7 @@
               <Pose
                 poseData={poseData.keypointsopp}
                 pose4dhData={poseData.keypoints4dh}
+                faceData={poseData.face_landmarks}
                 leftHandData={poseData.lh_keypoints_2d}
                 rightHandData={poseData.rh_keypoints_2d}
                 {scaleFactor}

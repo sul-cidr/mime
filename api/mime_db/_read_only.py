@@ -265,6 +265,7 @@ async def get_nearest_poses(
                  pose.keypoints,
                  {distance} AS distance,
                  frame.shot AS shot,
+                 face.landmarks AS face_landmarks,
                  face.cluster_id AS face_cluster_id
           FROM pose
             INNER JOIN video ON video.id = pose.video_id
