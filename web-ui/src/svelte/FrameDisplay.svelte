@@ -18,6 +18,7 @@
   export let displayWidthPx = 640;
 
   const scaleFactor = displayWidthPx / frameWidth;
+  const labelFontSize = `${Math.max(8, Math.round(16 / scaleFactor))}px`;
 </script>
 
 <div>
@@ -147,6 +148,7 @@
                 y={poseData.bbox[1] + 5}
                 stroke="white"
                 fill="white"
+                font-size={labelFontSize}
               >
                 {#if poseData.track_id !== null}
                   {poseData.track_id}
