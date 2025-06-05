@@ -73,8 +73,8 @@
                 stroke={poseData.track_id ? "magenta" : "white"}
                 fill="none"
                 stroke-width="1"
-                class:selected={hoveredPoseIdx === i}
-                on:mouseover={() => (hoveredPoseIdx = i)}
+                class:selected={hoveredPoseIdx === poseData.pose_idx}
+                on:mouseover={() => (hoveredPoseIdx = poseData.pose_idx)}
                 on:mouseout={() => (hoveredPoseIdx = undefined)}
                 on:click={() => ($currentPose = poses[i])}
                 pointer-events="visible"
@@ -89,9 +89,9 @@
                   stroke="limegreen"
                   fill="none"
                   stroke-width="1"
-                  class:selected={hoveredPoseIdx === i}
-                  on:mouseover={() => (hoveredPoseIdx = i)}
-                  on:focus={() => (hoveredPoseIdx = i)}
+                  class:selected={hoveredPoseIdx === poseData.pose_idx}
+                  on:mouseover={() => (hoveredPoseIdx = poseData.pose_idx)}
+                  on:focus={() => (hoveredPoseIdx = poseData.pose_idx)}
                   on:mouseout={() => (hoveredPoseIdx = undefined)}
                   on:blur={() => (hoveredPoseIdx = undefined)}
                   pointer-events="visible"
@@ -107,9 +107,9 @@
                   stroke="green"
                   fill="none"
                   stroke-width="1"
-                  class:selected={hoveredPoseIdx === i}
-                  on:mouseover={() => (hoveredPoseIdx = i)}
-                  on:focus={() => (hoveredPoseIdx = i)}
+                  class:selected={hoveredPoseIdx === poseData.pose_idx}
+                  on:mouseover={() => (hoveredPoseIdx = poseData.pose_idx)}
+                  on:focus={() => (hoveredPoseIdx = poseData.pose_idx)}
                   on:mouseout={() => (hoveredPoseIdx = undefined)}
                   on:blur={() => (hoveredPoseIdx = undefined)}
                   on:click={() => {
@@ -129,9 +129,9 @@
                   stroke="red"
                   fill="none"
                   stroke-width="1"
-                  class:selected={hoveredPoseIdx === i}
-                  on:mouseover={() => (hoveredPoseIdx = i)}
-                  on:focus={() => (hoveredPoseIdx = i)}
+                  class:selected={hoveredPoseIdx === poseData.pose_idx}
+                  on:mouseover={() => (hoveredPoseIdx = poseData.pose_idx)}
+                  on:focus={() => (hoveredPoseIdx = poseData.pose_idx)}
                   on:mouseout={() => (hoveredPoseIdx = undefined)}
                   on:blur={() => (hoveredPoseIdx = undefined)}
                   on:click={() => {
