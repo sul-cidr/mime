@@ -13,10 +13,10 @@
 	let { sourcePose } = $props();
 
 	/** @type {'cosine'|'euclidean'|'view_invariant'|'3d'} */
-	let searchType = $state('cosine');
+	let searchType = $state('view_invariant');
 
-	let limit = $state(14);
-	let excludeWithinFrames = $state(30);
+	let limit = $state(21);
+	let excludeWithinFrames = $state(600);
 
 	/** @type {string[]}*/
 	let selectedVideoIds = $state([]);
