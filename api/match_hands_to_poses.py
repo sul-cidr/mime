@@ -22,23 +22,24 @@ model_path = "lib/hands/keypoint_classifier.hdf5"
 
 
 def get_segment_midpoint_3d(seg1, seg2):
-    return [seg1[0] + seg2[0],
-            seg1[1] + seg2[1],
-            seg1[2] + seg2[2]]
+    return [seg1[0] + seg2[0], seg1[1] + seg2[1], seg1[2] + seg2[2]]
 
 
 # Trying this from https://www.mathworks.com/matlabcentral/answers/445994-how-to-calculate-a-rotation-matrix-between-two-3d-points
 def derive_rotation_matrix(p0, p1):
-
     C = np.cross(p0, p1)
     D = np.dot(p0, p1)
     NP0 = np.linalg.norm(p0)
 
     Z = [[0, -C[2], C[1]], [C[2], 0, -C[0]], [-C[1], C[0], 0]]
-    R = np.eye(3) + Z + np.square(Z) * (1-D)/np.square(np.linalg.norm(C)) / np.square(NP0)
+    R = (
+        np.eye(3)
+        + Z
+        + np.square(Z) * (1 - D) / np.square(np.linalg.norm(C)) / np.square(NP0)
+    )
 
     # A simpler case that doesn't seem to apply here
-    #R = np.sign(D) * (np.linalg.norm(p1) / NP0)
+    # R = np.sign(D) * (np.linalg.norm(p1) / NP0)
 
     return R
 
@@ -88,18 +89,22 @@ def project_hand_keypoints(hand, pose):
     pose_global_3d = unflatten_triplets(pose["global3d_coco13"])
 
     # Project the pose into the camera space
-    pose_proj = [[p[0] + pose["camera"][0],
-                 p[1] + pose["camera"][1],
-                 p[2] + pose["camera"][2]]
-                 for p in pose_kpts_3d]
+    pose_proj = [
+        [p[0] + pose["camera"][0], p[1] + pose["camera"][1], p[2] + pose["camera"][2]]
+        for p in pose_kpts_3d
+    ]
 
     # hand_rot = np.matmul(hand["kpts_3d"], hand["global_orient"])
 
     # Rotate the 3D hand so that it appears from the angle in the orig 2D image
-    hand_rot = [[h[0] + hand["global_orient"][0][0],
-                 h[1] + hand["global_orient"][0][1],
-                 h[2] + hand["global_orient"][0][2]]
-                 for h in hand["kpts_3d"]]
+    hand_rot = [
+        [
+            h[0] + hand["global_orient"][0][0],
+            h[1] + hand["global_orient"][0][1],
+            h[2] + hand["global_orient"][0][2],
+        ]
+        for h in hand["kpts_3d"]
+    ]
 
     # Get the wrist coordinates of the rotated hand
     hand_base = hand_rot[0]
@@ -111,14 +116,31 @@ def project_hand_keypoints(hand, pose):
         pose_wrist_coords = pose_proj[5]
 
     # Express the rotated hand coordinates relative to the base of the hand's wrist
-    hand_zeroed = [[trio[0] - hand_base[0], trio[1] - hand_base[1], trio[2] - hand_base[2]] for trio in hand_rot]
+    hand_zeroed = [
+        [trio[0] - hand_base[0], trio[1] - hand_base[1], trio[2] - hand_base[2]]
+        for trio in hand_rot
+    ]
 
     # Translate the wrist-origin rotated hand coords to the pose's wrist
-    hand_trans = [[trio[0] + pose_wrist_coords[0], trio[1] + pose_wrist_coords[1], trio[2] + pose_wrist_coords[2]] for trio in hand_zeroed]
+    hand_trans = [
+        [
+            trio[0] + pose_wrist_coords[0],
+            trio[1] + pose_wrist_coords[1],
+            trio[2] + pose_wrist_coords[2],
+        ]
+        for trio in hand_zeroed
+    ]
 
     # "Deproject" the hand coordinates (now in the pose's reference frame)
     # so the camera is not a factor.
-    hand_deproj = [[trio[0] - pose["camera"][0], trio[1] - pose["camera"][1], trio[2] - pose["camera"][2]] for trio in hand_trans]
+    hand_deproj = [
+        [
+            trio[0] - pose["camera"][0],
+            trio[1] - pose["camera"][1],
+            trio[2] - pose["camera"][2],
+        ]
+        for trio in hand_trans
+    ]
 
     # Finally, need to apply the same transform to the pose-referenced hand
     # coordinates that was applied to get the pose coordinates (keypoints3d)
@@ -127,32 +149,31 @@ def project_hand_keypoints(hand, pose):
 
     hand_global = np.matmul(hand_deproj, pose_global_xform).flatten()
 
-    #hand_global = np.array(hand_deproj).flatten()
+    # hand_global = np.array(hand_deproj).flatten()
 
     return hand_global
 
 
-
 # Derived from https://github.com/Kazuhito00/hand-gesture-recognition-using-mediapipe
 def get_class_weights(keypoints_2d, model):
-
     # Coords need to be shifted relative to point 0 (wrist) and normalized
     wrist_coords = [keypoints_2d[0], keypoints_2d[1]]
     shifted_coords = []
     for i in range(0, len(keypoints_2d), 2):
-        shifted_coords.extend([keypoints_2d[i] - wrist_coords[0], keypoints_2d[i+1] - wrist_coords[1]])
+        shifted_coords.extend(
+            [keypoints_2d[i] - wrist_coords[0], keypoints_2d[i + 1] - wrist_coords[1]]
+        )
 
     abs_val = max([abs(val) for val in shifted_coords])
     normed_coords = [val / abs_val for val in shifted_coords]
 
-    predict_result = model.predict(np.array([normed_coords]), verbose = 0)
+    predict_result = model.predict(np.array([normed_coords]), verbose=0)
 
     return np.squeeze(predict_result)
 
 
 # Inspired by https://www.geeksforgeeks.org/angle-between-a-pair-of-lines-in-3d/
 def calculate_angle_in_3d(arm1, vertex, arm2):
-
     x1, y1, z1 = arm1
     x2, y2, z2 = vertex
     x3, y3, z3 = arm2
@@ -206,10 +227,10 @@ def get_2d_xyxy(points_list):
     # Extract xyxy bbox from a list of 2d keypoints
     points = np.array(points_list)
 
-    xmin = min(points[:,0])
-    ymin = min(points[:,1])
-    xmax = max(points[:,0])
-    ymax = max(points[:,1])
+    xmin = min(points[:, 0])
+    ymin = min(points[:, 1])
+    xmax = max(points[:, 0])
+    ymax = max(points[:, 1])
 
     return [xmin, ymin, xmax, ymax]
 
@@ -221,30 +242,39 @@ def extend_2d_xyxy(points, extend=0):
     width = xmax - xmin
     height = ymax - ymin
 
-    return [xmin - (width * extend), ymin - (height * extend), xmax + (width * extend), ymax + (height * extend)]
+    return [
+        xmin - (width * extend),
+        ymin - (height * extend),
+        xmax + (width * extend),
+        ymax + (height * extend),
+    ]
 
 
-def get_extend_2d_xyxy(points, extend=.2):
-   # Obtain an xyxy bbox from a list of points and expand it by some fraction of width and height
-   return extend_2d_xyxy(get_2d_xyxy(points), extend)
+def get_extend_2d_xyxy(points, extend=0.2):
+    # Obtain an xyxy bbox from a list of points and expand it by some fraction of width and height
+    return extend_2d_xyxy(get_2d_xyxy(points), extend)
 
 
 def get_hand_center(hand):
     # Find the center point of a hand's 2D bounding box
     xmin, ymin, xmax, ymax = get_2d_xyxy(hand)
 
-    return np.array([(xmax + xmin)/2, (ymax + ymin)/2])
+    return np.array([(xmax + xmin) / 2, (ymax + ymin) / 2])
 
 
 def do_xyxys_overlap(xyxy1, xyxy2):
     # Check if two xyxy bounding boxes overlap
-    return not (xyxy1[2] < xyxy2[0]
-                or xyxy1[0] > xyxy2[2]
-                or xyxy1[3] < xyxy2[1]
-                or xyxy1[1] > xyxy2[3])
+    return not (
+        xyxy1[2] < xyxy2[0]
+        or xyxy1[0] > xyxy2[2]
+        or xyxy1[3] < xyxy2[1]
+        or xyxy1[1] > xyxy2[3]
+    )
 
 
-async def match_hands_in_frames(video_id, hands_to_match, min_frameno, max_frameno, db, model):
+async def match_hands_in_frames(
+    video_id, hands_to_match, min_frameno, max_frameno, db, model
+):
     """Hands are matched to poses based on the distance of each detected
     hand's wrist (base) from each pose's wrist, considering only right wrists
     if the hand is estimated to be a right hand, etc. Matches are calculated
@@ -253,9 +283,7 @@ async def match_hands_in_frames(video_id, hands_to_match, min_frameno, max_frame
     hands keypoints are derived from different models whose depth estimation
     results may vary widely."""
 
-    logging.info(
-        f"Matching hands in frame {min_frameno} to {max_frameno}"
-    )
+    logging.info(f"Matching hands in frame {min_frameno} to {max_frameno}")
 
     matched_hands = 0
     duplicate_hands = 0
@@ -299,8 +327,10 @@ async def match_hands_in_frames(video_id, hands_to_match, min_frameno, max_frame
                 else:
                     target_wrist = triplets_to_pairs(pose["keypoints"])[5]
 
-                #wrist_hand_dist = np.linalg.norm(target_wrist - hand_center)
-                wrist_hand_dist = np.linalg.norm(np.array(target_wrist) - np.array(hand_base))
+                # wrist_hand_dist = np.linalg.norm(target_wrist - hand_center)
+                wrist_hand_dist = np.linalg.norm(
+                    np.array(target_wrist) - np.array(hand_base)
+                )
 
                 if closest_dist >= 0 and closest_dist < wrist_hand_dist:
                     continue
@@ -309,7 +339,9 @@ async def match_hands_in_frames(video_id, hands_to_match, min_frameno, max_frame
                     best_pose_match = p
 
             # If the hand's bbox doesn't overlap with the pose at all, ignore it
-            expanded_pose_xyxy = extend_2d_xyxy(xywh_to_xyxy(frame_poses[best_pose_match]["bbox"]))
+            expanded_pose_xyxy = extend_2d_xyxy(
+                xywh_to_xyxy(frame_poses[best_pose_match]["bbox"])
+            )
             expanded_hand_xyxy = get_extend_2d_xyxy(hand["kpts_2d"])
 
             if not do_xyxys_overlap(expanded_pose_xyxy, expanded_hand_xyxy):
@@ -339,21 +371,26 @@ async def match_hands_in_frames(video_id, hands_to_match, min_frameno, max_frame
                 bbox = get_2d_xyxy(hand["kpts_2d"])
 
             # Flatten arrays of coordinates into flat vectors for DB ingest
-            kpts_2d = [
-                coord for pair in hand["kpts_2d"] for coord in pair
-            ]
-            kpts_3d = [
-                coord for triplet in hand["kpts_3d"] for coord in triplet
-            ]
+            kpts_2d = [coord for pair in hand["kpts_2d"] for coord in pair]
+            kpts_3d = [coord for triplet in hand["kpts_3d"] for coord in triplet]
             global_orient = [
                 coord for triplet in hand["global_orient"] for coord in triplet
             ]
 
             # Get the rectified/global hand coordinates in the pose's frame of reference
-            projected_hand_keypoints = project_hand_keypoints(hand, frame_poses[best_pose_match])
+            projected_hand_keypoints = project_hand_keypoints(
+                hand, frame_poses[best_pose_match]
+            )
 
             # Calculate angles between hand joints
-            joint_angles_3d = [calculate_angle_in_3d(hand["kpts_3d"][triad[0]], hand["kpts_3d"][triad[1]], hand["kpts_3d"][triad[2]]) for triad in HAND_21_ANGLES]
+            joint_angles_3d = [
+                calculate_angle_in_3d(
+                    hand["kpts_3d"][triad[0]],
+                    hand["kpts_3d"][triad[1]],
+                    hand["kpts_3d"][triad[2]],
+                )
+                for triad in HAND_21_ANGLES
+            ]
 
             # Get the logits (linear class scores) from a hand gesture classification model
             class_weights = get_class_weights(kpts_2d, model)
@@ -385,7 +422,9 @@ async def match_hands_in_frames(video_id, hands_to_match, min_frameno, max_frame
         await db.add_pose_hands(matches_to_assign)
 
     logging.info(f"Duplicate hand-to-pose matches (rejected): {duplicate_hands}")
-    logging.info(f"Rejected based upon lack of overlapping bounding boxes: {rejected_matches}")
+    logging.info(
+        f"Rejected based upon lack of overlapping bounding boxes: {rejected_matches}"
+    )
 
 
 async def main() -> None:
@@ -448,10 +487,9 @@ async def main() -> None:
 
     with jsonlines.open(hands_file) as reader:
         for hand in reader:
-            if (
-                ("confidence" in hand and hand["confidence"] == 0)
-                or hand["frame"] not in track_frame_ids
-            ):
+            if ("confidence" in hand and hand["confidence"] == 0) or hand[
+                "frame"
+            ] not in track_frame_ids:
                 continue
 
             if hand["frame"] in hands_to_match:
