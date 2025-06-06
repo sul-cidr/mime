@@ -6,6 +6,8 @@ import argparse
 import asyncio
 import logging
 import math
+from concurrent.futures import ProcessPoolExecutor
+from functools import lru_cache, partial
 from pathlib import Path
 
 import jsonlines
@@ -16,7 +18,7 @@ from rich.logging import RichHandler
 from lib.pose_utils import HAND_21_ANGLES
 from mime_db import MimeDb
 
-BATCH_SIZE = 1000
+BATCH_SIZE = 100
 
 model_path = "lib/hands/keypoint_classifier.hdf5"
 
@@ -272,8 +274,19 @@ def do_xyxys_overlap(xyxy1, xyxy2):
     )
 
 
+@lru_cache(maxsize=1)
+def get_model(model_path):
+    model = tf.keras.models.load_model(model_path, compile=False)
+
+    # Consider getting the linear weights of the categories to use as embeddings,
+    # rather than running softmax to get their probabilities
+    model.layers[-1].activation = tf.keras.activations.linear
+
+    return model
+
+
 async def match_hands_in_frames(
-    video_id, hands_to_match, min_frameno, max_frameno, db, model
+    video_id, hands_to_match, min_frameno, max_frameno, db, model_path
 ):
     """Hands are matched to poses based on the distance of each detected
     hand's wrist (base) from each pose's wrist, considering only right wrists
@@ -296,127 +309,27 @@ async def match_hands_in_frames(
     poses_by_frame = {}
     for pose in frame_poses:
         if pose["frame"] in poses_by_frame:
-            poses_by_frame[pose["frame"]].append(pose)
+            poses_by_frame[pose["frame"]].append(dict(pose))
         else:
-            poses_by_frame[pose["frame"]] = [pose]
+            poses_by_frame[pose["frame"]] = [dict(pose)]
 
-    for frameno in hands_to_match:
-        if frameno not in poses_by_frame:
-            continue
-        frame_hands = hands_to_match[frameno]
-        frame_poses = poses_by_frame[frameno]
+    process_item = partial(
+        match_hands_for_frame,
+        poses_by_frame=poses_by_frame,
+        video_id=str(video_id),
+        model_path=model_path,
+    )
 
-        pose_to_hands = {}
+    with ProcessPoolExecutor() as executor:
+        results = executor.map(process_item, hands_to_match.items())
 
-        for h, hand in enumerate(frame_hands):
-            hand_base = hand["kpts_2d"][0]
+    for result in results:
+        _matches_to_assign, _duplicate_hands, _rejected_matches = result
+        matched_hands += len(_matches_to_assign)
 
-            closest_dist = -1
-            best_pose_match = -1
-
-            is_right = hand["right"] == 1
-
-            for p, pose in enumerate(frame_poses):
-                # Skip non-tracked poses
-                if pose["track_id"] == 0:
-                    continue
-
-                # Match each left/right hand to the closest left/right wrist
-                if is_right is True:
-                    target_wrist = triplets_to_pairs(pose["keypoints"])[6]
-                else:
-                    target_wrist = triplets_to_pairs(pose["keypoints"])[5]
-
-                # wrist_hand_dist = np.linalg.norm(target_wrist - hand_center)
-                wrist_hand_dist = np.linalg.norm(
-                    np.array(target_wrist) - np.array(hand_base)
-                )
-
-                if closest_dist >= 0 and closest_dist < wrist_hand_dist:
-                    continue
-                else:
-                    closest_dist = wrist_hand_dist
-                    best_pose_match = p
-
-            # If the hand's bbox doesn't overlap with the pose at all, ignore it
-            expanded_pose_xyxy = extend_2d_xyxy(
-                xywh_to_xyxy(frame_poses[best_pose_match]["bbox"])
-            )
-            expanded_hand_xyxy = get_extend_2d_xyxy(hand["kpts_2d"])
-
-            if not do_xyxys_overlap(expanded_pose_xyxy, expanded_hand_xyxy):
-                rejected_matches += 1
-                continue
-
-            # Sometimes there are multiple detections of the same hand, so
-            # if a pose has already been assigned a right or left hand and a
-            # new match is found for it, ignore the new match.
-            if best_pose_match in pose_to_hands:
-                if is_right in pose_to_hands[best_pose_match]:
-                    duplicate_hands += 1
-                    continue
-                else:
-                    pose_to_hands[best_pose_match][is_right] = h
-            else:
-                pose_to_hands[best_pose_match] = {is_right: h}
-
-            if "confidence" in hand:
-                confidence = hand["confidence"]
-            else:
-                confidence = 1
-
-            if "bbox" in hand:
-                bbox = hand["bbox"]
-            else:
-                bbox = get_2d_xyxy(hand["kpts_2d"])
-
-            # Flatten arrays of coordinates into flat vectors for DB ingest
-            kpts_2d = [coord for pair in hand["kpts_2d"] for coord in pair]
-            kpts_3d = [coord for triplet in hand["kpts_3d"] for coord in triplet]
-            global_orient = [
-                coord for triplet in hand["global_orient"] for coord in triplet
-            ]
-
-            # Get the rectified/global hand coordinates in the pose's frame of reference
-            projected_hand_keypoints = project_hand_keypoints(
-                hand, frame_poses[best_pose_match]
-            )
-
-            # Calculate angles between hand joints
-            joint_angles_3d = [
-                calculate_angle_in_3d(
-                    hand["kpts_3d"][triad[0]],
-                    hand["kpts_3d"][triad[1]],
-                    hand["kpts_3d"][triad[2]],
-                )
-                for triad in HAND_21_ANGLES
-            ]
-
-            # Get the logits (linear class scores) from a hand gesture classification model
-            class_weights = get_class_weights(kpts_2d, model)
-
-            matched_hands += 1
-
-            matches_to_assign.append(
-                [
-                    video_id,
-                    frameno,
-                    frame_poses[best_pose_match]["pose_idx"],
-                    hand["personid"],
-                    bbox,
-                    is_right,
-                    confidence,
-                    hand["pred_cam"],
-                    hand["cam_t"],
-                    kpts_2d,
-                    kpts_3d,
-                    joint_angles_3d,
-                    class_weights,
-                    projected_hand_keypoints,
-                    global_orient,
-                    frame_poses[best_pose_match]["track_id"],
-                ]
-            )
+        matches_to_assign += _matches_to_assign
+        duplicate_hands += _duplicate_hands
+        rejected_matches += _rejected_matches
 
     if len(matches_to_assign) > 0:
         await db.add_pose_hands(matches_to_assign)
@@ -425,6 +338,144 @@ async def match_hands_in_frames(
     logging.info(
         f"Rejected based upon lack of overlapping bounding boxes: {rejected_matches}"
     )
+
+
+def match_hands_for_frame(frame_data, poses_by_frame, video_id, model_path):
+    frame_no, frame_hands = frame_data
+    if frame_no not in poses_by_frame:
+        return [], 0, 0
+
+    frame_poses = poses_by_frame[frame_no]
+
+    pose_to_hands = {}
+    matches_to_assign = []
+    duplicate_hands = 0
+    rejected_matches = 0
+
+    for h, hand in enumerate(frame_hands):
+        try:
+            matched_hand, best_pose_match = match_and_parse_hand(
+                h, hand, frame_poses, pose_to_hands, model_path
+            )
+            if matched_hand is not None:
+                # Sometimes there are multiple detections of the same hand, so
+                # if a pose has already been assigned a right or left hand and a
+                # new match is found for it, ignore the new match.
+                is_right = matched_hand[2]
+                if best_pose_match in pose_to_hands:
+                    if is_right in pose_to_hands[best_pose_match]:
+                        duplicate_hands += 1
+                        continue
+                    else:
+                        pose_to_hands[best_pose_match][is_right] = h
+                else:
+                    pose_to_hands[best_pose_match] = {is_right: h}
+
+                matches_to_assign.append(
+                    [
+                        video_id,
+                        frame_no,
+                        frame_poses[best_pose_match]["pose_idx"],
+                    ]
+                    + matched_hand
+                    + [
+                        frame_poses[best_pose_match]["track_id"],
+                    ]
+                )
+        except RejectedHandException as e:
+            rejected_matches += 1
+
+    return matches_to_assign, duplicate_hands, rejected_matches
+
+
+def match_and_parse_hand(h, hand, frame_poses, pose_to_hands, model) -> tuple:
+    hand_base = hand["kpts_2d"][0]
+
+    closest_dist = -1
+    best_pose_match = -1
+
+    is_right = hand["right"] == 1
+
+    for p, pose in enumerate(frame_poses):
+        # Skip non-tracked poses
+        if pose["track_id"] == 0:
+            continue
+
+        # Match each left/right hand to the closest left/right wrist
+        if is_right is True:
+            target_wrist = triplets_to_pairs(pose["keypoints"])[6]
+        else:
+            target_wrist = triplets_to_pairs(pose["keypoints"])[5]
+
+        # wrist_hand_dist = np.linalg.norm(target_wrist - hand_center)
+        wrist_hand_dist = np.linalg.norm(np.array(target_wrist) - np.array(hand_base))
+
+        if closest_dist >= 0 and closest_dist < wrist_hand_dist:
+            continue
+        else:
+            closest_dist = wrist_hand_dist
+            best_pose_match = p
+
+    # If the hand's bbox doesn't overlap with the pose at all, ignore it
+    expanded_pose_xyxy = extend_2d_xyxy(
+        xywh_to_xyxy(frame_poses[best_pose_match]["bbox"])
+    )
+    expanded_hand_xyxy = get_extend_2d_xyxy(hand["kpts_2d"])
+
+    if not do_xyxys_overlap(expanded_pose_xyxy, expanded_hand_xyxy):
+        raise RejectedHandException
+
+    if "confidence" in hand:
+        confidence = hand["confidence"]
+    else:
+        confidence = 1
+
+    if "bbox" in hand:
+        bbox = hand["bbox"]
+    else:
+        bbox = get_2d_xyxy(hand["kpts_2d"])
+
+    # Flatten arrays of coordinates into flat vectors for DB ingest
+    kpts_2d = [coord for pair in hand["kpts_2d"] for coord in pair]
+    kpts_3d = [coord for triplet in hand["kpts_3d"] for coord in triplet]
+    global_orient = [coord for triplet in hand["global_orient"] for coord in triplet]
+
+    # Get the rectified/global hand coordinates in the pose's frame of reference
+    projected_hand_keypoints = project_hand_keypoints(hand, frame_poses[best_pose_match])
+
+    # Calculate angles between hand joints
+    joint_angles_3d = [
+        calculate_angle_in_3d(
+            hand["kpts_3d"][triad[0]],
+            hand["kpts_3d"][triad[1]],
+            hand["kpts_3d"][triad[2]],
+        )
+        for triad in HAND_21_ANGLES
+    ]
+
+    model = get_model(model_path)  # Cached per process
+
+    # Get the logits (linear class scores) from a hand gesture classification model
+    class_weights = get_class_weights(kpts_2d, model)
+
+    return [
+        hand["personid"],
+        bbox,
+        is_right,
+        confidence,
+        hand["pred_cam"],
+        hand["cam_t"],
+        kpts_2d,
+        kpts_3d,
+        joint_angles_3d,
+        class_weights,
+        projected_hand_keypoints,
+        global_orient,
+    ], best_pose_match
+
+
+class RejectedHandException(Exception):
+    pass
 
 
 async def main() -> None:
@@ -476,13 +527,6 @@ async def main() -> None:
     min_frameno = None
     max_frameno = None
 
-    logging.info("Loading classification model")
-    model = tf.keras.models.load_model(model_path, compile=False)
-
-    # Consider getting the linear weights of the categories to use as embeddings,
-    # rather than running softmax to get their probabilities
-    model.layers[-1].activation = tf.keras.activations.linear
-
     logging.info("Matching tracked poses to hands detected in video")
 
     with jsonlines.open(hands_file) as reader:
@@ -509,7 +553,7 @@ async def main() -> None:
 
             if len(hands_to_match) >= BATCH_SIZE:
                 await match_hands_in_frames(
-                    video_id, hands_to_match, min_frameno, max_frameno, db, model
+                    video_id, hands_to_match, min_frameno, max_frameno, db, model_path
                 )
                 hands_to_match = {}
                 min_frameno = None
@@ -517,7 +561,7 @@ async def main() -> None:
 
         if len(hands_to_match) > 0:
             await match_hands_in_frames(
-                video_id, hands_to_match, min_frameno, max_frameno, db, model
+                video_id, hands_to_match, min_frameno, max_frameno, db, model_path
             )
 
     await db.index_pose_hands()
