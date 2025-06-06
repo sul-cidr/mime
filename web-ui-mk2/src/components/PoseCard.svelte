@@ -21,9 +21,14 @@
 
 	const showFrameModal = async () => {
 		const video = (await getVideoData()).find(
-			(/** @type {VideoRecord} */ video) => video.id === sourcePose.video_id
+			(/** @type {VideoRecord} */ video) =>
+				video.id === /** @type {PoseRecord} */ (sourcePose).video_id
 		);
-		frameModal.show(video, sourcePose.frame, sourcePose.pose_idx);
+		frameModal.show(
+			video,
+			/** @type {PoseRecord} */ (sourcePose).frame,
+			/** @type {PoseRecord} */ (sourcePose).pose_idx
+		);
 	};
 </script>
 
