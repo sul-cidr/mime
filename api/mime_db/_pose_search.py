@@ -60,28 +60,47 @@ async def search_poses(
 
             ORDER BY distance
             LIMIT 50000
+        ),
+
+        matches as (
+            SELECT ranked_poses.video_id,
+                video_name,
+                ranked_poses.frame,
+                ranked_poses.pose_idx,
+                norm,
+                keypoints,
+                ranked_poses.bbox,
+                distance,
+                rank
+            FROM ranked_poses
+            WHERE NOT EXISTS (
+                SELECT 1
+                FROM ranked_poses rp2
+                WHERE rp2.rank < ranked_poses.rank
+                and rp2.video_id = ranked_poses.video_id
+                and rp2.pose_idx = ranked_poses.pose_idx
+                and ABS(rp2.frame - ranked_poses.frame) < $2
+            )
+            ORDER BY distance
+            LIMIT $1
         )
 
-        SELECT video_id,
-               video_name,
-               frame,
-               pose_idx,
-               norm,
-               keypoints,
-               bbox,
-               distance,
-               rank
-        FROM ranked_poses
-        WHERE NOT EXISTS (
-            SELECT 1
-            FROM ranked_poses rp2
-            WHERE rp2.rank < ranked_poses.rank
-            and rp2.video_id = ranked_poses.video_id
-            and rp2.pose_idx = ranked_poses.pose_idx
-            and ABS(rp2.frame - ranked_poses.frame) < $2
-        )
-        ORDER BY distance
-        LIMIT $1
+        SELECT matches.*,
+               rhand.keypoints2d AS rh_keypoints2d,
+               rhand.global_orient AS rh_global_orient,
+               lhand.keypoints2d AS lh_keypoints2d,
+               lhand.global_orient AS lh_global_orient
+        FROM matches
+        LEFT JOIN hand AS rhand
+            ON matches.video_id = rhand.video_id
+            AND matches.pose_idx = rhand.pose_idx
+            AND matches.frame = rhand.frame
+            AND rhand.is_right = True
+        LEFT JOIN hand AS lhand
+            ON matches.video_id = lhand.video_id
+            AND matches.pose_idx = lhand.pose_idx
+            AND matches.frame = lhand.frame
+            AND lhand.is_right = False
         ;
     """,
         limit,
