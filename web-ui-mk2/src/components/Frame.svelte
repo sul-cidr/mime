@@ -2,6 +2,7 @@
 	import { page } from '$app/stores';
 	import { LayerCake, Canvas, Html, Svg } from 'layercake';
 	import Pose from './Pose.svelte';
+	import Hand from './Hand.svelte';
 
 	/**
 	 * @typedef {Object} FrameProps
@@ -9,14 +10,19 @@
 	 * @property {number} frame
 	 * @property {PoseRecord[]} poseData
 	 * @property {number} selectedPoseIdx
+	 * @property {boolean} showPoses
+	 * @property {boolean} showHands
+	 * @property {boolean} showBboxes
 	 */
 
 	/** @type {FrameProps} */
-	let { video, frame, poseData, selectedPoseIdx } = $props();
+	let { video, frame, poseData, selectedPoseIdx, showPoses, showHands, showBboxes } = $props();
 	const { id: videoId, width: frameWidth, height: frameHeight } = video;
 
 	let displayWidthPx = $state();
 	let scaleFactor = $derived(displayWidthPx / frameWidth);
+
+	$inspect(poseData);
 </script>
 
 <div
@@ -37,53 +43,72 @@
 		</Html>
 		{#if poseData && poseData.length}
 			{#each poseData as pose}
-				<Canvas zIndex={1}>
-					<Pose
-						poseData={pose.keypoints}
-						pose4dhData={pose.keypoints4dh}
-						faceData={pose.face_landmarks}
-						{scaleFactor}
-					/>
-				</Canvas>
+				{#if showPoses}
+					<Canvas zIndex={1}>
+						<Pose
+							poseData={pose.keypoints}
+							pose4dhData={pose.keypoints4dh}
+							faceData={pose.face_landmarks}
+							{scaleFactor}
+						/>
+					</Canvas>
+				{/if}
+				{#if showHands}
+					<Canvas zIndex={1}>
+						{#if pose.rh_keypoints2d}
+							<Hand handData={pose.rh_keypoints2d} isRight={true} {scaleFactor} />
+						{/if}
+						{#if pose.lh_keypoints2d}
+							<Hand
+								handData={pose.lh_keypoints2d}
+								isRight={false}
+								prepCanvas={false}
+								{scaleFactor}
+							/>
+						{/if}
+					</Canvas>
+				{/if}
 			{/each}
-			<Svg viewBox="0 0 {frameWidth} {frameHeight}" zIndex={2}>
-				<defs>
-					<filter x="0" y="0" width="1" height="1" id="solid">
-						<feFlood flood-color="white" result="bg" />
-						<feMerge>
-							<feMergeNode in="bg" />
-							<feMergeNode in="SourceGraphic" />
-						</feMerge>
-					</filter>
-				</defs>
-				{#each poseData as pose, i}
-					<!-- svelte-ignore a11y_click_events_have_key_events -->
-					<!-- svelte-ignore a11y_mouse_events_have_key_events -->
-					<!-- svelte-ignore a11y_no_static_element_interactions -->
-					<rect
-						data-id={i}
-						x={pose.bbox[0]}
-						y={pose.bbox[1]}
-						height={pose.bbox[3]}
-						width={pose.bbox[2]}
-						class:selected={selectedPoseIdx === pose.pose_idx}
-					/>
-					{#if pose.face_bbox}
+			{#if showBboxes}
+				<Svg viewBox="0 0 {frameWidth} {frameHeight}" zIndex={2}>
+					<defs>
+						<filter x="0" y="0" width="1" height="1" id="solid">
+							<feFlood flood-color="white" result="bg" />
+							<feMerge>
+								<feMergeNode in="bg" />
+								<feMergeNode in="SourceGraphic" />
+							</feMerge>
+						</filter>
+					</defs>
+					{#each poseData as pose, i}
+						<!-- svelte-ignore a11y_click_events_have_key_events -->
+						<!-- svelte-ignore a11y_mouse_events_have_key_events -->
 						<!-- svelte-ignore a11y_no_static_element_interactions -->
 						<rect
-							x={pose.face_bbox[0]}
-							y={pose.face_bbox[1]}
-							height={pose.face_bbox[3]}
-							width={pose.face_bbox[2]}
-							class:face={true}
+							data-id={i}
+							x={pose.bbox[0]}
+							y={pose.bbox[1]}
+							height={pose.bbox[3]}
+							width={pose.bbox[2]}
 							class:selected={selectedPoseIdx === pose.pose_idx}
 						/>
-					{/if}
-					<text x={pose.bbox[0] + 2} y={pose.bbox[1] + 5}>
-						#{pose.pose_idx + 1}
-					</text>
-				{/each}
-			</Svg>
+						{#if pose.face_bbox}
+							<!-- svelte-ignore a11y_no_static_element_interactions -->
+							<rect
+								x={pose.face_bbox[0]}
+								y={pose.face_bbox[1]}
+								height={pose.face_bbox[3]}
+								width={pose.face_bbox[2]}
+								class:face={true}
+								class:selected={selectedPoseIdx === pose.pose_idx}
+							/>
+						{/if}
+						<text x={pose.bbox[0] + 2} y={pose.bbox[1] + 5}>
+							#{pose.pose_idx + 1}
+						</text>
+					{/each}
+				</Svg>
+			{/if}
 		{/if}
 	</LayerCake>
 </div>
