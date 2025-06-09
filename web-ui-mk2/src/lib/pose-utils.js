@@ -39,6 +39,54 @@ export const COCO_COLORS = [
 
 export const BLAZE_33_TO_COCO_13 = [0, 11, 12, 13, 14, 15, 16, 23, 24, 25, 26, 27, 28];
 
+export const HAND_21_KEYPOINTS = [
+	'ulnar_palm',
+	'radial_palm',
+	'thumb_metacarpal',
+	'thumb_proximal',
+	'thumb_distal',
+	'index_metacarpal',
+	'index_proximal',
+	'index_middle',
+	'index_distal',
+	'middle_metacarpal',
+	'middle_proximal',
+	'middle_middle',
+	'middle_distal',
+	'ring_metacarpal',
+	'ring_proximal',
+	'ring_middle',
+	'ring_distal',
+	'pinkie_metacarpal',
+	'pinkie_proximal',
+	'pinkie_middle',
+	'pinkie_distal'
+];
+
+export const HAND_21_SKELETON = [
+	[1, 2],
+	[1, 18],
+	[2, 3],
+	[3, 4],
+	[3, 6],
+	[4, 5],
+	[6, 10],
+	[6, 7],
+	[7, 8],
+	[8, 9],
+	[10, 14],
+	[10, 11],
+	[11, 12],
+	[12, 13],
+	[14, 18],
+	[14, 15],
+	[15, 16],
+	[16, 17],
+	[18, 19],
+	[19, 20],
+	[20, 21]
+];
+
 /**
  * Segments an array into an array of arrays of a specified length.
  *
@@ -173,4 +221,49 @@ export const getKeypointsBounds = (keypoints, hasConfidence = true) => {
 	const height = maxY - minY;
 
 	return [minX, minY, width, height];
+};
+
+/**
+ * Draws a hand skeleton on a canvas.
+ *
+ * @param {CanvasRenderingContext2D} ctx - Canvas context to draw on.
+ * @param {Array<number>} handPoints - The 2D keypoints of the hand, as an array of x, y pairs.
+ * @param {string} [color='red'] - The color to draw the hand in. Defaults to red.
+ * @param {BoundingBox} [bbox]
+ * @param {number} [scaleFactor=1] - The scale factor to apply to the keypoints.
+ */
+export const drawHandOnCanvas = (ctx, handPoints, color = 'red', bbox, scaleFactor = 1) => {
+	if (handPoints === undefined || handPoints === null) return;
+
+	let xAdjust = 0;
+	let yAdjust = 0;
+
+	if (bbox) {
+		handPoints = handPoints.map((v, i) => (i % 2 ? v - bbox[1] : v - bbox[0])); // shift with respect to bbox
+
+		const [, , width, height] = bbox;
+		if (width > height) {
+			scaleFactor = ctx.canvas.width / width;
+			xAdjust = (ctx.canvas.height - height * scaleFactor) / 2;
+		} else {
+			scaleFactor = ctx.canvas.height / height;
+			xAdjust = (ctx.canvas.width - width * scaleFactor) / 2;
+		}
+	}
+
+	const segments = segmentKeypoints(handPoints, 2);
+
+	HAND_21_SKELETON.forEach(([from, to]) => {
+		let fromX, fromY, toX, toY;
+		[fromX, fromY] = segments[from - 1];
+		[toX, toY] = segments[to - 1];
+
+		ctx.lineWidth = scaleFactor > 0.8 ? 3 : 2;
+		ctx.strokeStyle = color;
+
+		ctx.beginPath();
+		ctx.moveTo(fromX * scaleFactor + xAdjust, fromY * scaleFactor + yAdjust);
+		ctx.lineTo(toX * scaleFactor + xAdjust, toY * scaleFactor + yAdjust);
+		ctx.stroke();
+	});
 };
