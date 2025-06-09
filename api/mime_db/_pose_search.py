@@ -95,12 +95,12 @@ async def search_poses(
             ON matches.video_id = rhand.video_id
             AND matches.pose_idx = rhand.pose_idx
             AND matches.frame = rhand.frame
-            AND rhand.is_right = True
+            AND rhand.is_right = 't'
         LEFT JOIN hand AS lhand
             ON matches.video_id = lhand.video_id
             AND matches.pose_idx = lhand.pose_idx
             AND matches.frame = lhand.frame
-            AND lhand.is_right = False
+            AND lhand.is_right = 'f'
         ;
     """,
         limit,
