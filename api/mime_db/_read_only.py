@@ -102,7 +102,33 @@ async def get_pose_annotations(self, column: str, video_id: UUID) -> list[np.nda
 
 async def get_frame_data(self, video_id: UUID, frame: int) -> list:
     return await self._pool.fetch(
-        "SELECT pose.*, frame.shot, frame.pose_interest, frame.action_interest FROM pose, frame WHERE pose.video_id = $1 AND pose.frame = $2 AND frame.video_id = $1 AND frame.frame = $2;",
+        """
+        SELECT pose.*,
+               frame.shot,
+               frame.pose_interest,
+               frame.action_interest,
+               rhand.keypoints2d AS rh_keypoints2d,
+               rhand.global_orient AS rh_global_orient,
+               lhand.keypoints2d AS lh_keypoints2d,
+               lhand.global_orient AS lh_global_orient
+
+        FROM pose
+          INNER JOIN frame ON pose.video_id = frame.video_id AND pose.frame = frame.frame
+          LEFT JOIN hand AS rhand
+            ON pose.video_id = rhand.video_id
+            AND pose.pose_idx = rhand.pose_idx
+            AND pose.frame = rhand.frame
+            AND rhand.is_right = 't'
+          LEFT JOIN hand AS lhand
+            ON pose.video_id = lhand.video_id
+            AND pose.pose_idx = lhand.pose_idx
+            AND pose.frame = lhand.frame
+            AND lhand.is_right = 'f'
+
+        WHERE pose.video_id = $1
+          AND pose.frame = $2
+        ;
+        """,
         video_id,
         frame,
     )
