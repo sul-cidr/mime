@@ -22,6 +22,7 @@
 	let selectedVideoIds = $state([]);
 
 	let showPose = $state(false);
+	let showHands = $state(false);
 
 	/** @param {PoseRecord[]} poses */
 	const excludeSourcePose = (poses) => {
@@ -53,10 +54,16 @@
 </script>
 
 <div class="controls">
-	<label>
-		Show Pose:
-		<input type="checkbox" bind:checked={showPose} />
-	</label>
+	<div>
+		<label>
+			Show Pose:
+			<input type="checkbox" bind:checked={showPose} />
+		</label>
+		<label>
+			Show Hands:
+			<input type="checkbox" bind:checked={showHands} />
+		</label>
+	</div>
 	<label>
 		Videos:
 		{#await getVideoData() then videos}
@@ -97,7 +104,7 @@
 			</div>
 		{:then data}
 			{#each excludeSourcePose(data) as pose}
-				<PoseCard sourcePose={pose} {showPose} />
+				<PoseCard sourcePose={pose} {showPose} {showHands} />
 			{/each}
 		{:catch error}
 			<p style="color: red">{error.message}</p>

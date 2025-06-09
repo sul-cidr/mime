@@ -13,11 +13,12 @@
 	 * @typedef {Object} SearchResultsProps
 	 * @property {PoseRecord|MinimalPose} sourcePose Pose to be presented
 	 * @property {boolean} showPose
+	 * @property {boolean} showHands
 	 * @property {string} [class]
 	 */
 
 	/** @type {SearchResultsProps} */
-	let { sourcePose, showPose, ...props } = $props();
+	let { sourcePose, showPose, showHands, ...props } = $props();
 
 	let frameModal = $state();
 
@@ -64,6 +65,11 @@
 			<Canvas zIndex={1}>
 				<PoseCardCanvas />
 				<Pose poseData={sourcePose.keypoints} bbox={sourcePose.bbox} />
+			</Canvas>
+		{/if}
+		{#if showHands}
+			<Canvas zIndex={1}>
+				<PoseCardCanvas />
 				{#if sourcePose.rh_keypoints2d}
 					<Hand handData={sourcePose.rh_keypoints2d} isRight={true} bbox={sourcePose.bbox} />
 				{/if}
