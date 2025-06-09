@@ -5,7 +5,6 @@
 	import { getVideoData } from '$lib/data-fetching';
 	import Overlay from '../ui-components/Overlay.svelte';
 	import FrameModal from './FrameModal.svelte';
-	import PoseCardCanvas from './PoseCardCanvas.svelte';
 	import Hand from './Hand.svelte';
 	import Pose from './Pose.svelte';
 
@@ -63,18 +62,21 @@
 		{/if}
 		{#if showPose}
 			<Canvas zIndex={1}>
-				<PoseCardCanvas />
 				<Pose poseData={sourcePose.keypoints} bbox={sourcePose.bbox} />
 			</Canvas>
 		{/if}
 		{#if showHands}
 			<Canvas zIndex={1}>
-				<PoseCardCanvas />
 				{#if sourcePose.rh_keypoints2d}
 					<Hand handData={sourcePose.rh_keypoints2d} isRight={true} bbox={sourcePose.bbox} />
 				{/if}
 				{#if sourcePose.lh_keypoints2d}
-					<Hand handData={sourcePose.lh_keypoints2d} isRight={false} bbox={sourcePose.bbox} />
+					<Hand
+						handData={sourcePose.lh_keypoints2d}
+						isRight={false}
+						bbox={sourcePose.bbox}
+						prepCanvas={false}
+					/>
 				{/if}
 			</Canvas>
 		{/if}

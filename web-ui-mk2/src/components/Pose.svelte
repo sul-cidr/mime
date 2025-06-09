@@ -1,5 +1,6 @@
 <script>
 	import { getContext } from 'svelte';
+	import { scaleCanvas } from 'layercake';
 	import { drawPoseOnCanvas } from '$lib/pose-utils';
 
 	/**
@@ -7,19 +8,25 @@
 	 * @property {Coco13SkeletonNoConfidence} poseData Pose data to be drawn
 	 * @property {number} [scaleFactor] Scale factor to be applied to the pose
 	 * @property {BoundingBox} [bbox] Bounding box of the figure -- if supplied, the pose will be drawn with respect to the bbox
+	 * @property {boolean} [prepCanvas=true] Whether to prep the canvas before drawing
 	 * @returns {void}
 	 */
 
 	/** @type {PoseProps} */
-	let { poseData, scaleFactor, bbox } = $props();
+	let { poseData, scaleFactor, bbox, prepCanvas = true } = $props();
+
+	const { width, height } = getContext('LayerCake');
 	const { ctx } = getContext('canvas');
 
 	$effect(() => {
-		// Ugly hack to ensure the canvas has been scaled and cleared *before* the pose is drawn
-		//  (only an issue when the pose is derived from a fixture; the db/network latency means its
-		//   not a problem when poses are fetched from the server)
-		setTimeout(() => {
-			if ($ctx) drawPoseOnCanvas($ctx, poseData, scaleFactor, bbox);
-		}, 0);
+		if ($ctx) {
+			if (prepCanvas) {
+				// "Scale your canvas size to retina screens."
+				// (see https://layercake.graphics/guide#scalecanvas)
+				scaleCanvas($ctx, $width, $height);
+				$ctx.clearRect(0, 0, $width, $height);
+			}
+			drawPoseOnCanvas($ctx, poseData, scaleFactor, bbox);
+		}
 	});
 </script>
