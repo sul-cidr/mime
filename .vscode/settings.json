@@ -10,8 +10,6 @@
     },
     "editor.defaultFormatter": "charliermarsh.ruff"
   },
-  "ruff.lint.args": ["--config=api/pyproject.toml"],
-  "ruff.interpreter": ["api/.venv/bin/python"],
   "cSpell.words": [
     "bbox",
     "executemany",
