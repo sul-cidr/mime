@@ -50,6 +50,7 @@ class MimeDb:
         load_lart_predictions,
         load_openpifpaf_predictions,
     )
+    from mime_db._hand_search import search_hands
     from mime_db._initialization import initialize_db, remove_video
     from mime_db._pose_search import search_poses
     from mime_db._read_only import (

@@ -242,6 +242,7 @@ async def faces_by_frame(video_id: UUID, frame: int, request: Request):
         media_type="application/json",
     )
 
+
 @mime_api.get("/hands/{video_id}/{frame}/")
 async def hands_by_frame(video_id: UUID, frame: int, request: Request):
     frame_data = await request.app.state.db.get_frame_hands(video_id, frame)
@@ -249,6 +250,7 @@ async def hands_by_frame(video_id: UUID, frame: int, request: Request):
         content=json.dumps(frame_data, cls=MimeJSONEncoder),
         media_type="application/json",
     )
+
 
 # compares a known pose from the DB to others in the DB (c.f. "search_nearest_")
 @mime_api.get(
@@ -455,6 +457,29 @@ async def pose_search(
     pose_coords = json.loads(pose)
     results = await request.app.state.db.search_poses(
         pose_coords=pose_coords,
+        search_type=search_type,
+        videos=videos,
+        limit=limit,
+        exclude_within_frames=exclude_within_frames,
+    )
+    return Response(
+        content=json.dumps(results, cls=MimeJSONEncoder),
+        media_type="application/json",
+    )
+
+
+@mime_api.get("/hand-search/")
+async def hand_search(
+    request: Request,
+    embedding: str,
+    search_type: Literal["joint_angles3d", "embedding", "global3d"],
+    videos: Set[str] = Query(None),  # noqa: B008
+    limit: int = 50,
+    exclude_within_frames: int = 30,
+):
+    embedding = json.loads(embedding)
+    results = await request.app.state.db.search_hands(
+        embedding=embedding,
         search_type=search_type,
         videos=videos,
         limit=limit,
