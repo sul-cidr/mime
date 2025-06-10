@@ -23,7 +23,7 @@
 
 /**
  * @typedef {Object} MinimalPose
- * @property {Coco13SkeletonWithConfidence} keypoints
+ * @property {Coco13SkeletonNoConfidence} keypoints
  * @property {Array<number>} bbox [x0, y0, width, height]
  * @property {Coco13SkeletonNoConfidence} norm
  */
@@ -70,4 +70,27 @@
  * @property {number} poses_per_frame
  * @property {number} face_ct
  * @property {number} hand_ct
+ */
+
+/**
+ * @typedef {Object} HandForSearching
+ * @property {boolean} is_right
+ * @property {Array<number>} keypoints
+ * @property {Array<number>} global_orient
+ * @property {Array<number>} class_weights
+ * @property {Array<number>} joint_angles3d
+ * @property {Array<number>} global3d
+ * @property {string} [video_id]
+ * @property {number} [frame]
+ * @property {number} [pose_idx]
+ */
+
+/**
+ * @typedef {Object} HandForDrawing
+ * @property {boolean} is_right
+ * @property {Array<number>} [rh_keypoints2d]
+ * @property {Array<number>} [rh_global_orient]
+ * @property {Array<number>} [lh_keypoints2d]
+ * @property {Array<number>} [lh_global_orient]
+ * @property {Array<number>} [bbox]
  */

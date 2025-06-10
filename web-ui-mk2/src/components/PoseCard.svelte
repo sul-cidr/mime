@@ -10,14 +10,14 @@
 
 	/**
 	 * @typedef {Object} SearchResultsProps
-	 * @property {PoseRecord|MinimalPose} sourcePose Pose to be presented
-	 * @property {boolean} showPose
-	 * @property {boolean} showHands
+	 * @property {PoseRecord|MinimalPose|HandForDrawing} sourcePose Pose or hand to be presented
+	 * @property {boolean} [showPose = false]
+	 * @property {boolean} [showHands = false]
 	 * @property {string} [class]
 	 */
 
 	/** @type {SearchResultsProps} */
-	let { sourcePose, showPose, showHands, ...props } = $props();
+	let { sourcePose, showPose = false, showHands = false, ...props } = $props();
 
 	let frameModal = $state();
 
@@ -60,17 +60,17 @@
 				/>
 			</Html>
 		{/if}
-		{#if showPose}
+		{#if 'keypoints' in sourcePose && showPose}
 			<Canvas zIndex={1}>
 				<Pose poseData={sourcePose.keypoints} bbox={sourcePose.bbox} />
 			</Canvas>
 		{/if}
 		{#if showHands}
 			<Canvas zIndex={1}>
-				{#if sourcePose.rh_keypoints2d}
+				{#if 'rh_keypoints2d' in sourcePose && sourcePose.rh_keypoints2d}
 					<Hand handData={sourcePose.rh_keypoints2d} isRight={true} bbox={sourcePose.bbox} />
 				{/if}
-				{#if sourcePose.lh_keypoints2d}
+				{#if 'lh_keypoints2d' in sourcePose && sourcePose.lh_keypoints2d}
 					<Hand
 						handData={sourcePose.lh_keypoints2d}
 						isRight={false}

@@ -5,65 +5,69 @@
 	import PoseCard from '$components/PoseCard.svelte';
 
 	/**
-	 * @typedef {Object} SearchResultsProps
-	 * @property {MinimalPose|PoseRecord} sourcePose Source pose to be searched
+	 * @typedef {Object} HandSearchResultsProps
+	 * @property {HandForSearching} sourceHand Source hand to be searched
 	 */
 
-	/** @type {SearchResultsProps} */
-	let { sourcePose } = $props();
+	/** @type {HandSearchResultsProps} */
+	let { sourceHand } = $props();
 
-	/** @type {'cosine'|'euclidean'|'view_invariant'|'3d'} */
-	let searchType = $state('view_invariant');
+	/** @type {'joint_angles3d'|'embedding'|'global3d'} */
+	let searchType = $state('global3d');
 
-	let limit = $state(21);
-	let excludeWithinFrames = $state(600);
+	let limit = $state(3);
+	let excludeWithinFrames = $state(3000);
 
 	/** @type {string[]}*/
 	let selectedVideoIds = $state([]);
 
-	let showPose = $state(false);
-	let showHands = $state(false);
+	let showHands = $state(true);
 
 	/** @param {PoseRecord[]} poses */
-	const excludeSourcePose = (poses) => {
+	const excludeSourceHand = (poses) => {
 		return poses.filter(
 			(/** @type {PoseRecord} */ pose) =>
 				!(
-					pose.video_id === /** @type {PoseRecord} */ (sourcePose).video_id &&
-					pose.frame === /** @type {PoseRecord} */ (sourcePose).frame &&
-					pose.pose_idx === /** @type {PoseRecord} */ (sourcePose).pose_idx
+					pose.video_id === /** @type {HandForSearching} */ (sourceHand).video_id &&
+					pose.frame === /** @type {HandForSearching} */ (sourceHand).frame &&
+					pose.pose_idx === /** @type {HandForSearching} */ (sourceHand).pose_idx
 				)
 		);
 	};
 
 	async function getPoseData() {
 		const queryParams = new URLSearchParams();
-		queryParams.append('pose', JSON.stringify(sourcePose.norm));
+		let embedding;
+		if (searchType === 'embedding') {
+			embedding = sourceHand.class_weights;
+		} else if (searchType === 'joint_angles3d') {
+			embedding = sourceHand.joint_angles3d;
+		} else if (searchType === 'global3d') {
+			embedding = sourceHand.global3d;
+		}
+
+		queryParams.append('embedding', JSON.stringify(embedding));
 		queryParams.append('search_type', searchType);
 		if (selectedVideoIds.length) selectedVideoIds.forEach((v) => queryParams.append('videos', v));
 		queryParams.append('exclude_within_frames', Math.max(excludeWithinFrames, 1).toString());
 		// if sourcePose has a frame property then it's from the db -- add one to the limit so we
 		//  can exclude the source pose from the results and still end up with the requested number
-		queryParams.append('limit', (limit + +sourcePose.hasOwnProperty('frame')).toString());
+		queryParams.append('limit', (limit + +sourceHand.hasOwnProperty('frame')).toString());
 
-		const query = `${page.data.apiBase}/pose-search/?${queryParams.toString()}`;
+		const query = `${page.data.apiBase}/hand-search/?${queryParams.toString()}`;
 
 		const response = await fetch(query);
 		return await response.json();
 	}
+
+	$inspect(sourceHand);
 </script>
 
 <div class="controls">
-	<div>
-		<label>
-			Show Pose:
-			<input type="checkbox" bind:checked={showPose} />
-		</label>
-		<label>
-			Show Hands:
-			<input type="checkbox" bind:checked={showHands} />
-		</label>
-	</div>
+	<label>
+		Show Hands:
+		<input type="checkbox" bind:checked={showHands} />
+	</label>
 	<label>
 		Videos:
 		{#await getVideoData() then videos}
@@ -77,12 +81,9 @@
 	<label>
 		Search Type:
 		<select bind:value={searchType}>
-			<option value="cosine">Cosine</option>
-			<option value="euclidean">Euclidean</option>
-			<option value="view_invariant">View Invariant</option>
-			<!--
-			<option value="3d">3D</option>
-			-->
+			<option value="joint_angles3d">Joint Angles</option>
+			<option value="embedding">Embedding</option>
+			<option value="global3d">Global 3D</option>
 		</select>
 	</label>
 	<label>
@@ -95,7 +96,7 @@
 	</label>
 </div>
 
-{#if sourcePose}
+{#if sourceHand}
 	<div class="results">
 		{#await getPoseData()}
 			<div class="loading">
@@ -103,8 +104,8 @@
 				<Loading withOverlay={false} />
 			</div>
 		{:then data}
-			{#each excludeSourcePose(data) as pose}
-				<PoseCard sourcePose={pose} {showPose} {showHands} />
+			{#each excludeSourceHand(data) as pose}
+				<PoseCard sourcePose={pose} {showHands} />
 			{/each}
 		{:catch error}
 			<p style="color: red">{error.message}</p>
