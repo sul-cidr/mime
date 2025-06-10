@@ -23,7 +23,7 @@
     webcamImage,
   } from "@svelte/stores";
 
-  export let similarityMetric = "cosine";
+  export let similarityMetric = "global";
   export let toggle3DPoseModal;
 
   let avoidShotInResults: boolean = false;
@@ -111,12 +111,12 @@
           <RadioItem
             bind:group={similarityMetric}
             name="similarity-metric"
-            value="cosine">Cosine</RadioItem
+            value="cosine">2D Cosine</RadioItem
           >
           <RadioItem
             bind:group={similarityMetric}
             name="similarity-metric"
-            value="euclidean">Euclidean</RadioItem
+            value="euclidean">2D Euclidean</RadioItem
           >
           <!-- <RadioItem
             bind:group={similarityMetric}
@@ -240,9 +240,11 @@
                 <li>
                   Time: {formatSeconds($currentPose.frame / $currentVideo.fps)}
                 </li>
-                <li>
-                  Face group: {$currentPose.face_cluster_id}
-                </li>
+                {#if $currentPose.face_cluster_id !== undefined}
+                  <li>
+                    Face group: {$currentPose.face_cluster_id}
+                  </li>
+                {/if}
               </ul>
               <span
                 ><strong
@@ -300,9 +302,11 @@
                       Time: {formatSeconds(pose.frame / $currentVideo.fps)}
                     </li>
                     <li>Distance: {pose.distance?.toFixed(5)}</li>
-                    <li>
-                      Face group: {pose.face_cluster_id}
-                    </li>
+                    {#if pose.face_cluster_id !== null}
+                      <li>
+                        Face group: {pose.face_cluster_id}
+                      </li>
+                    {/if}
                   </ul>
                   <span
                     ><strong

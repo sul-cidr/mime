@@ -136,6 +136,56 @@ openpifpaf_to_coco_13 = [
 ]
 
 
+HAND_21_KEYPOINTS = [
+  "ulnar_palm", # 0
+  "radial_palm", # 1
+  "thumb_metacarpal", # 2
+  "thumb_proximal", # 3
+  "thumb_distal", # 4
+  "index_metacarpal", # 5
+  "index_proximal", # 6
+  "index_middle", # 7
+  "index_distal", # 8
+  "middle_metacarpal", # 9
+  "middle_proximal", # 10
+  "middle_middle", # 11
+  "middle_distal", # 12
+  "ring_metacarpal", # 13
+  "ring_proximal", # 14
+  "ring_middle", # 15
+  "ring_distal", # 16
+  "pinkie_metacarpal", # 17
+  "pinkie_proximal", # 18
+  "pinkie_middle", # 19
+  "pinkie_distal", # 20
+]
+
+
+HAND_21_ANGLES = [
+    [0, 1, 2],
+    [1, 2, 3],
+    [2, 3, 4],
+    [1, 5, 6],
+    [1, 5, 9],
+    [2, 1, 5],
+    [9, 5, 6],
+    [5, 6, 7],
+    [6, 7, 8],
+    [5, 9, 10],
+    [9, 10, 11],
+    [10, 11, 12],
+    [10, 9, 13],
+    [9, 13, 14],
+    [13, 14, 15],
+    [14, 15, 16],
+    [14, 13, 17],
+    [13, 17, 18],
+    [17, 18, 19],
+    [18, 19, 20],
+    [13, 17, 0],
+]
+
+
 def merge_coords(all_coords, guide_to_merge, has_confidence=False, is_3d=False):
     new_coords = []
     for to_merge in guide_to_merge:

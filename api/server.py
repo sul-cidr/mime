@@ -242,6 +242,13 @@ async def faces_by_frame(video_id: UUID, frame: int, request: Request):
         media_type="application/json",
     )
 
+@mime_api.get("/hands/{video_id}/{frame}/")
+async def hands_by_frame(video_id: UUID, frame: int, request: Request):
+    frame_data = await request.app.state.db.get_frame_hands(video_id, frame)
+    return Response(
+        content=json.dumps(frame_data, cls=MimeJSONEncoder),
+        media_type="application/json",
+    )
 
 # compares a known pose from the DB to others in the DB (c.f. "search_nearest_")
 @mime_api.get(
@@ -321,6 +328,50 @@ async def search_nearest_poses(
 
     return Response(
         content=json.dumps(frame_data, cls=MimeJSONEncoder),
+        media_type="application/json",
+    )
+
+
+# compares a known hand from the DB to others in the DB
+@mime_api.get(
+    "/hands/similar/{max_results}/{metric_and_max}/{video_param}/{frame}/{pose_idx}/{is_right}/{avoid_shot}/"
+)
+async def get_nearest_hands(
+    max_results: int,
+    metric_and_max: str,
+    video_param: UUID | str,
+    frame: int,
+    pose_idx: int,
+    is_right: bool,
+    avoid_shot: int,
+    request: Request,
+):
+    metric, max_distance = metric_and_max.split("|")
+
+    embedding = "joint_angles3d"
+    if metric == "cosine":
+        embedding = "class_weights"
+    elif metric == "joint_angles":
+        metric = "cosine"
+        embedding = "joint_angles3d"
+    elif metric == "global3d":
+        metric = "cosine"
+        embedding = "rectified3d"
+
+    hand_data = await request.app.state.db.get_nearest_hands(
+        video_param,
+        frame,
+        pose_idx,
+        is_right,
+        metric,
+        embedding,
+        float(max_distance),
+        avoid_shot,
+        max_results,
+    )
+
+    return Response(
+        content=json.dumps(hand_data, cls=MimeJSONEncoder),
         media_type="application/json",
     )
 

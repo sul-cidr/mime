@@ -3,7 +3,12 @@
   import Pose from "./Pose.svelte";
 
   import { API_BASE } from "@config";
-  import { currentVideo, currentFrame, currentPose } from "@svelte/stores";
+  import {
+    currentVideo,
+    currentFrame,
+    currentPose,
+    currentHandPose,
+  } from "@svelte/stores";
 
   const { id: videoId, width: frameWidth, height: frameHeight } = $currentVideo;
 
@@ -37,7 +42,8 @@
               <Pose
                 poseData={poseData.keypointsopp}
                 pose4dhData={poseData.keypoints4dh}
-                faceData={poseData.face_landmarks}
+                leftHandData={poseData.lh_keypoints_2d}
+                rightHandData={poseData.rh_keypoints_2d}
                 {scaleFactor}
               />
             </Canvas>
@@ -69,7 +75,7 @@
                 class:selected={hoveredPoseIdx === i}
                 on:mouseover={() => (hoveredPoseIdx = i)}
                 on:mouseout={() => (hoveredPoseIdx = undefined)}
-                on:click={() => $currentPose = poses[i]}
+                on:click={() => ($currentPose = poses[i])}
                 pointer-events="visible"
                 style="cursor: pointer"
               />
@@ -87,6 +93,50 @@
                   on:focus={() => (hoveredPoseIdx = i)}
                   on:mouseout={() => (hoveredPoseIdx = undefined)}
                   on:blur={() => (hoveredPoseIdx = undefined)}
+                  pointer-events="visible"
+                  style="cursor: pointer"
+                />
+              {/if}
+              {#if poseData.rh_bbox != null}
+                <rect
+                  x={poseData.rh_bbox[0]}
+                  y={poseData.rh_bbox[1]}
+                  height={Math.abs(poseData.rh_bbox[3] - poseData.rh_bbox[1])}
+                  width={Math.abs(poseData.rh_bbox[2] - poseData.rh_bbox[0])}
+                  stroke="green"
+                  fill="none"
+                  stroke-width="1"
+                  class:selected={hoveredPoseIdx === i}
+                  on:mouseover={() => (hoveredPoseIdx = i)}
+                  on:focus={() => (hoveredPoseIdx = i)}
+                  on:mouseout={() => (hoveredPoseIdx = undefined)}
+                  on:blur={() => (hoveredPoseIdx = undefined)}
+                  on:click={() => {
+                    poses[i].search_is_right = true;
+                    $currentHandPose = poses[i];
+                  }}
+                  pointer-events="visible"
+                  style="cursor: pointer"
+                />
+              {/if}
+              {#if poseData.lh_bbox != null}
+                <rect
+                  x={poseData.lh_bbox[0]}
+                  y={poseData.lh_bbox[1]}
+                  height={Math.abs(poseData.lh_bbox[3] - poseData.lh_bbox[1])}
+                  width={Math.abs(poseData.lh_bbox[2] - poseData.lh_bbox[0])}
+                  stroke="red"
+                  fill="none"
+                  stroke-width="1"
+                  class:selected={hoveredPoseIdx === i}
+                  on:mouseover={() => (hoveredPoseIdx = i)}
+                  on:focus={() => (hoveredPoseIdx = i)}
+                  on:mouseout={() => (hoveredPoseIdx = undefined)}
+                  on:blur={() => (hoveredPoseIdx = undefined)}
+                  on:click={() => {
+                    poses[i].search_is_right = false;
+                    $currentHandPose = poses[i];
+                  }}
                   pointer-events="visible"
                   style="cursor: pointer"
                 />
@@ -116,7 +166,7 @@
 
 <style>
   :global(rect.selected) {
-    stroke: red;
+    stroke: yellow;
     fill: white;
     fill-opacity: 0.25;
   }

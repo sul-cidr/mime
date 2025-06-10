@@ -7,6 +7,7 @@
     videoTableData,
     currentVideo,
     similarPoseFrames,
+    similarHandFrames,
     similarMoveletFrames,
     currentFrame,
     currentPose,
@@ -41,6 +42,7 @@
           "Poses",
           "Poses/Frame",
           "Faces",
+          "Hands",
           "Tracks",
           "Shots",
         ],
@@ -54,6 +56,7 @@
           video.pose_ct,
           video.poses_per_frame,
           video.face_ct,
+          video.hand_ct,
           video.track_ct,
           video.shot_ct,
         ]),
@@ -94,6 +97,7 @@
     $currentMoveletPose = null;
     $currentActionPose = null;
     $similarPoseFrames = {};
+    $similarHandFrames = {};
     $similarMoveletFrames = {};
     $similarActionFrames = {};
   };

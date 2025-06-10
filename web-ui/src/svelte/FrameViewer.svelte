@@ -10,8 +10,10 @@
   import { currentVideo, currentFrame } from "@svelte/stores";
 
   let poseData: Array<PoseRecord>;
+  let handsData: Array<HandRecord>;
   let trackCt: number;
   let faceCt: number;
+  let handCt: number;
   let showFrame: boolean = true;
   let playInterval: number | undefined;
   let hoveredPoseIdx: number | undefined;
@@ -21,21 +23,23 @@
   let show3Dframe: boolean = false;
 
   const updatePoseData = (data: Array<PoseRecord>) => {
+    trackCt = 0;
     if (data) {
       poseData = data;
-      let trackCount = 0;
       if (data.length) {
         data.forEach((pr: PoseRecord) => {
-          if (pr.track_id !== null) trackCount += 1;
+          if (pr.track_id !== null) trackCt += 1;
           shot = pr.shot;
           pose_interest = pr.pose_interest;
           action_interest = pr.action_interest;
         });
       }
-      trackCt = trackCount;
     }
     getFaceData($currentVideo.id, $currentFrame!).then((data) =>
       integrateFaceData(data),
+    );
+    getHandsData($currentVideo.id, $currentFrame!).then((data) =>
+      integrateHandsData(data),
     );
   };
 
@@ -57,6 +61,32 @@
     }
   };
 
+  const integrateHandsData = (data: Array<HandRecord>) => {
+    handCt = 0;
+    handsData = data;
+    if (data && poseData) {
+      if (data.length && poseData.length) {
+        poseData.forEach((pr: PoseRecord, pi: number) => {
+          data.forEach((hr: HandRecord) => {
+            if (hr.pose_idx == pr.pose_idx) {
+              handCt += 1;
+              poseData[pi]!.hand_global_orient = hr.global_orient;
+              if (hr.is_right) {
+                poseData[pi]!.rh_bbox = hr.bbox;
+                poseData[pi]!.rh_keypoints_2d = hr.keypoints2d;
+                poseData[pi]!.rh_keypoints_3d = hr.keypoints3d;
+              } else {
+                poseData[pi]!.lh_bbox = hr.bbox;
+                poseData[pi]!.lh_keypoints_2d = hr.keypoints2d;
+                poseData[pi]!.lh_keypoints_3d = hr.keypoints3d;
+              }
+            }
+          });
+        });
+      }
+    }
+  };
+
   async function getPoseData(videoId: string, frame: number) {
     if (!frame) {
       return null;
@@ -70,6 +100,14 @@
       return null;
     }
     const response = await fetch(`${API_BASE}/faces/${videoId}/${frame}/`);
+    return await response.json();
+  }
+
+  async function getHandsData(videoId: string, frame: number) {
+    if (!frame) {
+      return null;
+    }
+    const response = await fetch(`${API_BASE}/hands/${videoId}/${frame}/`);
     return await response.json();
   }
 
@@ -153,7 +191,11 @@
       {:else}
         <div>
           <Canvas3D size={{ width: 640, height: 480 }}>
-            <Scene3D></Scene3D>
+            <Scene3D
+              bind:poses={poseData}
+              bind:hands={handsData}
+              bind:hoveredPoseIdx
+            ></Scene3D>
           </Canvas3D>
         </div>
       {/if}
@@ -161,6 +203,7 @@
         bind:poses={poseData}
         {trackCt}
         {faceCt}
+        {handCt}
         bind:hoveredPoseIdx
         {shot}
         {pose_interest}

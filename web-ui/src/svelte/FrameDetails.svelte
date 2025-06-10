@@ -5,6 +5,7 @@
     currentFrame,
     currentPose,
     currentActionPose,
+    currentHandPose,
     searchAllVideos,
     searchThresholds,
   } from "@svelte/stores";
@@ -14,6 +15,7 @@
   export let poses: Array<PoseRecord>;
   export let trackCt: number;
   export let faceCt: number;
+  export let handCt: number;
   export let hoveredPoseIdx: number | undefined;
   export let shot: number | 0;
   export let pose_interest: number | 0;
@@ -40,6 +42,8 @@
         <dd>{trackCt}</dd>
         <dt>#Detected Faces:</dt>
         <dd>{faceCt}</dd>
+        <dt>#Detected Hands:</dt>
+        <dd>{handCt}</dd>
         <dt>Time:</dt>
         <dd>{formatSeconds(($currentFrame || 0) / $currentVideo.fps)}</dd>
         <dt>Shot:</dt>
@@ -172,8 +176,8 @@
         <!-- svelte-ignore a11y-mouse-events-have-key-events -->
         <li
           class="py-1 px-2 flex items-center gap-2 justify-between cursor-pointer"
-          class:variant-ghost={hoveredPoseIdx === i}
-          on:mouseover={() => (hoveredPoseIdx = i)}
+          class:variant-ghost={hoveredPoseIdx === pose.pose_idx}
+          on:mouseover={() => (hoveredPoseIdx = pose.pose_idx)}
           on:mouseout={() => (hoveredPoseIdx = undefined)}
         >
           Pose #{i + 1} | Confidence: {pose.score.toFixed(3)}
@@ -181,13 +185,34 @@
             | Track {pose.track_id}
           {/if}
           <div class="flex align-stretch gap-2">
+            <span class="font-bold self-center">Find similar:</span>
+            <button
+              class="button px-2 variant-filled"
+              disabled={pose.lh_keypoints_2d === undefined}
+              on:click={() => {
+                pose.search_is_right = false;
+                $currentHandPose = pose;
+              }}
+            >
+              hands <span style="color:red">(left)</span>
+            </button>
+            <button
+              class="button px-2 variant-filled"
+              disabled={pose.rh_keypoints_2d === undefined}
+              on:click={() => {
+                pose.search_is_right = true;
+                $currentHandPose = pose;
+              }}
+            >
+              hands <span style="color:green">(right)</span>
+            </button>
             <button
               class="button px-2 variant-filled"
               on:click={() => {
                 $currentPose = pose;
               }}
             >
-              similar poses
+              poses
             </button>
             {#if pose.track_id !== null}
               <button
@@ -196,7 +221,7 @@
                   $currentActionPose = pose;
                 }}
               >
-                similar actions
+                actions
               </button>
             {/if}
             <button

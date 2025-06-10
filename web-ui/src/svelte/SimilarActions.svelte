@@ -175,9 +175,11 @@
                   {/each}
                 </ul>
               </li>
-              <li>
-                Face group: {$currentActionPose.face_cluster_id}
-              </li>
+              {#if $currentActionPose.face_cluster_id !== undefined}
+                <li>
+                  Face group: {$currentActionPose.face_cluster_id}
+                </li>
+              {/if}
             </ul>
             <span
               ><strong
@@ -239,9 +241,11 @@
                         {/each}
                       </ul>
                     </li>
-                    <li>
-                      Face group: {pose.face_cluster_id}
-                    </li>
+                    {#if pose.face_cluster_id !== null}
+                      <li>
+                        Face group: {pose.face_cluster_id}
+                      </li>
+                    {/if}
                   </ul>
                   <span
                     ><strong

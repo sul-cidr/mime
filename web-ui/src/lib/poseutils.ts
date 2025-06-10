@@ -37,6 +37,70 @@ export const COCO_13_SKELETON = [
   [1, 3],
 ];
 
+export const COCO_13_KEYPOINTS = [
+  "nose",  // 0
+  "left_shoulder",  // 1
+  "right_shoulder",  // 2
+  "left_elbow",  // 3
+  "right_elbow",  // 4
+  "left_wrist",  // 5
+  "right_wrist",  // 6
+  "left_hip",  // 7
+  "right_hip",  // 8
+  "left_knee",  // 9
+  "right_knee",  // 10
+  "left_ankle",  // 11
+  "right_ankle",  // 12
+]
+
+export const HAND_21_KEYPOINTS = [
+  "ulnar_palm",
+  "radial_palm",
+  "thumb_metacarpal",
+  "thumb_proximal",
+  "thumb_distal",
+  "index_metacarpal",
+  "index_proximal",
+  "index_middle",
+  "index_distal",
+  "middle_metacarpal",
+  "middle_proximal",
+  "middle_middle",
+  "middle_distal",
+  "ring_metacarpal",
+  "ring_proximal",
+  "ring_middle",
+  "ring_distal",
+  "pinkie_metacarpal",
+  "pinkie_proximal",
+  "pinkie_middle",
+  "pinkie_distal",
+]
+
+export const HAND_21_SKELETON = [
+  [1, 2],
+  [1, 18],
+  [2, 3],
+  [3, 4],
+  [3, 6],
+  [4, 5],
+  [6, 10],
+  [6, 7],
+  [7, 8],
+  [8, 9],
+  [10, 14],
+  [10, 11],
+  [11, 12],
+  [12, 13],
+  [14, 18],
+  [14, 15],
+  [15, 16],
+  [16, 17],
+  [18, 19],
+  [19, 20],
+  [20, 21],
+]
+
 export const COCO_COLORS = [
   "orangered",
   "orange",
@@ -202,6 +266,18 @@ export const shiftNormalizeRescalePoseCoords = (
   return searchPose;
 };
 
+const getXywh = (x_values: Array<number>, y_values: Array<number>) => {
+  let min_x = Math.min(...x_values);
+  let max_x = Math.max(...x_values);
+  let min_y = Math.min(...y_values);
+  let max_y = Math.max(...y_values);
+
+  let width = max_x - min_x;
+  let height = max_y - min_y;
+
+  return [min_x, min_y, width, height];
+}
+
 export const getNormDims = (keypoints: CocoSkeletonNoConfidence) => {
   let x_values: Array<number> = [];
   let y_values: Array<number> = [];
@@ -235,14 +311,42 @@ export const getExtent = (keypoints: CocoSkeletonWithConfidence) => {
       y_values.push(keypoints[i]);
     }
   }
+  return getXywh(x_values, y_values);
+};
 
-  let min_x = Math.min(...x_values);
-  let max_x = Math.max(...x_values);
-  let min_y = Math.min(...y_values);
-  let max_y = Math.max(...y_values);
+export const getExtentFlat = (keypoints: Array<number> = []) => {
+  let x_values: Array<number> = [];
+  let y_values: Array<number> = [];
+  for (let i: number = 0; i < keypoints.length; i++) {
+    if (i % 2 == 0) {
+      x_values.push(keypoints[i]);
+    } else {
+      y_values.push(keypoints[i]);
+    }
+  }
+  return getXywh(x_values, y_values);
+};
 
-  let width = max_x - min_x;
-  let height = max_y - min_y;
-
-  return [min_x, min_y, width, height];
+export const get3DPoseExtent = (
+  poses: number[][],
+  minsSoFar = [null, null, null],
+  maxsSoFar = [null, null, null],
+): number[][] => {
+  const poseMin: number[] = poses.reduce(
+    (poseMins, coords) => [
+      poseMins[0] === null ? coords[0] : Math.min(poseMins[0], coords[0]),
+      poseMins[1] === null ? coords[1] : Math.min(poseMins[1], coords[1]),
+      poseMins[2] === null ? coords[2] : Math.min(poseMins[2], coords[2]),
+    ],
+    minsSoFar,
+  );
+  const poseMax: number[] = poses.reduce(
+    (poseMaxs, coords) => [
+      poseMaxs[0] === null ? coords[0] : Math.max(poseMaxs[0], coords[0]),
+      poseMaxs[1] === null ? coords[1] : Math.max(poseMaxs[1], coords[1]),
+      poseMaxs[2] === null ? coords[2] : Math.max(poseMaxs[2], coords[2]),
+    ],
+    maxsSoFar,
+  );
+  return [poseMin, poseMax];
 };

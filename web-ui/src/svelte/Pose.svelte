@@ -3,6 +3,7 @@
     COCO_13_SKELETON,
     COCO_17_SKELETON,
     COCO_COLORS,
+    HAND_21_SKELETON,
   } from "../lib/poseutils";
 
   const SMPL_COLOR = "white";
@@ -23,9 +24,17 @@
     | SmplSkeletonWithConfidence
     | SmplSkeletonNoConfidence = null;
   export let faceData: FaceLandmarks = null;
+  export let rightHandData: HandJoints2D = null;
+  export let leftHandData: HandJoints2D = null;
   export let scaleFactor = 1;
   export let normalizedPose = false;
+  export let maxXywh: FixedLengthArray<number, 4> = [0, 0, null, null];
+  export let searchHandData: HandJoints2D = null;
+  export let searchHandIsRight: boolean = undefined;
   export let opacity = 1;
+
+  let heightOffset = 0;
+  let widthOffset = 0;
 
   let total_coco_coords = 13;
   let coco_skeleton = COCO_13_SKELETON;
@@ -62,6 +71,10 @@
 
   $: facePoints = segmentArray(faceData, 2);
 
+  $: rightHandPoints = segmentArray(rightHandData, 2);
+  $: leftHandPoints = segmentArray(leftHandData, 2);
+  $: searchHandPoints = segmentArray(searchHandData, 2);
+
   $: {
     if ($ctx) {
       /* --------------------------------------------
@@ -74,11 +87,19 @@
 
       // "Scale your canvas size to retina screens."
       // (see https://layercake.graphics/guide#scalecanvas)
+
       scaleCanvas($ctx, $width, $height);
       $ctx.globalAlpha = opacity;
       $ctx.clearRect(0, 0, $width, $height);
 
       const normalizationFactor = normalizedPose ? $width / 100 : 1;
+
+      if (maxXywh[2] !== null && maxXywh[3] !== null) {
+        scaleFactor =
+          maxXywh[2] >= maxXywh[3] ? $width / maxXywh[2] : $height / maxXywh[3];
+        widthOffset = ($width - maxXywh[2] * scaleFactor) / 2;
+        heightOffset = ($height - maxXywh[3] * scaleFactor) / 2;
+      }
 
       // Draw a line on the canvas for each skeleton segment.
       // If the confidence value for a given armature point is 0, skip related segments.
@@ -100,12 +121,14 @@
 
         $ctx.beginPath();
         $ctx.moveTo(
-          fromX * normalizationFactor * scaleFactor,
-          fromY * normalizationFactor * scaleFactor,
+          (fromX - maxXywh[0]) * normalizationFactor * scaleFactor +
+            widthOffset,
+          (fromY - maxXywh[1]) * normalizationFactor * scaleFactor +
+            heightOffset,
         );
         $ctx.lineTo(
-          toX * normalizationFactor * scaleFactor,
-          toY * normalizationFactor * scaleFactor,
+          (toX - maxXywh[0]) * normalizationFactor * scaleFactor + widthOffset,
+          (toY - maxXywh[1]) * normalizationFactor * scaleFactor + heightOffset,
         );
         $ctx.stroke();
       });
@@ -115,8 +138,10 @@
         smplPoints?.forEach(([centerX, centerY], i) => {
           $ctx.beginPath();
           $ctx.arc(
-            centerX! * normalizationFactor * scaleFactor,
-            centerY! * normalizationFactor * scaleFactor,
+            (centerX! - maxXywh[0]) * normalizationFactor * scaleFactor +
+              widthOffset,
+            (centerY! - maxXywh[1]) * normalizationFactor * scaleFactor +
+              heightOffset,
             dotRadius * scaleFactor,
             0,
             2 * Math.PI,
@@ -125,10 +150,47 @@
           $ctx.globalAlpha = 0.8;
           $ctx.fillStyle = SMPL_COLOR!;
           $ctx.fill();
+          // Just draw points for the SMPL+ vertices, not connections
           //$ctx.lineWidth = dotRadius;
           //$ctx.strokeStyle = SMPL_COLOR!;
           //$ctx.stroke();
         });
+      }
+
+      const drawHand = (handPoints: Array<number[]>, isRight: boolean) => {
+        if (handPoints === null) return;
+
+        HAND_21_SKELETON.forEach(([from, to], i) => {
+          let fromX, fromY, toX, toY;
+          [fromX, fromY] = handPoints[from! - 1]!;
+          [toX, toY] = handPoints[to! - 1]!;
+
+          $ctx.lineWidth = scaleFactor > 0.8 ? 3 : 2;
+          // port (left) wine is red, starboard is green
+          $ctx.strokeStyle = isRight ? "green" : "red ";
+
+          $ctx.beginPath();
+          $ctx.moveTo(
+            (fromX - maxXywh[0]) * normalizationFactor * scaleFactor +
+              widthOffset,
+            (fromY - maxXywh[1]) * normalizationFactor * scaleFactor +
+              heightOffset,
+          );
+          $ctx.lineTo(
+            (toX - maxXywh[0]) * normalizationFactor * scaleFactor +
+              widthOffset,
+            (toY - maxXywh[1]) * normalizationFactor * scaleFactor +
+              heightOffset,
+          );
+          $ctx.stroke();
+        });
+      };
+
+      if (searchHandData !== null && searchHandIsRight !== undefined) {
+        drawHand(searchHandPoints, searchHandIsRight);
+      } else {
+        drawHand(rightHandPoints, true);
+        drawHand(leftHandPoints, false);
       }
 
       if (faceData) {
@@ -136,8 +198,10 @@
         facePoints?.forEach(([centerX, centerY], i) => {
           $ctx.beginPath();
           $ctx.arc(
-            centerX! * normalizationFactor * scaleFactor,
-            centerY! * normalizationFactor * scaleFactor,
+            (centerX! - maxXywh[0]) * normalizationFactor * scaleFactor +
+              widthOffset,
+            (centerY! - maxXywh[1]) * normalizationFactor * scaleFactor +
+              heightOffset,
             dotRadius * scaleFactor,
             0,
             2 * Math.PI,

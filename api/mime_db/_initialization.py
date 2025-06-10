@@ -92,6 +92,31 @@ async def initialize_db(conn, drop=False) -> None:
 
     await conn.execute(
         """
+        CREATE TABLE IF NOT EXISTS hand (
+            video_id uuid NOT NULL REFERENCES video(id) ON DELETE CASCADE,
+            frame INTEGER NOT NULL,
+            pose_idx INTEGER DEFAULT NULL,
+            hand_personid INTEGER,
+            bbox FLOAT[4] NOT NULL,
+            is_right BOOLEAN DEFAULT TRUE,
+            confidence FLOAT NOT NULL DEFAULT 1.0,
+            camera FLOAT[3] NOT NULL,
+            camera_transform FLOAT[3] NOT NULL,
+            keypoints2d vector(42) NOT NULL,
+            keypoints3d vector(63) NOT NULL,
+            global_orient FLOAT[9] NOT NULL,
+            joint_angles3d vector(21) DEFAULT NULL,
+            class_weights vector(7) DEFAULT NULL,
+            rectified3d vector(63) DEFAULT NULL,
+            track_id INTEGER DEFAULT NULL,
+            cluster_id INTEGER DEFAULT NULL
+        )
+        ;
+        """
+    )
+
+    await conn.execute(
+        """
         CREATE TABLE IF NOT EXISTS movelet (
             video_id uuid NOT NULL REFERENCES video(id) ON DELETE CASCADE,
             track_id INTEGER NOT NULL,
@@ -115,7 +140,7 @@ async def initialize_db(conn, drop=False) -> None:
     await conn.execute(
         """
         CREATE MATERIALIZED VIEW IF NOT EXISTS video_meta AS
-            SELECT video.*, pose_ct, track_ct, shot_ct, poses_per_frame, face_ct
+            SELECT video.*, pose_ct, track_ct, shot_ct, poses_per_frame, face_ct, hand_ct
             FROM video
             LEFT JOIN (
                 SELECT video.id, COUNT(*) AS face_ct
@@ -123,6 +148,12 @@ async def initialize_db(conn, drop=False) -> None:
                 INNER JOIN face ON video.id = face.video_id
                 GROUP BY video.id
             ) AS f ON video.id = f.id
+            LEFT JOIN (
+                SELECT video.id, COUNT(*) AS hand_ct
+                FROM video
+                INNER JOIN hand ON video.id = hand.video_id
+                GROUP BY video.id
+            ) AS h ON video.id = h.id
             LEFT JOIN (
                 SELECT video.id, COUNT(*) filter (where frame.is_shot_boundary) as shot_ct
                 FROM video
@@ -148,11 +179,12 @@ async def initialize_db(conn, drop=False) -> None:
     await conn.execute(
         """
         CREATE MATERIALIZED VIEW if not exists video_frame_meta as
-        SELECT  pose_faces.video_id,
-                pose_faces.frame,
-                pose_faces.track_ct,
-                pose_faces.face_ct,
-                pose_faces.avg_score,
+        SELECT  pose_details.video_id,
+                pose_details.frame,
+                pose_details.track_ct,
+                pose_details.face_ct,
+                pose_details.hand_ct,
+                pose_details.avg_score,
                 CAST(frame.is_shot_boundary AS INT) AS is_shot,
                 frame.pose_interest,
                 frame.action_interest,
@@ -171,19 +203,24 @@ async def initialize_db(conn, drop=False) -> None:
                    pose.frame,
                    count(NULLIF(pose.track_id,0)) AS track_ct,
                    count(face.pose_idx) AS face_ct,
+                   count(hand.pose_idx) AS hand_ct,
                    ROUND(AVG(pose.score)::numeric, 2) AS avg_score
             FROM pose
             LEFT JOIN face ON
                 pose.video_id = face.video_id AND
                 pose.frame = face.frame AND
                 pose.pose_idx = face.pose_idx
+            LEFT JOIN hand ON
+                pose.video_id = hand.video_id AND
+                pose.frame = hand.frame AND
+                pose.pose_idx = hand.pose_idx
             GROUP BY pose.video_id, pose.frame
             ORDER BY pose.frame
-        ) AS pose_faces
+        ) AS pose_details
         LEFT JOIN frame ON
-            pose_faces.video_id = frame.video_id AND
-            pose_faces.frame = frame.frame
-        ORDER BY pose_faces.frame
+            pose_details.video_id = frame.video_id AND
+            pose_details.frame = frame.frame
+        ORDER BY pose_details.frame
         WITH DATA;
 
         CREATE INDEX ON video_frame_meta (video_id);

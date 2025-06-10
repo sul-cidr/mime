@@ -6,7 +6,7 @@ from PIL import Image, ImageColor, ImageDraw
 # https://github.com/openpifpaf/openpifpaf/blob/main/src/openpifpaf/plugins/coco/constants.py
 # But they're repeated here for easy reference.
 
-COCO_KEYPOINTS = [
+COCO_17_KEYPOINTS = [
     "nose",  # 1
     "left_eye",  # 2
     "right_eye",  # 3

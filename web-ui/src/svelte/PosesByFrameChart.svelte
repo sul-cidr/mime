@@ -17,9 +17,11 @@
     currentVideo,
     currentPose,
     currentActionPose,
+    currentHandPose,
     seriesNames,
     similarActionFrames,
     similarPoseFrames,
+    similarHandFrames,
   } from "@svelte/stores";
 
   export let timelineData: Array<FrameRecord>;
@@ -32,9 +34,11 @@
     "black",
     "gray",
     "orange",
-    "#964B00BB", // brown
+    "tan",
     "#fA8072BB", // salmon
-    "fbceb1", // apricot
+    "brown",
+    "deeppink",
+    "forestgreen",
   ];
   const formatTickXAsTime = (d: number) => {
     return new Date((d / $currentVideo.fps) * 1000)
@@ -67,7 +71,7 @@
   /* Series whose values are always normalized between 0 and 1 in the DB (e.g.,
    * movement and avg pose confidence score) can be scaled to between 0 and the
    * maximum of the integer-valued entries on the timeline (usually just pose
-   * count, face count or track count).
+   * count, face count, hand count or track count).
    * XXX BUT if the module hot-reloads, the scaling is run twice due to Svelte
    * weirdness, and the values are artificially inflated (though still clamped
    * to the max integer value from the DB). Hopefully this won't happen on the
@@ -111,6 +115,7 @@
     data: Array<FrameRecord>,
     similarPoseFrames: { [frameno: number]: number },
     similarActionFrames: { [frameno: number]: number },
+    similarHandFrames: { [frameno: number]: number },
     startFrame = 1,
     endFrame = $currentVideo.frame_count,
   ) => {
@@ -131,6 +136,7 @@
           frame: i,
           avgScore: 0,
           faceCt: 0,
+          handCt: 0,
           trackCt: 0,
           isShot: 0,
           movement: 0,
@@ -139,6 +145,7 @@
           action_interest: 0,
           sim_pose: 0,
           sim_action: 0,
+          sim_hand: 0,
         });
         i++;
       }
@@ -149,6 +156,7 @@
       // method at all for highlighting matching frames.
       thisFrame["sim_pose"] = i in similarPoseFrames ? maxValue : 0;
       thisFrame["sim_action"] = i in similarActionFrames ? maxValue : 0;
+      thisFrame["sim_hand"] = i in similarHandFrames ? maxValue : 0;
       if (!normalizedSeriesAlreadyScaled) {
         seriesToFit.forEach((series) => {
           thisFrame[series] = scaleToFit(frame[series]);
@@ -162,6 +170,7 @@
         frame: i,
         avgScore: 0,
         faceCt: 0,
+        handCt: 0,
         trackCt: 0,
         isShot: 0,
         movement: 0,
@@ -170,6 +179,7 @@
         action_interest: 0,
         sim_pose: 0,
         sim_action: 0,
+        sim_hand: 0,
       });
       i++;
     }
@@ -207,12 +217,27 @@
     }
   }
 
+  $: if ($currentHandPose) {
+    if (
+      Object.keys($similarHandFrames).length &&
+      !$seriesNames.includes("sim_hand")
+    ) {
+      $seriesNames.push("sim_hand");
+    } else if (
+      !Object.keys($similarHandFrames).length &&
+      $seriesNames.includes("sim_hand")
+    ) {
+      $seriesNames.splice($seriesNames.indexOf("sim_hand", 1));
+    }
+  }
+
   $: maxValue = getMaxValue(timelineData);
 
   $: framesArray = fillEmptyFrames(
     timelineData,
     $similarPoseFrames,
     $similarActionFrames,
+    $similarHandFrames,
   );
 
   $: {
@@ -270,6 +295,7 @@
         hiddenKeys={[
           "sim_pose",
           "sim_action",
+          "sim_hand",
           "isShot",
           "avgScore",
           "movement",
