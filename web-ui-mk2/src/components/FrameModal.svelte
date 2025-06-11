@@ -21,12 +21,22 @@
 	 * @param {VideoRecord} _video
 	 * @param {number} _frame
 	 * @param {number} _selectedPoseIdx
+	 * @param {boolean} [_showPoses = false]
+	 * @param {boolean} [_showHands = false]
 	 */
-	export const show = async (_video, _frame, _selectedPoseIdx) => {
+	export const show = async (
+		_video,
+		_frame,
+		_selectedPoseIdx,
+		_showPoses = false,
+		_showHands = false
+	) => {
 		video = _video;
 		frame = _frame;
 		selectedPoseIdx = _selectedPoseIdx;
 		framePoseData = await getPoseData(video.id, frame);
+		showPoses = _showPoses;
+		showHands = _showHands;
 		modal.show();
 	};
 </script>

@@ -29,7 +29,9 @@
 		frameModal.show(
 			video,
 			/** @type {PoseRecord} */ (sourcePose).frame,
-			/** @type {PoseRecord} */ (sourcePose).pose_idx
+			/** @type {PoseRecord} */ (sourcePose).pose_idx,
+			showPose,
+			showHands
 		);
 	};
 </script>
