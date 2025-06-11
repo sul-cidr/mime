@@ -1,14 +1,14 @@
 <script>
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import { Tabs, Tab, TabContent } from 'carbon-components-svelte';
 
 	import { getPoseData, getVideoData } from '$lib/data-fetching';
-	import PoseCard from '$components/PoseCard.svelte';
 	import SearchResults from '$components/SearchResults.svelte';
 	import HandSearchResults from '$components/HandSearchResults.svelte';
 	import WebcamPoseInput from '$components/WebcamPoseInput.svelte';
 	import ExamplePoses from '$components/ExamplePoses.svelte';
 	import ExampleHands from '$components/ExampleHands.svelte';
+	import SourcePoseFromDb from '$components/SourcePoseFromDb.svelte';
 
 	let searchTab = $state(0);
 	let searchType = $derived(searchTab === 0 ? 'pose' : 'hand');
@@ -38,11 +38,11 @@
 	};
 
 	$effect(() => {
-		const videoId = $page.url.searchParams.get('video');
-		const frame = parseInt($page.url.searchParams.get('frame') ?? '', 10);
-		const poseIdx = parseInt($page.url.searchParams.get('pose') ?? '', 10);
+		const videoId = page.url.searchParams.get('video');
+		const frame = parseInt(page.url.searchParams.get('frame') ?? '', 10);
+		const poseIdx = parseInt(page.url.searchParams.get('pose') ?? '', 10);
 
-		if (videoId && frame && poseIdx) {
+		if (videoId && !isNaN(frame) && !isNaN(poseIdx)) {
 			getPoseData(videoId, frame).then((data) => {
 				const pose = data.find((/** @type {PoseRecord} */ p) => p.pose_idx === poseIdx);
 				if (!pose) {
@@ -65,7 +65,7 @@
 				<TabContent class="tab-panel">
 					{#if sourcePoseFromUrl}
 						{#if sourcePose}
-							<PoseCard {sourcePose} showPose={false} class="source-pose-card" />
+							<SourcePoseFromDb poseRecord={sourcePose} />
 						{/if}
 					{:else}
 						<Tabs bind:selected={sourceTab} autoWidth>
@@ -73,9 +73,9 @@
 							<Tab label="Webcam" />
 							<Tab label="Pose Editor" />
 							<svelte:fragment slot="content">
-								<TabContent class="tab-panel"
-									><ExamplePoses {setSourcePoseFromCoco13Skeleton} /></TabContent
-								>
+								<TabContent class="tab-panel">
+									<ExamplePoses {setSourcePoseFromCoco13Skeleton} />
+								</TabContent>
 								<TabContent class="tab-panel">
 									{#if sourceTab === 1}<WebcamPoseInput {setSourcePoseFromCoco13Skeleton} />{/if}
 								</TabContent>
@@ -84,7 +84,11 @@
 						</Tabs>
 					{/if}
 				</TabContent>
-				<TabContent><ExampleHands {setSourceHand} /></TabContent>
+				<TabContent>
+					{#if searchType === 'hand'}
+						<ExampleHands {setSourceHand} />
+					{/if}
+				</TabContent>
 			</svelte:fragment>
 		</Tabs>
 	</div>
@@ -137,10 +141,6 @@
 		#results-container {
 			flex: 1 1 auto;
 			overflow-y: auto;
-		}
-
-		& :global(.source-pose-card) {
-			width: 100%;
 		}
 	}
 </style>
