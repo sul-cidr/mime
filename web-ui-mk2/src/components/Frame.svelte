@@ -43,12 +43,7 @@
 			{#each poseData as pose}
 				{#if showPoses}
 					<Canvas zIndex={1}>
-						<Pose
-							poseData={pose.keypoints}
-							pose4dhData={pose.keypoints4dh}
-							faceData={pose.face_landmarks}
-							{scaleFactor}
-						/>
+						<Pose poseData={pose.keypoints} {scaleFactor} />
 					</Canvas>
 				{/if}
 				{#if showHands}
@@ -88,17 +83,6 @@
 							width={pose.bbox[2]}
 							class:selected={selectedPoseIdx === pose.pose_idx}
 						/>
-						{#if pose.face_bbox}
-							<!-- svelte-ignore a11y_no_static_element_interactions -->
-							<rect
-								x={pose.face_bbox[0]}
-								y={pose.face_bbox[1]}
-								height={pose.face_bbox[3]}
-								width={pose.face_bbox[2]}
-								class:face={true}
-								class:selected={selectedPoseIdx === pose.pose_idx}
-							/>
-						{/if}
 						<text x={pose.bbox[0] + 2} y={pose.bbox[1] + 5}>
 							#{pose.pose_idx + 1}
 						</text>

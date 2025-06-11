@@ -35,9 +35,9 @@
  * @property {number} frame
  * @property {number} pose_idx
  * @property {number} [distance]
- * @property {Array<number>} [rh_keypoints_2d] 42-keypoints representing the right hand
+ * @property {Array<number>} [rh_keypoints2d] 42-keypoints representing the right hand
  * @property {Array<number>} [rh_global_orient] 9-element array representing a transform for the right hand
- * @property {Array<number>} [lh_keypoints_2d] 42-keypoints representing the left hand
+ * @property {Array<number>} [lh_keypoints2d] 42-keypoints representing the left hand
  * @property {Array<number>} [lh_global_orient] 9-element array representing a transform for the left hand
  */
 

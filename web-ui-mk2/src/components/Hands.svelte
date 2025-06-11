@@ -5,7 +5,7 @@
 
 	/**
 	 * @typedef {Object} PoseProps
-	 * @property {{ rh_keypoints2d: number[]; lh_keypoints2d: number[] }} handData Pose data to be drawn
+	 * @property {{ rh_keypoints2d: number[]|undefined; lh_keypoints2d: number[]|undefined }} handData Pose data to be drawn
 	 * @property {number} [scaleFactor] Scale factor to be applied to the pose
 	 * @property {BoundingBox} [bbox] Bounding box of the figure -- if supplied, the pose will be drawn with respect to the bbox
 	 * @returns {void}
