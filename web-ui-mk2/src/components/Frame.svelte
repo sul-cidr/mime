@@ -21,8 +21,6 @@
 
 	let displayWidthPx = $state();
 	let scaleFactor = $derived(displayWidthPx / frameWidth);
-
-	$inspect(poseData);
 </script>
 
 <div
