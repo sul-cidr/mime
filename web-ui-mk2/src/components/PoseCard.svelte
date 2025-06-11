@@ -5,7 +5,7 @@
 	import { getVideoData } from '$lib/data-fetching';
 	import Overlay from '../ui-components/Overlay.svelte';
 	import FrameModal from './FrameModal.svelte';
-	import Hand from './Hand.svelte';
+	import Hands from './Hands.svelte';
 	import Pose from './Pose.svelte';
 
 	/**
@@ -29,12 +29,14 @@
 		frameModal.show(
 			video,
 			/** @type {PoseRecord} */ (sourcePose).frame,
-			/** @type {PoseRecord} */ (sourcePose).pose_idx
+			/** @type {PoseRecord} */ (sourcePose).pose_idx,
+			showPose,
+			showHands
 		);
 	};
 </script>
 
-<div class:pose-card={true} {...props}>
+<div class="pose-card">
 	<LayerCake>
 		{#if 'frame' in sourcePose && 'pose_idx' in sourcePose}
 			<Overlay>
@@ -67,15 +69,13 @@
 		{/if}
 		{#if showHands}
 			<Canvas zIndex={1}>
-				{#if 'rh_keypoints2d' in sourcePose && sourcePose.rh_keypoints2d}
-					<Hand handData={sourcePose.rh_keypoints2d} isRight={true} bbox={sourcePose.bbox} />
-				{/if}
-				{#if 'lh_keypoints2d' in sourcePose && sourcePose.lh_keypoints2d}
-					<Hand
-						handData={sourcePose.lh_keypoints2d}
-						isRight={false}
+				{#if ('rh_keypoints2d' in sourcePose && sourcePose.rh_keypoints2d) || ('lh_keypoints2d' in sourcePose && sourcePose.lh_keypoints2d)}
+					<Hands
+						handData={{
+							rh_keypoints2d: sourcePose.rh_keypoints2d,
+							lh_keypoints2d: sourcePose.lh_keypoints2d
+						}}
 						bbox={sourcePose.bbox}
-						prepCanvas={false}
 					/>
 				{/if}
 			</Canvas>
@@ -100,6 +100,7 @@
 		outline: 1px solid var(--primary);
 		position: relative;
 		width: 180px;
+		height: 216px;
 
 		&:hover :global(.overlay) {
 			opacity: 1;

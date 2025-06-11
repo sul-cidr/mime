@@ -2,7 +2,7 @@
 	import { page } from '$app/stores';
 	import { LayerCake, Canvas, Html, Svg } from 'layercake';
 	import Pose from './Pose.svelte';
-	import Hand from './Hand.svelte';
+	import Hands from './Hands.svelte';
 
 	/**
 	 * @typedef {Object} FrameProps
@@ -21,8 +21,6 @@
 
 	let displayWidthPx = $state();
 	let scaleFactor = $derived(displayWidthPx / frameWidth);
-
-	$inspect(poseData);
 </script>
 
 <div
@@ -45,24 +43,17 @@
 			{#each poseData as pose}
 				{#if showPoses}
 					<Canvas zIndex={1}>
-						<Pose
-							poseData={pose.keypoints}
-							pose4dhData={pose.keypoints4dh}
-							faceData={pose.face_landmarks}
-							{scaleFactor}
-						/>
+						<Pose poseData={pose.keypoints} {scaleFactor} />
 					</Canvas>
 				{/if}
 				{#if showHands}
 					<Canvas zIndex={1}>
-						{#if pose.rh_keypoints2d}
-							<Hand handData={pose.rh_keypoints2d} isRight={true} {scaleFactor} />
-						{/if}
-						{#if pose.lh_keypoints2d}
-							<Hand
-								handData={pose.lh_keypoints2d}
-								isRight={false}
-								prepCanvas={false}
+						{#if ('rh_keypoints2d' in pose && pose.rh_keypoints2d) || ('lh_keypoints2d' in pose && pose.lh_keypoints2d)}
+							<Hands
+								handData={{
+									rh_keypoints2d: pose.rh_keypoints2d,
+									lh_keypoints2d: pose.lh_keypoints2d
+								}}
 								{scaleFactor}
 							/>
 						{/if}
@@ -92,17 +83,6 @@
 							width={pose.bbox[2]}
 							class:selected={selectedPoseIdx === pose.pose_idx}
 						/>
-						{#if pose.face_bbox}
-							<!-- svelte-ignore a11y_no_static_element_interactions -->
-							<rect
-								x={pose.face_bbox[0]}
-								y={pose.face_bbox[1]}
-								height={pose.face_bbox[3]}
-								width={pose.face_bbox[2]}
-								class:face={true}
-								class:selected={selectedPoseIdx === pose.pose_idx}
-							/>
-						{/if}
 						<text x={pose.bbox[0] + 2} y={pose.bbox[1] + 5}>
 							#{pose.pose_idx + 1}
 						</text>

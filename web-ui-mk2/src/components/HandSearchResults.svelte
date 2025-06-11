@@ -59,8 +59,6 @@
 		const response = await fetch(query);
 		return await response.json();
 	}
-
-	$inspect(sourceHand);
 </script>
 
 <div class="controls">
