@@ -18,6 +18,7 @@
   export let displayWidthPx = 640;
 
   const scaleFactor = displayWidthPx / frameWidth;
+  const labelFontSize = `${Math.max(8, Math.round(16 / scaleFactor))}px`;
 </script>
 
 <div>
@@ -42,6 +43,7 @@
               <Pose
                 poseData={poseData.keypointsopp}
                 pose4dhData={poseData.keypoints4dh}
+                faceData={poseData.face_landmarks}
                 leftHandData={poseData.lh_keypoints_2d}
                 rightHandData={poseData.rh_keypoints_2d}
                 {scaleFactor}
@@ -72,8 +74,8 @@
                 stroke={poseData.track_id ? "magenta" : "white"}
                 fill="none"
                 stroke-width="1"
-                class:selected={hoveredPoseIdx === i}
-                on:mouseover={() => (hoveredPoseIdx = i)}
+                class:selected={hoveredPoseIdx === poseData.pose_idx}
+                on:mouseover={() => (hoveredPoseIdx = poseData.pose_idx)}
                 on:mouseout={() => (hoveredPoseIdx = undefined)}
                 on:click={() => ($currentPose = poses[i])}
                 pointer-events="visible"
@@ -88,9 +90,9 @@
                   stroke="limegreen"
                   fill="none"
                   stroke-width="1"
-                  class:selected={hoveredPoseIdx === i}
-                  on:mouseover={() => (hoveredPoseIdx = i)}
-                  on:focus={() => (hoveredPoseIdx = i)}
+                  class:selected={hoveredPoseIdx === poseData.pose_idx}
+                  on:mouseover={() => (hoveredPoseIdx = poseData.pose_idx)}
+                  on:focus={() => (hoveredPoseIdx = poseData.pose_idx)}
                   on:mouseout={() => (hoveredPoseIdx = undefined)}
                   on:blur={() => (hoveredPoseIdx = undefined)}
                   pointer-events="visible"
@@ -106,9 +108,9 @@
                   stroke="green"
                   fill="none"
                   stroke-width="1"
-                  class:selected={hoveredPoseIdx === i}
-                  on:mouseover={() => (hoveredPoseIdx = i)}
-                  on:focus={() => (hoveredPoseIdx = i)}
+                  class:selected={hoveredPoseIdx === poseData.pose_idx}
+                  on:mouseover={() => (hoveredPoseIdx = poseData.pose_idx)}
+                  on:focus={() => (hoveredPoseIdx = poseData.pose_idx)}
                   on:mouseout={() => (hoveredPoseIdx = undefined)}
                   on:blur={() => (hoveredPoseIdx = undefined)}
                   on:click={() => {
@@ -128,9 +130,9 @@
                   stroke="red"
                   fill="none"
                   stroke-width="1"
-                  class:selected={hoveredPoseIdx === i}
-                  on:mouseover={() => (hoveredPoseIdx = i)}
-                  on:focus={() => (hoveredPoseIdx = i)}
+                  class:selected={hoveredPoseIdx === poseData.pose_idx}
+                  on:mouseover={() => (hoveredPoseIdx = poseData.pose_idx)}
+                  on:focus={() => (hoveredPoseIdx = poseData.pose_idx)}
                   on:mouseout={() => (hoveredPoseIdx = undefined)}
                   on:blur={() => (hoveredPoseIdx = undefined)}
                   on:click={() => {
@@ -147,6 +149,7 @@
                 y={poseData.bbox[1] + 5}
                 stroke="white"
                 fill="white"
+                font-size={labelFontSize}
               >
                 {#if poseData.track_id !== null}
                   {poseData.track_id}
