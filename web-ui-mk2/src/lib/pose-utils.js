@@ -173,7 +173,7 @@ export const drawPoseOnCanvas = (context, poseData, scaleFactor = 1, bbox) => {
 		const [, , width, height] = bbox;
 		if (width > height) {
 			scaleFactor = context.canvas.width / width;
-			xAdjust = (context.canvas.height - height * scaleFactor) / 2;
+			yAdjust = (context.canvas.height - height * scaleFactor) / 2;
 		} else {
 			scaleFactor = context.canvas.height / height;
 			xAdjust = (context.canvas.width - width * scaleFactor) / 2;
@@ -244,7 +244,7 @@ export const drawHandOnCanvas = (ctx, handPoints, color = 'red', bbox, scaleFact
 		const [, , width, height] = bbox;
 		if (width > height) {
 			scaleFactor = ctx.canvas.width / width;
-			xAdjust = (ctx.canvas.height - height * scaleFactor) / 2;
+			yAdjust = (ctx.canvas.height - height * scaleFactor) / 2;
 		} else {
 			scaleFactor = ctx.canvas.height / height;
 			xAdjust = (ctx.canvas.width - width * scaleFactor) / 2;
