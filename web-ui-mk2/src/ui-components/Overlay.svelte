@@ -4,11 +4,12 @@
 	 * @property {import('svelte').Snippet} [topLeft]
 	 * @property {import('svelte').Snippet} [topRight]
 	 * @property {import('svelte').Snippet} [bottomLeft]
+	 * @property {import('svelte').Snippet} [bottomRight]
 	 * @property {string} [class]
 	 */
 
 	/** @type {OverlayProps} */
-	let { topLeft, topRight, bottomLeft, ...props } = $props();
+	let { topLeft, topRight, bottomLeft, bottomRight, ...props } = $props();
 </script>
 
 <div class="overlay">
@@ -25,6 +26,11 @@
 	{#if bottomLeft}
 		<div class="bottom-left">
 			{@render bottomLeft()}
+		</div>
+	{/if}
+	{#if bottomRight}
+		<div class="bottom-right">
+			{@render bottomRight()}
 		</div>
 	{/if}
 </div>
@@ -63,6 +69,11 @@
 
 		.bottom-left {
 			left: 0;
+			bottom: 0;
+		}
+
+		.bottom-right {
+			right: 0;
 			bottom: 0;
 		}
 

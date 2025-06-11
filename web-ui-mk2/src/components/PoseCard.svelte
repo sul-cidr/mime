@@ -5,25 +5,32 @@
 	import { getVideoData } from '$lib/data-fetching';
 	import Overlay from '../ui-components/Overlay.svelte';
 	import FrameModal from './FrameModal.svelte';
+	import Hand from './Hand.svelte';
 	import Pose from './Pose.svelte';
 
 	/**
 	 * @typedef {Object} SearchResultsProps
-	 * @property {PoseRecord|MinimalPose} sourcePose Pose to be presented
-	 * @property {boolean} showPose
+	 * @property {PoseRecord|MinimalPose|HandForDrawing} sourcePose Pose or hand to be presented
+	 * @property {boolean} [showPose = false]
+	 * @property {boolean} [showHands = false]
 	 * @property {string} [class]
 	 */
 
 	/** @type {SearchResultsProps} */
-	let { sourcePose, showPose, ...props } = $props();
+	let { sourcePose, showPose = false, showHands = false, ...props } = $props();
 
 	let frameModal = $state();
 
 	const showFrameModal = async () => {
 		const video = (await getVideoData()).find(
-			(/** @type {VideoRecord} */ video) => video.id === sourcePose.video_id
+			(/** @type {VideoRecord} */ video) =>
+				video.id === /** @type {PoseRecord} */ (sourcePose).video_id
 		);
-		frameModal.show(video, sourcePose.frame, sourcePose.pose_idx);
+		frameModal.show(
+			video,
+			/** @type {PoseRecord} */ (sourcePose).frame,
+			/** @type {PoseRecord} */ (sourcePose).pose_idx
+		);
 	};
 </script>
 
@@ -53,9 +60,24 @@
 				/>
 			</Html>
 		{/if}
-		{#if showPose}
+		{#if 'keypoints' in sourcePose && showPose}
 			<Canvas zIndex={1}>
 				<Pose poseData={sourcePose.keypoints} bbox={sourcePose.bbox} />
+			</Canvas>
+		{/if}
+		{#if showHands}
+			<Canvas zIndex={1}>
+				{#if 'rh_keypoints2d' in sourcePose && sourcePose.rh_keypoints2d}
+					<Hand handData={sourcePose.rh_keypoints2d} isRight={true} bbox={sourcePose.bbox} />
+				{/if}
+				{#if 'lh_keypoints2d' in sourcePose && sourcePose.lh_keypoints2d}
+					<Hand
+						handData={sourcePose.lh_keypoints2d}
+						isRight={false}
+						bbox={sourcePose.bbox}
+						prepCanvas={false}
+					/>
+				{/if}
 			</Canvas>
 		{/if}
 	</LayerCake>
