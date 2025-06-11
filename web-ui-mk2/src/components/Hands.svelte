@@ -1,19 +1,18 @@
 <script>
 	import { getContext } from 'svelte';
 	import { scaleCanvas } from 'layercake';
-	import { drawPoseOnCanvas } from '$lib/pose-utils';
+	import { drawHandOnCanvas } from '$lib/pose-utils';
 
 	/**
 	 * @typedef {Object} PoseProps
-	 * @property {Coco13SkeletonNoConfidence} poseData Pose data to be drawn
+	 * @property {{ rh_keypoints2d: number[]; lh_keypoints2d: number[] }} handData Pose data to be drawn
 	 * @property {number} [scaleFactor] Scale factor to be applied to the pose
 	 * @property {BoundingBox} [bbox] Bounding box of the figure -- if supplied, the pose will be drawn with respect to the bbox
 	 * @returns {void}
 	 */
 
 	/** @type {PoseProps} */
-	let { poseData, scaleFactor, bbox } = $props();
-
+	let { handData, scaleFactor, bbox } = $props();
 	const { width, height } = getContext('LayerCake');
 	const { ctx } = getContext('canvas');
 
@@ -23,7 +22,12 @@
 			// (see https://layercake.graphics/guide#scalecanvas)
 			scaleCanvas($ctx, $width, $height);
 			$ctx.clearRect(0, 0, $width, $height);
-			drawPoseOnCanvas($ctx, poseData, scaleFactor, bbox);
+			if ('rh_keypoints2d' in handData && handData.rh_keypoints2d) {
+				drawHandOnCanvas($ctx, handData.rh_keypoints2d, 'green', bbox, scaleFactor);
+			}
+			if ('lh_keypoints2d' in handData && handData.lh_keypoints2d) {
+				drawHandOnCanvas($ctx, handData.lh_keypoints2d, 'red', bbox, scaleFactor);
+			}
 		}
 	});
 </script>

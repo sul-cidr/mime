@@ -2,7 +2,7 @@
 	import { page } from '$app/stores';
 	import { LayerCake, Canvas, Html, Svg } from 'layercake';
 	import Pose from './Pose.svelte';
-	import Hand from './Hand.svelte';
+	import Hands from './Hands.svelte';
 
 	/**
 	 * @typedef {Object} FrameProps
@@ -53,14 +53,12 @@
 				{/if}
 				{#if showHands}
 					<Canvas zIndex={1}>
-						{#if pose.rh_keypoints2d}
-							<Hand handData={pose.rh_keypoints2d} isRight={true} {scaleFactor} />
-						{/if}
-						{#if pose.lh_keypoints2d}
-							<Hand
-								handData={pose.lh_keypoints2d}
-								isRight={false}
-								prepCanvas={false}
+						{#if ('rh_keypoints2d' in pose && pose.rh_keypoints2d) || ('lh_keypoints2d' in pose && pose.lh_keypoints2d)}
+							<Hands
+								handData={{
+									rh_keypoints2d: pose.rh_keypoints2d,
+									lh_keypoints2d: pose.lh_keypoints2d
+								}}
 								{scaleFactor}
 							/>
 						{/if}
