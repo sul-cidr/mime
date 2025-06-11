@@ -156,11 +156,20 @@ export const shiftNormalizeRescaleKeypoints = (keypoints) => {
 /**
  * @param {CanvasRenderingContext2D} context
  * @param {Array<number>} poseData
+ * @param {number} canvasWidth
+ * @param {number} canvasHeight
  * @param {number} [scaleFactor=1]
  * @param {BoundingBox} [bbox]
  * @returns {void}
  */
-export const drawPoseOnCanvas = (context, poseData, scaleFactor = 1, bbox) => {
+export const drawPoseOnCanvas = (
+	context,
+	poseData,
+	canvasWidth,
+	canvasHeight,
+	scaleFactor = 1,
+	bbox
+) => {
 	let xAdjust = 0;
 	let yAdjust = 0;
 
@@ -172,11 +181,11 @@ export const drawPoseOnCanvas = (context, poseData, scaleFactor = 1, bbox) => {
 		// calculate scale factor and x/y adjustment based on whether the bbox is wide or tall
 		const [, , width, height] = bbox;
 		if (width > height) {
-			scaleFactor = context.canvas.width / width;
-			yAdjust = (context.canvas.height - height * scaleFactor) / 2;
+			scaleFactor = canvasWidth / width;
+			yAdjust = (canvasHeight - height * scaleFactor) / 2;
 		} else {
-			scaleFactor = context.canvas.height / height;
-			xAdjust = (context.canvas.width - width * scaleFactor) / 2;
+			scaleFactor = canvasHeight / height;
+			xAdjust = (canvasWidth - width * scaleFactor) / 2;
 		}
 	}
 
