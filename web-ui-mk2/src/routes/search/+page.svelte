@@ -1,6 +1,7 @@
 <script>
 	import { page } from '$app/state';
-	import { Tabs, Tab, TabContent } from 'carbon-components-svelte';
+	import { Button, Tabs, Tab, TabContent } from 'carbon-components-svelte';
+	import CloseLarge from 'carbon-icons-svelte/lib/CloseLarge.svelte';
 
 	import { getPoseData, getVideoData } from '$lib/data-fetching';
 	import SearchResults from '$components/SearchResults.svelte';
@@ -58,16 +59,24 @@
 
 <section>
 	<div id="query-container">
-		<Tabs bind:selected={searchTab} type="container">
-			<Tab>Poses</Tab>
-			<Tab>Hands</Tab>
-			<svelte:fragment slot="content">
-				<TabContent class="tab-panel">
-					{#if sourcePoseFromUrl}
-						{#if sourcePose}
-							<SourcePoseFromDb poseRecord={sourcePose} />
-						{/if}
-					{:else}
+		{#if sourcePoseFromUrl}
+			{#if sourcePose}
+				<SourcePoseFromDb poseRecord={sourcePose} />
+				<Button
+					size="small"
+					kind="secondary"
+					icon={CloseLarge}
+					class="clear"
+					style="width: 240px; margin: 0 auto;"
+					onclick={() => (sourcePoseFromUrl = false)}>Clear</Button
+				>
+			{/if}
+		{:else}
+			<Tabs bind:selected={searchTab} type="container">
+				<Tab>Poses</Tab>
+				<Tab>Hands</Tab>
+				<svelte:fragment slot="content">
+					<TabContent class="tab-panel">
 						<Tabs bind:selected={sourceTab} autoWidth>
 							<Tab label="Examples" />
 							<Tab label="Webcam" />
@@ -82,15 +91,15 @@
 								<TabContent class="tab-panel">Pose Editor goes here...</TabContent>
 							</svelte:fragment>
 						</Tabs>
-					{/if}
-				</TabContent>
-				<TabContent>
-					{#if searchType === 'hand'}
-						<ExampleHands {setSourceHand} />
-					{/if}
-				</TabContent>
-			</svelte:fragment>
-		</Tabs>
+					</TabContent>
+					<TabContent>
+						{#if searchType === 'hand'}
+							<ExampleHands {setSourceHand} />
+						{/if}
+					</TabContent>
+				</svelte:fragment>
+			</Tabs>
+		{/if}
 	</div>
 	<div id="results-container">
 		{#if searchType === 'pose'}
