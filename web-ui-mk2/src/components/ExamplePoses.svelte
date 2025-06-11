@@ -49,7 +49,7 @@
 			// if there's no keypoints, interpolate a confidence value (1)
 			//  (the pose drawing functions expect a confidence value --
 			//   this might be better addressed elsewhere, but this will do for now)
-			pose.keypoints = /** @type {Coco13SkeletonWithConfidence} */ (
+			pose.keypoints = /** @type {Coco13SkeletonNoConfidence} */ (
 				pose.norm.flatMap((val, i) => ((i + 1) % 2 === 0 ? [val, 1] : val))
 			);
 		}
