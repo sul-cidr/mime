@@ -2,6 +2,7 @@
 	import { page } from '$app/stores';
 	import { LayerCake, Canvas, Html } from 'layercake';
 	import ImageReference from 'carbon-icons-svelte/lib/ImageReference.svelte';
+	import Search from 'carbon-icons-svelte/lib/Search.svelte';
 	import { getVideoData } from '$lib/data-fetching';
 	import Overlay from '../ui-components/Overlay.svelte';
 	import FrameModal from './FrameModal.svelte';
@@ -13,11 +14,11 @@
 	 * @property {PoseRecord|MinimalPose|HandForDrawing} sourcePose Pose or hand to be presented
 	 * @property {boolean} [showPose = false]
 	 * @property {boolean} [showHands = false]
-	 * @property {string} [class]
+	 * @property {boolean} [isSourcePose = false]
 	 */
 
 	/** @type {SearchResultsProps} */
-	let { sourcePose, showPose = false, showHands = false, ...props } = $props();
+	let { sourcePose, showPose = false, showHands = false, isSourcePose = false } = $props();
 
 	let frameModal = $state();
 
@@ -36,19 +37,26 @@
 	};
 </script>
 
+{#snippet bottomLeft()}
+	Frame #{/** @type {PoseRecord} */ (sourcePose).frame}
+	<br />
+	Pose #{/** @type {PoseRecord} */ (sourcePose).pose_idx}
+{/snippet}
+{#snippet topRight()}
+	<button onclick={() => showFrameModal()}><ImageReference /></button>
+{/snippet}
+{#snippet bottomRight()}
+	<button
+		onclick={() =>
+			(location.href = `/mk2/search?video=${sourcePose.video_id}&frame=${sourcePose.frame}&pose=${sourcePose.pose_idx}`)}
+		><Search /></button
+	>
+{/snippet}
+
 <div class="pose-card">
 	<LayerCake>
 		{#if 'frame' in sourcePose && 'pose_idx' in sourcePose}
-			<Overlay>
-				{#snippet bottomLeft()}
-					Frame #{sourcePose.frame}
-					<br />
-					Pose #{sourcePose.pose_idx + 1}
-				{/snippet}
-				{#snippet topRight()}
-					<button onclick={() => showFrameModal()}><ImageReference /></button>
-				{/snippet}
-			</Overlay>
+			<Overlay {bottomLeft} {topRight} bottomRight={!isSourcePose ? bottomRight : undefined} />
 			<Html zIndex={0}>
 				{@const { video_id, frame, pose_idx, bbox } = sourcePose}
 				{@const dims = bbox.join(',')}

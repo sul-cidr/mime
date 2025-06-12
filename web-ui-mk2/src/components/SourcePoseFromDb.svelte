@@ -25,7 +25,7 @@
 			<input type="checkbox" bind:checked={showHands} />
 		</label>
 	</div>
-	<PoseCard sourcePose={poseRecord} {showPose} {showHands} />
+	<PoseCard sourcePose={poseRecord} {showPose} {showHands} isSourcePose={true} />
 </section>
 
 <style>
