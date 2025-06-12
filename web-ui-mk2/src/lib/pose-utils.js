@@ -156,11 +156,20 @@ export const shiftNormalizeRescaleKeypoints = (keypoints) => {
 /**
  * @param {CanvasRenderingContext2D} context
  * @param {Array<number>} poseData
- * @param {number} [scaleFactor=1]
+ * @param {number} canvasWidth
+ * @param {number} canvasHeight
  * @param {BoundingBox} [bbox]
+ * @param {number} [scaleFactor=1]
  * @returns {void}
  */
-export const drawPoseOnCanvas = (context, poseData, scaleFactor = 1, bbox) => {
+export const drawPoseOnCanvas = (
+	context,
+	poseData,
+	canvasWidth,
+	canvasHeight,
+	bbox,
+	scaleFactor = 1
+) => {
 	let xAdjust = 0;
 	let yAdjust = 0;
 
@@ -172,11 +181,11 @@ export const drawPoseOnCanvas = (context, poseData, scaleFactor = 1, bbox) => {
 		// calculate scale factor and x/y adjustment based on whether the bbox is wide or tall
 		const [, , width, height] = bbox;
 		if (width > height) {
-			scaleFactor = context.canvas.width / width;
-			yAdjust = (context.canvas.height - height * scaleFactor) / 2;
+			scaleFactor = canvasWidth / width;
+			yAdjust = (canvasHeight - height * scaleFactor) / 2;
 		} else {
-			scaleFactor = context.canvas.height / height;
-			xAdjust = (context.canvas.width - width * scaleFactor) / 2;
+			scaleFactor = canvasHeight / height;
+			xAdjust = (canvasWidth - width * scaleFactor) / 2;
 		}
 	}
 
@@ -228,11 +237,21 @@ export const getKeypointsBounds = (keypoints, hasConfidence = true) => {
  *
  * @param {CanvasRenderingContext2D} ctx - Canvas context to draw on.
  * @param {Array<number>} handPoints - The 2D keypoints of the hand, as an array of x, y pairs.
- * @param {string} [color='red'] - The color to draw the hand in. Defaults to red.
+ * @param {number} canvasWidth
+ * @param {number} canvasHeight
  * @param {BoundingBox} [bbox]
  * @param {number} [scaleFactor=1] - The scale factor to apply to the keypoints.
+ * @param {string} [color='red'] - The color to draw the hand in. Defaults to red.
  */
-export const drawHandOnCanvas = (ctx, handPoints, color = 'red', bbox, scaleFactor = 1) => {
+export const drawHandOnCanvas = (
+	ctx,
+	handPoints,
+	canvasWidth,
+	canvasHeight,
+	bbox,
+	scaleFactor = 1,
+	color = 'red'
+) => {
 	if (handPoints === undefined || handPoints === null) return;
 
 	let xAdjust = 0;
@@ -243,11 +262,11 @@ export const drawHandOnCanvas = (ctx, handPoints, color = 'red', bbox, scaleFact
 
 		const [, , width, height] = bbox;
 		if (width > height) {
-			scaleFactor = ctx.canvas.width / width;
-			yAdjust = (ctx.canvas.height - height * scaleFactor) / 2;
+			scaleFactor = canvasWidth / width;
+			yAdjust = (canvasHeight - height * scaleFactor) / 2;
 		} else {
-			scaleFactor = ctx.canvas.height / height;
-			xAdjust = (ctx.canvas.width - width * scaleFactor) / 2;
+			scaleFactor = canvasHeight / height;
+			xAdjust = (canvasWidth - width * scaleFactor) / 2;
 		}
 	}
 

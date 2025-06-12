@@ -23,10 +23,18 @@
 			scaleCanvas($ctx, $width, $height);
 			$ctx.clearRect(0, 0, $width, $height);
 			if ('rh_keypoints2d' in handData && handData.rh_keypoints2d) {
-				drawHandOnCanvas($ctx, handData.rh_keypoints2d, 'green', bbox, scaleFactor);
+				drawHandOnCanvas(
+					$ctx,
+					handData.rh_keypoints2d,
+					$width,
+					$height,
+					bbox,
+					scaleFactor,
+					'green'
+				);
 			}
 			if ('lh_keypoints2d' in handData && handData.lh_keypoints2d) {
-				drawHandOnCanvas($ctx, handData.lh_keypoints2d, 'red', bbox, scaleFactor);
+				drawHandOnCanvas($ctx, handData.lh_keypoints2d, $width, $height, bbox, scaleFactor, 'red');
 			}
 		}
 	});

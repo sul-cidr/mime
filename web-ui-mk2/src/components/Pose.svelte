@@ -23,7 +23,7 @@
 			// (see https://layercake.graphics/guide#scalecanvas)
 			scaleCanvas($ctx, $width, $height);
 			$ctx.clearRect(0, 0, $width, $height);
-			drawPoseOnCanvas($ctx, poseData, scaleFactor, bbox);
+			drawPoseOnCanvas($ctx, poseData, $width, $height, bbox, scaleFactor);
 		}
 	});
 </script>
