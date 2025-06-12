@@ -23,12 +23,12 @@
 					video_name: video.video_name,
 					meta: `${video.width}x${video.height}@${video.fps.toFixed(2)}fps`,
 					length: new Date((video.frame_count / video.fps) * 1000).toISOString().slice(11, 19),
-					pose_ct: video.pose_ct.toLocaleString(),
+					pose_ct: video.pose_ct?.toLocaleString(),
 					poses_per_frame: video.poses_per_frame,
-					face_ct: video.face_ct.toLocaleString(),
-					hand_ct: video.hand_ct.toLocaleString(),
-					track_ct: video.track_ct.toLocaleString(),
-					shot_ct: video.shot_ct.toLocaleString()
+					face_ct: video.face_ct?.toLocaleString(),
+					hand_ct: video.hand_ct?.toLocaleString(),
+					track_ct: video.track_ct?.toLocaleString(),
+					shot_ct: video.shot_ct?.toLocaleString()
 				}))
 			);
 	};
