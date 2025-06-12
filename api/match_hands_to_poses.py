@@ -237,7 +237,7 @@ def get_2d_xyxy(points_list):
     return [xmin, ymin, xmax, ymax]
 
 
-def extend_2d_xyxy(points, extend=0):
+def extend_2d_xyxy(points, extend=0.0):
     # Expand an xyxy bbox by some multiple of the height and width
     xmin, ymin, xmax, ymax = points
 
@@ -289,18 +289,24 @@ async def match_hands_in_frames(
     video_id, hands_to_match, min_frameno, max_frameno, db, model_path
 ):
     """Hands are matched to poses based on the distance of each detected
-    hand's wrist (base) from each pose's wrist, considering only right wrists
-    if the hand is estimated to be a right hand, etc. Matches are calculated
-    based upon 2D image coordinates only, which is not ideal when hands overlap,
-    but matching in 3D seems unlikely to work better given that the body and
-    hands keypoints are derived from different models whose depth estimation
-    results may vary widely."""
+    hand's heel (base) from each pose's wrist. Matches are calculated based upon
+    2D image coordinates only, which is not ideal when hands overlap, but
+    matching in 3D seems unlikely to work better given that the body and hands
+    keypoints are derived from different models whose depth estimation results
+    may vary widely.
+    The inferred chirality of the detected hands (whether they are left or right
+    hands) is not very accurate, while the pose model seems to do a much better
+    job of distinguishing right and left limbs - though it does make mistakes.
+    So it seems preferable to disregard a hand's chirality as inferred by the
+    hand detector and simply to assign each matched hand the chirality of the
+    nearest wrist to which it has been matched."""
 
     logging.info(f"Matching hands in frame {min_frameno} to {max_frameno}")
 
     matched_hands = 0
     duplicate_hands = 0
     rejected_matches = 0
+    chirality_overrides = 0
 
     matches_to_assign = []
 
@@ -324,12 +330,18 @@ async def match_hands_in_frames(
         results = executor.map(process_item, hands_to_match.items())
 
     for result in results:
-        _matches_to_assign, _duplicate_hands, _rejected_matches = result
+        (
+            _matches_to_assign,
+            _duplicate_hands,
+            _rejected_matches,
+            _chirality_overrides,
+        ) = result
         matched_hands += len(_matches_to_assign)
 
         matches_to_assign += _matches_to_assign
         duplicate_hands += _duplicate_hands
         rejected_matches += _rejected_matches
+        chirality_overrides += _chirality_overrides
 
     if len(matches_to_assign) > 0:
         await db.add_pose_hands(matches_to_assign)
@@ -338,12 +350,15 @@ async def match_hands_in_frames(
     logging.info(
         f"Rejected based upon lack of overlapping bounding boxes: {rejected_matches}"
     )
+    logging.info(
+        f"Overrides of detected hand chirality based on wrist proximity: {chirality_overrides}"
+    )
 
 
 def match_hands_for_frame(frame_data, poses_by_frame, video_id, model_path):
     frame_no, frame_hands = frame_data
     if frame_no not in poses_by_frame:
-        return [], 0, 0
+        return [], 0, 0, 0
 
     frame_poses = poses_by_frame[frame_no]
 
@@ -351,6 +366,7 @@ def match_hands_for_frame(frame_data, poses_by_frame, video_id, model_path):
     matches_to_assign = []
     duplicate_hands = 0
     rejected_matches = 0
+    chirality_overrides = 0
 
     for h, hand in enumerate(frame_hands):
         try:
@@ -382,10 +398,12 @@ def match_hands_for_frame(frame_data, poses_by_frame, video_id, model_path):
                         frame_poses[best_pose_match]["track_id"],
                     ]
                 )
-        except RejectedHandException as e:
+        except ChiralityOverrideException:
+            chirality_overrides += 1
+        except RejectedHandException:
             rejected_matches += 1
 
-    return matches_to_assign, duplicate_hands, rejected_matches
+    return matches_to_assign, duplicate_hands, rejected_matches, chirality_overrides
 
 
 def match_and_parse_hand(h, hand, frame_poses, pose_to_hands, model) -> tuple:
@@ -401,22 +419,33 @@ def match_and_parse_hand(h, hand, frame_poses, pose_to_hands, model) -> tuple:
         if pose["track_id"] == 0:
             continue
 
-        # Match each left/right hand to the closest left/right wrist
-        if is_right is True:
-            target_wrist = triplets_to_pairs(pose["keypoints"])[6]
-        else:
-            target_wrist = triplets_to_pairs(pose["keypoints"])[5]
+        # Match each hand to the closest wrist
+        target_right_wrist = triplets_to_pairs(pose["keypoints"])[6]
+        target_left_wrist = triplets_to_pairs(pose["keypoints"])[5]
 
-        # wrist_hand_dist = np.linalg.norm(target_wrist - hand_center)
-        wrist_hand_dist = np.linalg.norm(np.array(target_wrist) - np.array(hand_base))
+        right_wrist_hand_dist = np.linalg.norm(
+            np.array(target_right_wrist) - np.array(hand_base)
+        )
+        left_wrist_hand_dist = np.linalg.norm(
+            np.array(target_left_wrist) - np.array(hand_base)
+        )
 
-        if closest_dist >= 0 and closest_dist < wrist_hand_dist:
+        if (
+            closest_dist >= 0
+            and closest_dist < right_wrist_hand_dist
+            and closest_dist < left_wrist_hand_dist
+        ):
             continue
         else:
-            closest_dist = wrist_hand_dist
+            if right_wrist_hand_dist < left_wrist_hand_dist:
+                closest_dist = right_wrist_hand_dist
+                hand["right"] = 1
+            else:
+                closest_dist = left_wrist_hand_dist
+                hand["right"] = 0
             best_pose_match = p
 
-    # If the hand's bbox doesn't overlap with the pose at all, ignore it
+    # If the hand's bbox doesn't overlap with the pose + 20% at all, ignore it
     expanded_pose_xyxy = extend_2d_xyxy(
         xywh_to_xyxy(frame_poses[best_pose_match]["bbox"])
     )
@@ -458,10 +487,15 @@ def match_and_parse_hand(h, hand, frame_poses, pose_to_hands, model) -> tuple:
     # Get the logits (linear class scores) from a hand gesture classification model
     class_weights = get_class_weights(kpts_2d, model)
 
+    match_is_right = hand["right"] == 1
+
+    if match_is_right != is_right:
+        raise ChiralityOverrideException
+
     return [
         hand["personid"],
         bbox,
-        is_right,
+        match_is_right,
         confidence,
         hand["pred_cam"],
         hand["cam_t"],
@@ -472,6 +506,10 @@ def match_and_parse_hand(h, hand, frame_poses, pose_to_hands, model) -> tuple:
         projected_hand_keypoints,
         global_orient,
     ], best_pose_match
+
+
+class ChiralityOverrideException(Exception):
+    pass
 
 
 class RejectedHandException(Exception):
@@ -524,8 +562,8 @@ async def main() -> None:
     track_frame_ids = {frame_record["frame"] for frame_record in track_frame_records}
 
     hands_to_match = {}
-    min_frameno = None
-    max_frameno = None
+    min_frameno: int = -1
+    max_frameno: int = -1
 
     logging.info("Matching tracked poses to hands detected in video")
 
@@ -536,28 +574,37 @@ async def main() -> None:
             ] not in track_frame_ids:
                 continue
 
+            if min_frameno == -1:
+                min_frameno = hand["frame"]
+            else:
+                if (
+                    min_frameno < hand["frame"]
+                    and max_frameno != -1
+                    and len(hands_to_match) >= BATCH_SIZE
+                ):
+                    await match_hands_in_frames(
+                        video_id,
+                        hands_to_match,
+                        min_frameno,
+                        max_frameno,
+                        db,
+                        model_path,
+                    )
+                    hands_to_match = {}
+                    min_frameno = -1
+                    max_frameno = -1
+
+                min_frameno = min(min_frameno, hand["frame"])
+
             if hand["frame"] in hands_to_match:
                 hands_to_match[hand["frame"]].append(hand)
             else:
                 hands_to_match[hand["frame"]] = [hand]
 
-            if min_frameno is None:
-                min_frameno = hand["frame"]
-            else:
-                min_frameno = min(min_frameno, hand["frame"])
-
-            if max_frameno is None:
+            if max_frameno == -1:
                 max_frameno = hand["frame"]
             else:
                 max_frameno = max(max_frameno, hand["frame"])
-
-            if len(hands_to_match) >= BATCH_SIZE:
-                await match_hands_in_frames(
-                    video_id, hands_to_match, min_frameno, max_frameno, db, model_path
-                )
-                hands_to_match = {}
-                min_frameno = None
-                max_frameno = None
 
         if len(hands_to_match) > 0:
             await match_hands_in_frames(
