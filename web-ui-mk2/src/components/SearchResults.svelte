@@ -2,6 +2,7 @@
 	import { page } from '$app/state';
 	import { Loading } from 'carbon-components-svelte';
 	import { getVideoData } from '$lib/data-fetching';
+	import localStorageState from '$lib/localstorage.svelte';
 	import PoseCard from '$components/PoseCard.svelte';
 
 	/**
@@ -12,39 +13,42 @@
 	/** @type {SearchResultsProps} */
 	let { sourcePose } = $props();
 
-	/** @type {'cosine'|'euclidean'|'view_invariant'|'3d'} */
-	let searchType = $state('view_invariant');
+	/** @type {{value: 'cosine'|'euclidean'|'view_invariant'|'3d'}}} */
+	let searchType = localStorageState('pose-search-type', 'view_invariant');
 
-	let limit = $state(21);
-	let excludeWithinFrames = $state(600);
+	let limit = localStorageState('search-limit', 21);
+	let excludeWithinFrames = localStorageState('exclude-within-frames', 3000);
 
-	/** @type {string[]}*/
-	let selectedVideoIds = $state([]);
+	/** @type {{value: string[]}} */
+	let selectedVideoIds = localStorageState('search-video-ids', []);
 
-	let showPose = $state(false);
-	let showHands = $state(false);
+	let showPose = localStorageState('search-show-pose', false);
+	let showHands = localStorageState('search-show-hands', false);
 
 	/** @param {PoseRecord[]} poses */
 	const excludeSourcePose = (poses) => {
-		return poses.filter(
-			(/** @type {PoseRecord} */ pose) =>
-				!(
-					pose.video_id === /** @type {PoseRecord} */ (sourcePose).video_id &&
-					pose.frame === /** @type {PoseRecord} */ (sourcePose).frame &&
-					pose.pose_idx === /** @type {PoseRecord} */ (sourcePose).pose_idx
-				)
-		);
+		return poses
+			.filter(
+				(/** @type {PoseRecord} */ pose) =>
+					!(
+						pose.video_id === /** @type {PoseRecord} */ (sourcePose).video_id &&
+						pose.frame === /** @type {PoseRecord} */ (sourcePose).frame &&
+						pose.pose_idx === /** @type {PoseRecord} */ (sourcePose).pose_idx
+					)
+			)
+			.slice(0, limit.value);
 	};
 
 	async function getPoseData() {
 		const queryParams = new URLSearchParams();
 		queryParams.append('pose', JSON.stringify(sourcePose.norm));
-		queryParams.append('search_type', searchType);
-		if (selectedVideoIds.length) selectedVideoIds.forEach((v) => queryParams.append('videos', v));
-		queryParams.append('exclude_within_frames', Math.max(excludeWithinFrames, 1).toString());
+		queryParams.append('search_type', searchType.value);
+		if (selectedVideoIds.value.length)
+			selectedVideoIds.value.forEach((v) => queryParams.append('videos', v));
+		queryParams.append('exclude_within_frames', Math.max(excludeWithinFrames.value, 1).toString());
 		// if sourcePose has a frame property then it's from the db -- add one to the limit so we
 		//  can exclude the source pose from the results and still end up with the requested number
-		queryParams.append('limit', (limit + +sourcePose.hasOwnProperty('frame')).toString());
+		queryParams.append('limit', (limit.value + +sourcePose.hasOwnProperty('frame')).toString());
 
 		const query = `${page.data.apiBase}/pose-search/?${queryParams.toString()}`;
 
@@ -57,17 +61,17 @@
 	<div>
 		<label>
 			Show Pose:
-			<input type="checkbox" bind:checked={showPose} />
+			<input type="checkbox" bind:checked={showPose.value} />
 		</label>
 		<label>
 			Show Hands:
-			<input type="checkbox" bind:checked={showHands} />
+			<input type="checkbox" bind:checked={showHands.value} />
 		</label>
 	</div>
 	<label>
 		Videos:
 		{#await getVideoData() then videos}
-			<select multiple bind:value={selectedVideoIds}>
+			<select multiple bind:value={selectedVideoIds.value}>
 				{#each videos as video}
 					<option value={video.id}>{video.video_name}</option>
 				{/each}
@@ -76,7 +80,7 @@
 	</label>
 	<label>
 		Search Type:
-		<select bind:value={searchType}>
+		<select bind:value={searchType.value}>
 			<option value="cosine">Cosine</option>
 			<option value="euclidean">Euclidean</option>
 			<option value="view_invariant">View Invariant</option>
@@ -87,11 +91,11 @@
 	</label>
 	<label>
 		Exclude within Frames:
-		<input type="number" bind:value={excludeWithinFrames} />
+		<input type="number" bind:value={excludeWithinFrames.value} />
 	</label>
 	<label>
 		# Results:
-		<input type="number" bind:value={limit} min="1" />
+		<input type="number" bind:value={limit.value} min="1" />
 	</label>
 </div>
 
@@ -104,7 +108,7 @@
 			</div>
 		{:then data}
 			{#each excludeSourcePose(data) as pose}
-				<PoseCard sourcePose={pose} {showPose} {showHands} />
+				<PoseCard sourcePose={pose} showPose={showPose.value} showHands={showHands.value} />
 			{/each}
 		{:catch error}
 			<p style="color: red">{error.message}</p>
