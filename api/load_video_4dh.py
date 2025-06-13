@@ -17,9 +17,6 @@ from mime_db import MimeDb
 
 
 def get_video_metadata(video_file):
-    # TODO: rewrite this without OpenCV?
-    #  (currently this is the only time OpenCV is needed in this container --
-    #   and it's a hefty dependency for just this..!)
     cap = cv2.VideoCapture(str(video_file))
     return {
         "frame_count": int(cap.get(cv2.CAP_PROP_FRAME_COUNT)),
