@@ -9,6 +9,8 @@
 	--primary: rebeccapurple;
 	--primary-hover: rgb(137, 83, 192);
 	--primary-active: rgb(73, 41, 105);
+
+	accent-color: var(--primary);
 }
 
 .bx--side-nav__item:not(.bx--side-nav__item--active):hover

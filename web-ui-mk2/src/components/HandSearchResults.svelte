@@ -2,6 +2,7 @@
 	import { page } from '$app/state';
 	import { Loading } from 'carbon-components-svelte';
 	import { getVideoData } from '$lib/data-fetching';
+	import localStorageState from '$lib/localstorage.svelte';
 	import PoseCard from '$components/PoseCard.svelte';
 
 	/**
@@ -12,16 +13,16 @@
 	/** @type {HandSearchResultsProps} */
 	let { sourceHand } = $props();
 
-	/** @type {'joint_angles3d'|'embedding'|'global3d'} */
-	let searchType = $state('global3d');
+	/** @type {{value: 'joint_angles3d'|'embedding'|'global3d'}} */
+	let searchType = localStorageState('hand-search-type', 'global3d');
 
-	let limit = $state(3);
-	let excludeWithinFrames = $state(3000);
+	let limit = localStorageState('search-limit', 21);
+	let excludeWithinFrames = localStorageState('exclude-within-frames', 3000);
 
-	/** @type {string[]}*/
-	let selectedVideoIds = $state([]);
+	/** @type {{value: string[]}} */
+	let selectedVideoIds = localStorageState('search-video-ids', []);
 
-	let showHands = $state(true);
+	let showHands = localStorageState('search-show-hands', false);
 
 	/** @param {PoseRecord[]} poses */
 	const excludeSourceHand = (poses) => {
@@ -38,21 +39,22 @@
 	async function getPoseData() {
 		const queryParams = new URLSearchParams();
 		let embedding;
-		if (searchType === 'embedding') {
+		if (searchType.value === 'embedding') {
 			embedding = sourceHand.class_weights;
-		} else if (searchType === 'joint_angles3d') {
+		} else if (searchType.value === 'joint_angles3d') {
 			embedding = sourceHand.joint_angles3d;
-		} else if (searchType === 'global3d') {
+		} else if (searchType.value === 'global3d') {
 			embedding = sourceHand.global3d;
 		}
 
 		queryParams.append('embedding', JSON.stringify(embedding));
-		queryParams.append('search_type', searchType);
-		if (selectedVideoIds.length) selectedVideoIds.forEach((v) => queryParams.append('videos', v));
-		queryParams.append('exclude_within_frames', Math.max(excludeWithinFrames, 1).toString());
+		queryParams.append('search_type', searchType.value);
+		if (selectedVideoIds.value.length)
+			selectedVideoIds.value.forEach((v) => queryParams.append('videos', v));
+		queryParams.append('exclude_within_frames', Math.max(excludeWithinFrames.value, 1).toString());
 		// if sourcePose has a frame property then it's from the db -- add one to the limit so we
 		//  can exclude the source pose from the results and still end up with the requested number
-		queryParams.append('limit', (limit + +sourceHand.hasOwnProperty('frame')).toString());
+		queryParams.append('limit', (limit.value + +sourceHand.hasOwnProperty('frame')).toString());
 
 		const query = `${page.data.apiBase}/hand-search/?${queryParams.toString()}`;
 
@@ -64,12 +66,12 @@
 <div class="controls">
 	<label>
 		Show Hands:
-		<input type="checkbox" bind:checked={showHands} />
+		<input type="checkbox" bind:checked={showHands.value} />
 	</label>
 	<label>
 		Videos:
 		{#await getVideoData() then videos}
-			<select multiple bind:value={selectedVideoIds}>
+			<select multiple bind:value={selectedVideoIds.value}>
 				{#each videos as video}
 					<option value={video.id}>{video.video_name}</option>
 				{/each}
@@ -78,7 +80,7 @@
 	</label>
 	<label>
 		Search Type:
-		<select bind:value={searchType}>
+		<select bind:value={searchType.value}>
 			<option value="joint_angles3d">Joint Angles</option>
 			<option value="embedding">Embedding</option>
 			<option value="global3d">Global 3D</option>
@@ -86,11 +88,11 @@
 	</label>
 	<label>
 		Exclude within Frames:
-		<input type="number" bind:value={excludeWithinFrames} />
+		<input type="number" bind:value={excludeWithinFrames.value} />
 	</label>
 	<label>
 		# Results:
-		<input type="number" bind:value={limit} min="1" />
+		<input type="number" bind:value={limit.value} min="1" />
 	</label>
 </div>
 
@@ -103,7 +105,7 @@
 			</div>
 		{:then data}
 			{#each excludeSourceHand(data) as pose}
-				<PoseCard sourcePose={pose} {showHands} />
+				<PoseCard sourcePose={pose} showHands={showHands.value} />
 			{/each}
 		{:catch error}
 			<p style="color: red">{error.message}</p>

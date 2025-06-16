@@ -7,7 +7,7 @@
 	import CloseLarge from 'carbon-icons-svelte/lib/CloseLarge.svelte';
 	import Search from 'carbon-icons-svelte/lib/Search.svelte';
 
-	import { getLocalStorage, setLocalStorage } from '$lib/localstorage';
+	import localStorageState from '$lib/localstorage.svelte';
 
 	import {
 		BLAZE_33_TO_COCO_13,
@@ -31,8 +31,8 @@
 	let /** @type DrawingUtils */ drawingUtils;
 
 	let capturedPose = $state();
-	let delay = $state(0);
-	let webcamStream;
+	let delay = localStorageState('webcam-delay', 0);
+	let /** @type MediaStream */ webcamStream;
 
 	/**
 	 * @param {Coco13Pose[]} landmarks
@@ -123,22 +123,19 @@
 				poseLandmarker.detectForVideo(videoElement, performance.now(), (result) => {
 					const { keypoints, normedKeypoints } = coco13FromLandmarks(result.landmarks);
 					capturedPose = [...normedKeypoints];
-					drawPoseOnCanvas(captureContext, keypoints, false);
+					drawPoseOnCanvas(captureContext, keypoints, width, height);
 					/** @type {HTMLImageElement} */ (document.getElementById('captured')).src =
 						captureCanvas.toDataURL('image/png');
 				});
 				document.querySelector('.live')?.classList.remove('grabbing');
 			},
-			delay * 1000 - 100
+			delay.value * 1000 - 100
 		);
 	};
 
 	onDestroy(() => {
 		webcamStream.getTracks().forEach((track) => track.stop());
 	});
-
-	$effect(() => (delay = getLocalStorage('webcam-delay', 0)));
-	$effect(() => setLocalStorage('webcam-delay', delay));
 </script>
 
 <section>
@@ -149,7 +146,7 @@
 		</div>
 	{:then}
 		<div class="controls">
-			<NumberInput label="Delay" size="sm" bind:value={delay} min={0} max={9} />
+			<NumberInput label="Delay" size="sm" bind:value={delay.value} min={0} max={9} />
 			<Button size="small" icon={Camera} onclick={grab}>Grab</Button>
 		</div>
 	{/await}
