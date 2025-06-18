@@ -17,12 +17,18 @@
     if (filterByAvgScoreActive) {
       filteredData = filteredData.map((p) => {
         if (
-          p.avgScore >= filterByAvgScoreMin &&
-          p.avgScore <= filterByAvgScoreMax
+          p.badScore >= filterByAvgScoreMin &&
+          p.badScore <= filterByAvgScoreMax
         ) {
           return p;
         }
-        return { frame: p.frame, avgScore: 0, trackCt: 0, faceCt: 0, handCt: 0 };
+        return {
+          frame: p.frame,
+          badScore: 0,
+          trackCt: 0,
+          faceCt: 0,
+          handCt: 0,
+        };
       });
     }
     if (filterByTrackCountActive) {
@@ -33,7 +39,13 @@
         ) {
           return p;
         }
-        return { frame: p.frame, avgScore: 0, trackCt: 0, faceCt: 0, handCt: 0 };
+        return {
+          frame: p.frame,
+          badScore: 0,
+          trackCt: 0,
+          faceCt: 0,
+          handCt: 0,
+        };
       });
     }
   };
@@ -50,7 +62,7 @@
 <div class="flex gap-4">
   <div class="card w-80" class:variant-ghost-primary={filterByAvgScoreActive}>
     <div class="flex items-center justify-between p-4">
-      Filter by Avg. Score: <SlideToggle
+      Filter by "Bad" Score: <SlideToggle
         name="filter-by-avg-score-active"
         size="sm"
         bind:checked={filterByAvgScoreActive}
