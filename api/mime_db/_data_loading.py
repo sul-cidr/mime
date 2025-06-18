@@ -101,7 +101,9 @@ async def load_openpifpaf_predictions(
     logging.info(f"Loaded {len(poses)} predictions!")
 
 
-async def load_4dh_predictions(self, video_id: UUID, pkl_path: Path, clear=True) -> None:
+async def load_4dh_predictions(
+    self, video_id: UUID, pkl_path: Path, import_multiples_of: int, clear=True
+) -> None:
     frames = {}
 
     if clear:
@@ -116,12 +118,14 @@ async def load_4dh_predictions(self, video_id: UUID, pkl_path: Path, clear=True)
 
     poses = []
 
-    low_confidence_discards = 0
-    bbox_fit_discards = 0
+    frame_idx = 0
 
     for _, frame in frames.items():
-        if len(frame["2d_joints"]) == 0:
+        if frame_idx % import_multiples_of != 0 or len(frame["2d_joints"]) == 0:
+            frame_idx += 1
             continue
+
+        frame_idx += 1
 
         # We only want the pose data about the tracked poses in each frame; the raw
         # output also contains data about previously tracked poses ("ghosts") that we
@@ -140,7 +144,6 @@ async def load_4dh_predictions(self, video_id: UUID, pkl_path: Path, clear=True)
                 continue
 
             if frame["conf"][pose_idx] < CONF_THRESH_4DH:
-                low_confidence_discards += 1
                 continue
 
             img_height, img_width = frame["size"][pose_idx]
@@ -153,45 +156,12 @@ async def load_4dh_predictions(self, video_id: UUID, pkl_path: Path, clear=True)
                 max(img_width, img_height) - min(img_width, img_height)
             ) / 2
 
-            # The bbox returned by PHALP seems to contain only the keypoints in the
-            # portion of the pose about which the model has the highest confidence
-            # (i.e., that isn't occluded or out of frame), so use it to determine when
-            # too much of a pose has been extrapolated (aka hallucinated) and it should
-            # be ignored.
-            pose_bbox = np.array(frame["bbox"][pose_idx])
-
-            pose_xyxy = [
-                pose_bbox[0],
-                pose_bbox[1],
-                pose_bbox[0] + pose_bbox[2],
-                pose_bbox[1] + pose_bbox[3],
-            ]
-
-            coco13_2d = pose_utils.merge_coords(joints_2d, pose_utils.phalp_to_coco_13)
-
-            # Criteria: a pose must have the nose (0), one shoulder (1 or 2) and at least
-            # one elbow or wrist (3, 4, 5, or 6) in the "confidence bbox" - otherwise it
-            # is skipped.
-            if not (
-                pose_utils.pt_in_bbox(coco13_2d[0], pose_xyxy)
-                and (
-                    pose_utils.pt_in_bbox(coco13_2d[1], pose_xyxy)
-                    or pose_utils.pt_in_bbox(coco13_2d[2], pose_xyxy)
-                )
-                and (
-                    pose_utils.pt_in_bbox(coco13_2d[3], pose_xyxy)
-                    or pose_utils.pt_in_bbox(coco13_2d[4], pose_xyxy)
-                    or pose_utils.pt_in_bbox(coco13_2d[5], pose_xyxy)
-                    or pose_utils.pt_in_bbox(coco13_2d[6], pose_xyxy)
-                )
-            ):
-                bbox_fit_discards += 1
-                continue
-
-            coco13_joints = coco13_2d.flatten()
-
             coco17_joints = pose_utils.merge_coords(
                 joints_2d, pose_utils.phalp_to_coco_17
+            ).flatten()
+
+            coco13_joints = pose_utils.merge_coords(
+                joints_2d, pose_utils.phalp_to_coco_13
             ).flatten()
 
             keypoints3d = pose_utils.merge_coords(
@@ -218,7 +188,7 @@ async def load_4dh_predictions(self, video_id: UUID, pkl_path: Path, clear=True)
                     "keypoints4dh": all_phalp_keypoints,
                     "keypoints3d": keypoints3d,
                     "global3d_phalp": global3d_phalp,
-                    "bbox": pose_bbox,
+                    "bbox": np.array(frame["bbox"][pose_idx]),
                     "camera": np.array(frame["camera"][pose_idx]),
                     "score": frame["conf"][pose_idx],
                     "category": frame["class_name"][pose_idx],
@@ -239,12 +209,6 @@ async def load_4dh_predictions(self, video_id: UUID, pkl_path: Path, clear=True)
     )
 
     logging.info(f"Loaded {len(poses)} predictions!")
-    logging.info(
-        f"Predictions discarded due to low confidence: {low_confidence_discards}"
-    )
-    logging.info(
-        f"Predictions discarded for lack of points in visible bbox: {bbox_fit_discards}"
-    )
 
 
 async def add_shot_boundaries(self, video_id: UUID | None, frames_data) -> None:
