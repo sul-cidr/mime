@@ -53,7 +53,7 @@
     (d) => !["frame", "time"].includes(d),
   );
 
-  let hiddenSeries: Array<string> = ["avgScore"];
+  let hiddenSeries: Array<string> = [];
 
   let groupedData: Array<any>;
   let xTicks: Array<number>;
