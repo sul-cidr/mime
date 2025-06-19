@@ -37,10 +37,12 @@
   class="key"
   style="justify-content: {align === 'end' ? 'flex-end' : align};"
 >
-  {#each $zDomain as item}
+  {#each $zDomain as item, i}
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <div
       class="key-item"
+      role="button"
+      tabindex={i}
       on:click={(ev) => {
         if (ev.altKey) {
           !hiddenSeries.includes(item)

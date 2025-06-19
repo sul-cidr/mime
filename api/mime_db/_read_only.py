@@ -345,7 +345,7 @@ async def get_nearest_hands(
                 INNER JOIN frame ON frame.video_id = hand.video_id
                     AND pose.frame = hand.frame
                     AND frame.frame = hand.frame
-                LEFT JOIN face ON face.video_id = hand.video_id 
+                LEFT JOIN face ON face.video_id = hand.video_id
                     AND face.frame = hand.frame
                     AND face.pose_idx = hand.pose_idx
             WHERE {hand_subquery}
