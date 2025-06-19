@@ -100,6 +100,12 @@ async def get_pose_annotations(self, column: str, video_id: UUID) -> list[np.nda
     return [np.array(_[column]) for _ in annotations]
 
 
+async def get_frame_info(self, video_id: UUID, frame: int) -> asyncpg.Record:
+    return await self._pool.fetchrow(
+        "SELECT * FROM frame WHERE video_id = $1 AND frame = $2;", video_id, frame
+    )
+
+
 async def get_frame_data(self, video_id: UUID, frame: int) -> list:
     return await self._pool.fetch(
         """

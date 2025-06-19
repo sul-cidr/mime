@@ -171,7 +171,7 @@ async def initialize_db(conn, drop=False) -> None:
                 GROUP BY video.id
             ) AS h ON video.id = h.id
             LEFT JOIN (
-                SELECT video.id, COUNT(*) filter (where frame.is_shot_boundary) as shot_ct
+                SELECT video.id, MAX(frame.shot) as shot_ct
                 FROM video
                 INNER JOIN frame ON video.id = frame.video_id
                 GROUP BY video.id
@@ -195,12 +195,12 @@ async def initialize_db(conn, drop=False) -> None:
     await conn.execute(
         """
         CREATE MATERIALIZED VIEW if not exists video_frame_meta as
-        SELECT  pose_details.video_id,
-                pose_details.frame,
-                pose_details.track_ct,
-                pose_details.face_ct,
-                pose_details.hand_ct,
-                pose_details.avg_score,
+        SELECT  frame.video_id,
+                frame.frame,
+                COALESCE(pose_details.track_ct,0) AS track_ct,
+                COALESCE(pose_details.face_ct,0) AS face_ct,
+                COALESCE(pose_details.hand_ct,0) AS hand_ct,
+                COALESCE(pose_details.avg_score,0) AS avg_score,
                 CAST(frame.is_shot_boundary AS INT) AS is_shot,
                 frame.pose_interest,
                 frame.action_interest,
@@ -214,8 +214,9 @@ async def initialize_db(conn, drop=False) -> None:
                   THEN 0.0
                   ELSE ROUND(frame.total_movement3d::numeric, 2)
                 END AS "movement3d"
-        FROM (
-            SELECT pose.video_id,
+        FROM frame
+        LEFT JOIN
+            ( SELECT pose.video_id,
                    pose.frame,
                    count(NULLIF(pose.track_id,0)) AS track_ct,
                    count(face.pose_idx) AS face_ct,
@@ -232,11 +233,11 @@ async def initialize_db(conn, drop=False) -> None:
                 pose.pose_idx = hand.pose_idx
             GROUP BY pose.video_id, pose.frame
             ORDER BY pose.frame
-        ) AS pose_details
-        LEFT JOIN frame ON
-            pose_details.video_id = frame.video_id AND
-            pose_details.frame = frame.frame
-        ORDER BY pose_details.frame
+            ) AS pose_details
+        ON
+            frame.video_id = pose_details.video_id AND
+            frame.frame = pose_details.frame
+        ORDER BY frame.frame
         WITH DATA;
 
         CREATE INDEX IF NOT EXISTS video_frame_meta_video_id_idx
