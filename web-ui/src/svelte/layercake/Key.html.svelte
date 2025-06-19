@@ -41,20 +41,35 @@
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <div
       class="key-item"
-      on:click={() =>
-        hiddenSeries.includes(item)
-          ? (hiddenSeries = hiddenSeries.filter((d) => d !== item))
-          : (hiddenSeries = [...hiddenSeries, item])}
+      on:click={(ev) => {
+        if (ev.altKey) {
+          !hiddenSeries.includes(item)
+            ? (hiddenSeries = $zDomain.filter((d) => d !== item))
+            : (hiddenSeries = []);
+        } else {
+          hiddenSeries.includes(item)
+            ? (hiddenSeries = hiddenSeries.filter((d) => d !== item))
+            : (hiddenSeries = [...hiddenSeries, item]);
+        }
+      }}
     >
       <div
-        class="chip chip__{shape}"
+        class="chip chip__{shape} {!hiddenSeries.includes(item)
+          ? 'chip__active'
+          : 'chip__disabled'}"
         style="background: {shape === `line`
           ? `linear-gradient(-45deg, #ffffff 40%, ${$zScale(
               item,
             )} 41%, ${$zScale(item)} 59%, #ffffff 60%)`
           : $zScale(item)};"
       />
-      <div class="name">{displayName(item)}</div>
+      <div
+        class="name {!hiddenSeries.includes(item)
+          ? 'chip__active'
+          : 'chip__disabled'}"
+      >
+        {displayName(item)}
+      </div>
     </div>
   {/each}
 </div>
@@ -86,6 +101,12 @@
     width: 14px;
     transform: rotate(-45deg);
     transform-origin: 14px 5px;
+  }
+  .chip__active {
+    opacity: 100%;
+  }
+  .chip__disabled {
+    opacity: 50%;
   }
   .name {
     display: inline;
