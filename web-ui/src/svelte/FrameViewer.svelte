@@ -29,8 +29,6 @@
       if (data.length) {
         data.forEach((pr: PoseRecord) => {
           if (pr.track_id !== null) trackCt += 1;
-          pose_interest = pr.pose_interest;
-          action_interest = pr.action_interest;
         });
       }
     }
@@ -47,6 +45,8 @@
 
   const integrateFrameInfo = (data: FrameRecord) => {
     shot = data.shot;
+    pose_interest = data.pose_interest;
+    action_interest = data.action_interest;
   };
 
   const integrateFaceData = (data: Array<FaceRecord>) => {
