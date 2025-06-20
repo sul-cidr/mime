@@ -98,6 +98,14 @@
       </header>
       <svelte:fragment slot="trail">
         <a
+          href={`${base}mk2/search`}
+          use:tooltip={"Search Interface (mk2)"}
+          target="_blank"
+        >
+          <Icon name="search" height="24" width="24" />
+        </a>
+
+        <a
           href={`${base}jupyter/notebooks/notebooks/video_posedata_explorer.ipynb`}
           use:tooltip={"PoseData Explorer Notebook"}
           target="_blank"
