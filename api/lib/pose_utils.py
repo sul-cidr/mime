@@ -104,19 +104,19 @@ phalp_to_coco_17 = [
 ]
 
 phalp_to_coco_13 = [
-    [0],
-    [5, 34],
-    [2, 33],
-    [6, 35],
-    [3, 32],
-    [7, 36],
-    [4, 31],
-    [28],
-    [27],
-    [13, 29],
-    [10, 26],
-    [14, 30],
-    [11, 25],
+    [0],  # Nose
+    [5, 34],  # Left shoulder
+    [2, 33],  # Right shoulder
+    [6, 35],  # Left elbow
+    [3, 32],  # Right elbow
+    [7, 36],  # Left wrist
+    [4, 31],  # Right wrist
+    [28],  # Left hip
+    [27],  # Right hip
+    [13, 29],  # Left knee
+    [10, 26],  # Right knee
+    [14, 30],  # Left ankle
+    [11, 25],  # Right ankle
 ]
 
 openpifpaf_to_coco_13 = [
@@ -137,27 +137,27 @@ openpifpaf_to_coco_13 = [
 
 
 HAND_21_KEYPOINTS = [
-  "ulnar_palm", # 0
-  "radial_palm", # 1
-  "thumb_metacarpal", # 2
-  "thumb_proximal", # 3
-  "thumb_distal", # 4
-  "index_metacarpal", # 5
-  "index_proximal", # 6
-  "index_middle", # 7
-  "index_distal", # 8
-  "middle_metacarpal", # 9
-  "middle_proximal", # 10
-  "middle_middle", # 11
-  "middle_distal", # 12
-  "ring_metacarpal", # 13
-  "ring_proximal", # 14
-  "ring_middle", # 15
-  "ring_distal", # 16
-  "pinkie_metacarpal", # 17
-  "pinkie_proximal", # 18
-  "pinkie_middle", # 19
-  "pinkie_distal", # 20
+    "ulnar_palm",  # 0
+    "radial_palm",  # 1
+    "thumb_metacarpal",  # 2
+    "thumb_proximal",  # 3
+    "thumb_distal",  # 4
+    "index_metacarpal",  # 5
+    "index_proximal",  # 6
+    "index_middle",  # 7
+    "index_distal",  # 8
+    "middle_metacarpal",  # 9
+    "middle_proximal",  # 10
+    "middle_middle",  # 11
+    "middle_distal",  # 12
+    "ring_metacarpal",  # 13
+    "ring_proximal",  # 14
+    "ring_middle",  # 15
+    "ring_distal",  # 16
+    "pinkie_metacarpal",  # 17
+    "pinkie_proximal",  # 18
+    "pinkie_middle",  # 19
+    "pinkie_distal",  # 20
 ]
 
 
@@ -184,6 +184,12 @@ HAND_21_ANGLES = [
     [18, 19, 20],
     [13, 17, 0],
 ]
+
+
+def pt_in_bbox(pt, xyxy):
+    return (
+        pt[0] >= xyxy[0] and pt[0] <= xyxy[2] and pt[1] >= xyxy[1] and pt[1] <= xyxy[3]
+    )
 
 
 def merge_coords(all_coords, guide_to_merge, has_confidence=False, is_3d=False):
