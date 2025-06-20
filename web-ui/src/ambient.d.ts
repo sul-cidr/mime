@@ -113,7 +113,7 @@ type HandRecord = {
 
 type FrameRecord = {
   frame: number;
-  avgScore: number;
+  badScore: number;
   trackCt: number;
   isShot: number | undefined;
   movement: number | undefined;

@@ -53,7 +53,7 @@
     (d) => !["frame", "time"].includes(d),
   );
 
-  let hiddenSeries: Array<string> = ["avgScore"];
+  let hiddenSeries: Array<string> = [];
 
   let groupedData: Array<any>;
   let xTicks: Array<number>;
@@ -80,7 +80,7 @@
   const seriesToFit = [
     "movement",
     "movement3d",
-    "avgScore",
+    "badScore",
     "pose_interest",
     "action_interest",
   ]; // always normalize between 0 and maxValue
@@ -134,7 +134,7 @@
       while (i < frame.frame) {
         timeSeries.push({
           frame: i,
-          avgScore: 0,
+          badScore: 0,
           faceCt: 0,
           handCt: 0,
           trackCt: 0,
@@ -168,7 +168,7 @@
     while (i < endFrame) {
       timeSeries.push({
         frame: i,
-        avgScore: 0,
+        badScore: 0,
         faceCt: 0,
         handCt: 0,
         trackCt: 0,
@@ -297,7 +297,7 @@
           "sim_action",
           "sim_hand",
           "isShot",
-          "avgScore",
+          "badScore",
           "movement",
           "movement3d",
           "pose_interest",
@@ -310,6 +310,7 @@
 </div>
 
 <!-- svelte-ignore a11y-mouse-events-have-key-events -->
+<!-- svelte-ignore a11y-no-static-element-interactions -->
 <div
   class="brush-container variant-ringed-primary select-none pt-2"
   on:mouseover={() => (brushFaded = false)}
