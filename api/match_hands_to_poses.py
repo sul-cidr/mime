@@ -611,8 +611,6 @@ async def main() -> None:
                 video_id, hands_to_match, min_frameno, max_frameno, db, model_path
             )
 
-    await db.index_pose_hands()
-
 
 if __name__ == "__main__":
     asyncio.run(main())

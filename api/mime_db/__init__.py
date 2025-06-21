@@ -45,7 +45,6 @@ class MimeDb:
         assign_pose_interest,
         clear_actions,
         clear_poses,
-        index_pose_hands,
         load_4dh_predictions,
         load_lart_predictions,
         load_openpifpaf_predictions,

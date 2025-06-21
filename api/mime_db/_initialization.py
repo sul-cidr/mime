@@ -70,6 +70,11 @@ async def initialize_db(conn, drop=False) -> None:
             PRIMARY KEY(video_id, frame, pose_idx)
         )
         ;
+
+        CREATE INDEX IF NOT EXISTS pose_poem_embedding_idx ON pose
+          USING ivfflat (poem_embedding vector_cosine_ops);
+        CREATE INDEX IF NOT EXISTS pose_ava_action_idx ON pose
+          USING ivfflat (ava_action vector_cosine_ops);
         """
     )
 
@@ -112,6 +117,13 @@ async def initialize_db(conn, drop=False) -> None:
             cluster_id INTEGER DEFAULT NULL
         )
         ;
+
+        CREATE INDEX IF NOT EXISTS hand_joint_angles3d_idx ON hand
+          USING ivfflat (joint_angles3d vector_cosine_ops);
+        CREATE INDEX IF NOT EXISTS hand_class_weights_idx ON hand
+          USING ivfflat (class_weights vector_cosine_ops);
+        CREATE INDEX IF NOT EXISTS hand_rectified3d_idx ON hand
+          USING ivfflat (rectified3d vector_cosine_ops);
         """
     )
 
@@ -134,6 +146,9 @@ async def initialize_db(conn, drop=False) -> None:
             PRIMARY KEY(video_id, track_id, tick)
         )
         ;
+
+        CREATE INDEX IF NOT EXISTS movelet_motion_idx ON movelet
+          USING ivfflat (motion vector_cosine_ops);
         """
     )
 
@@ -172,7 +187,7 @@ async def initialize_db(conn, drop=False) -> None:
             ORDER BY video_name
         WITH DATA;
 
-        CREATE UNIQUE INDEX ON video_meta (id);
+        CREATE UNIQUE INDEX IF NOT EXISTS video_meta_id_idx ON video_meta (id);
         """
     )
 
@@ -223,7 +238,8 @@ async def initialize_db(conn, drop=False) -> None:
         ORDER BY pose_details.frame
         WITH DATA;
 
-        CREATE INDEX ON video_frame_meta (video_id);
+        CREATE INDEX IF NOT EXISTS video_frame_meta_video_id_idx
+          ON video_frame_meta (video_id);
         """
     )
 
