@@ -9,6 +9,7 @@ async def initialize_db(conn, drop=False) -> None:
         await conn.execute("DROP TABLE IF EXISTS movelet CASCADE;")
         await conn.execute("DROP TABLE IF EXISTS face CASCADE;")
         await conn.execute("DROP TABLE IF EXISTS frame CASCADE;")
+        await conn.execute("DROP TABLE IF EXISTS hand CASCADE;")
 
     await conn.execute(
         """
