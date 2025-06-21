@@ -65,10 +65,12 @@ async def main() -> None:
     # Get video metadata
     json_file = input_path.name
 
-    video_name = json_file.split(".hands.")[0] #.replace(".hands.jsonl", "")
+    video_name = json_file.split(".hands.")[0]  # .replace(".hands.jsonl", "")
 
     video_id = await db.get_video_id(video_name)
     video_id = video_id[0]["id"]
+
+    track_frames = await db.get_track_frames(video_id)
 
     logging.info("Loading hand detection results from JSON file into the DB")
 
@@ -79,6 +81,9 @@ async def main() -> None:
                 await db.add_video_hands(video_id, hands_to_add)
                 hands_to_add = []
 
+            if hand["frame"] not in track_frames:
+                continue
+
             is_right = hand["right"] == 1
 
             if "confidence" in hand:
@@ -86,14 +91,10 @@ async def main() -> None:
             else:
                 confidence = 1
             # Don't bother
-            #if hand["confidence"] == 0:
+            # if hand["confidence"] == 0:
             #    continue
-            kpts_2d = [
-                coord for pair in hand["kpts_2d"] for coord in pair
-            ]
-            kpts_3d = [
-                coord for triplet in hand["kpts_3d"] for coord in triplet
-            ]
+            kpts_2d = [coord for pair in hand["kpts_2d"] for coord in pair]
+            kpts_3d = [coord for triplet in hand["kpts_3d"] for coord in triplet]
             global_orient = [
                 coord for triplet in hand["global_orient"] for coord in triplet
             ]
@@ -101,7 +102,6 @@ async def main() -> None:
             hands_to_add.append(
                 [
                     hand["frame"],
-                    None,
                     hand["personid"],
                     hand["bbox"],
                     is_right,

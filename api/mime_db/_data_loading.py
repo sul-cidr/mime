@@ -304,8 +304,14 @@ async def load_lart_predictions(
 
     action_updates = []
 
+    track_frames = await self.get_track_frames(video_id)
+
     for _, frame in frames.items():
-        if len(frame["tracked_ids"]) == 0 or "ava_action" not in frame:
+        if (
+            (frame["time"] + 1) not in track_frames
+            or len(frame["tracked_ids"]) == 0
+            or "ava_action" not in frame
+        ):
             continue
 
         for tracked_id in frame["tracked_ids"]:
