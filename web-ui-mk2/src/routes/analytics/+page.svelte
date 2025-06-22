@@ -1,6 +1,6 @@
 <script>
 	import { page } from '$app/stores';
-	import { Button, DataTable, MultiSelect } from 'carbon-components-svelte';
+	import { Button, DataTable, ImageLoader, MultiSelect } from 'carbon-components-svelte';
 	import { getVideoData } from '$lib/data-fetching';
 
 	let selectedVideoIds = $state([]);
@@ -9,8 +9,9 @@
 	let analysisResults = $state([]);
 
 	const analysisMetrics = [
-		{ id: 0, text: 'Movement (m/s)', endpoint: 'video_motion' },
-		{ id: 1, text: 'Distance between people', endpoint: 'video_spacing' }
+		{ id: 0, text: '3D Movement (m/s)', endpoint: 'video_motion/3d' },
+		{ id: 1, text: '2D Movement (norm px/s)', endpoint: 'video_motion/2d' },
+		{ id: 2, text: 'Interpersonal distance (m)', endpoint: 'video_spacing' }
 	];
 
 	const selectMetrics = (/** @type {CustomEvent} */ multiSelectEvent) => {
@@ -41,28 +42,34 @@
 			})
 		);
 
-	const getHeaders = (metricData) =>
-		metricData.length < 1
+	const getHeaders = (/** @type {[Object]} */ metricData) => {
+		return metricData === undefined || metricData.length < 1
 			? []
-			: Object.keys(metricData[0]).map((key) =>
-					key === 'video_id'
-						? { key: 'video', value: 'Performance' }
-						: { key: key, value: String(key).charAt(0).toUpperCase() + String(key).slice(1) }
-				);
+			: Object.keys(metricData[0])
+					.map((key) =>
+						key === 'video_id'
+							? { key: 'video', value: 'Performance' }
+							: { key: key, value: String(key).charAt(0).toUpperCase() + String(key).slice(1) }
+					)
+					.concat([{ key: 'histogram', value: 'Histogram' }]);
+	};
 
-	const getRows = (metricData) =>
-		metricData.map((metricRowData) => {
+	const getRows = ({ metric: metricId, data: metricData }) => {
+		const endpoint = analysisMetrics.filter((item) => item.id === metricId)[0]['endpoint'];
+		return metricData.map((/** @type {Object} */ metricRowData) => {
 			let rowDict = {};
 			Object.entries(metricRowData).map(([key, value]) => {
 				if (key === 'video_id') {
 					rowDict['id'] = value;
 					rowDict['video'] = videoNameById[value];
+					rowDict['histogram'] = `${$page.data.apiBase}/viz_${endpoint}/${value}/`;
 				} else {
 					rowDict[key] = value;
 				}
 			});
 			return rowDict;
 		});
+	};
 </script>
 
 <h1>Analytics</h1>
@@ -96,19 +103,33 @@
 			zebra
 			sortable
 			headers={getHeaders(tableData.data)}
-			rows={getRows(tableData.data)}
-		/>
+			rows={getRows(tableData)}
+		>
+			<svelte:fragment slot="cell" let:cell>
+				{#if cell.key === 'histogram'}
+					<ImageLoader src={cell.value} />
+				{:else}
+					{cell.value}
+				{/if}
+			</svelte:fragment>
+		</DataTable>
 	{/each}
 </div>
 
 <style>
+	#main-content {
+		overflow-y: scroll !important;
+	}
 	.control-board {
 		display: flex;
 		flex-direction: row;
 		column-gap: 1rem;
 	}
 	.results-board {
+		display: flex;
+		flex-direction: column;
 		padding: 1rem 0 0 0;
+		row-gap: 1rem;
 	}
 	h1 {
 		margin: 2rem 0;

@@ -500,13 +500,43 @@ async def hand_search(
     )
 
 
-@mime_api.get("/analyze_video_motion/{video_ids}/")
-async def analyze_video_motion(video_ids: str, request: Request):
+@mime_api.get("/analyze_video_motion/{dims}/{video_ids}/")
+async def analyze_video_motion(dims: str, video_ids: str, request: Request):
     video_uuid_strings = tuple(video_ids.split("|"))
-    frame_data = await request.app.state.db.analyze_video_motion(video_uuid_strings)
+    is_3d = dims == "3d"
+    data = await request.app.state.db.analyze_video_motion(video_uuid_strings, is_3d)
     return Response(
-        content=json.dumps(frame_data, cls=MimeJSONEncoder),
+        content=json.dumps(data, cls=MimeJSONEncoder),
         media_type="application/json",
+    )
+
+
+@mime_api.get("/viz_video_motion/{dims}/{video_id}/")
+async def viz_video_motion(dims: str, video_id: str, request: Request):
+    is_3d = dims == "3d"
+    img = await request.app.state.db.viz_video_motion(video_id, is_3d)
+    return Response(
+        content=iio.imwrite("<bytes>", img, extension=".png"),
+        media_type="image/png",
+    )
+
+
+@mime_api.get("/analyze_video_spacing/{video_ids}/")
+async def analyze_video_spacing(video_ids: str, request: Request):
+    video_uuid_strings = tuple(video_ids.split("|"))
+    data = await request.app.state.db.analyze_video_spacing(video_uuid_strings)
+    return Response(
+        content=json.dumps(data, cls=MimeJSONEncoder),
+        media_type="application/json",
+    )
+
+
+@mime_api.get("/viz_video_spacing/{video_id}/")
+async def viz_video_spacing(video_id: str, request: Request):
+    img = await request.app.state.db.viz_video_spacing(video_id)
+    return Response(
+        content=iio.imwrite("<bytes>", img, extension=".png"),
+        media_type="image/png",
     )
 
 
