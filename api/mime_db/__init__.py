@@ -27,6 +27,7 @@ except AssertionError:
 class MimeDb:
     """Class to interact with the database."""
 
+    from mime_db._analytics import analyze_video_motion
     from mime_db._data_loading import (
         add_frame_movement,
         add_pose_faces,

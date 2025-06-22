@@ -500,5 +500,15 @@ async def hand_search(
     )
 
 
+@mime_api.get("/analyze_video_motion/{video_ids}/")
+async def analyze_video_motion(video_ids: str, request: Request):
+    video_uuid_strings = tuple(video_ids.split("|"))
+    frame_data = await request.app.state.db.analyze_video_motion(video_uuid_strings)
+    return Response(
+        content=json.dumps(frame_data, cls=MimeJSONEncoder),
+        media_type="application/json",
+    )
+
+
 if __name__ == "__main__":
     uvicorn.run("server:mime_api", host="0.0.0.0", port=5000, reload=True)
