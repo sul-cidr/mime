@@ -540,5 +540,24 @@ async def viz_video_spacing(video_id: str, request: Request):
     )
 
 
+@mime_api.get("/analyze_video_sidereal/{video_ids}/")
+async def analyze_video_sidereal(video_ids: str, request: Request):
+    video_uuid_strings = tuple(video_ids.split("|"))
+    data = await request.app.state.db.analyze_video_sidereal(video_uuid_strings)
+    return Response(
+        content=json.dumps(data, cls=MimeJSONEncoder),
+        media_type="application/json",
+    )
+
+
+@mime_api.get("/viz_video_sidereal/{video_id}/")
+async def viz_video_sidereal(video_id: str, request: Request):
+    img = await request.app.state.db.viz_video_sidereal(video_id)
+    return Response(
+        content=iio.imwrite("<bytes>", img, extension=".png"),
+        media_type="image/png",
+    )
+
+
 if __name__ == "__main__":
     uvicorn.run("server:mime_api", host="0.0.0.0", port=5000, reload=True)

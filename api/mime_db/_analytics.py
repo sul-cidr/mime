@@ -4,16 +4,19 @@ import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image
 from scipy.spatial import distance_matrix
+from scipy.spatial.distance import euclidean
 from scipy.stats import kurtosis, kurtosistest, skew, skewtest
 
-font = {"family": "normal", "weight": "normal", "size": 8}
+font = {"weight": "normal", "size": 8}
 
 plt.rc("font", **font)
+
+MIN_MOVELET_DURATION = 0.1
 
 
 # Helper/lib functions duplicated from pose_information_retrieval.ipynb
 # Consider DRYing up...
-def get_distribution_stats(distrib, plot=False):
+def get_distribution_stats(distrib):
     if len(distrib) == 0:
         return {
             "count": 0,
@@ -33,10 +36,6 @@ def get_distribution_stats(distrib, plot=False):
         kurtosis_value = kurtosis(distrib)
     else:
         kurtosis_value = 0
-
-    if plot:
-        plt.hist(distrib, bins="auto")  # arguments are passed to np.histogram
-        plt.show()
 
     return {
         "count": len(distrib),
@@ -64,7 +63,7 @@ def get_histogram_image(viz_data):
     fig = plt.figure(figsize=(3, 2), dpi=100)
     fig.add_subplot(111)
 
-    plt.hist(viz_data, bins="auto")  # arguments are passed to np.histogram
+    plt.hist(viz_data, bins=300)  # arguments are passed to np.histogram
 
     fig.canvas.draw()
 
@@ -199,5 +198,119 @@ async def viz_video_spacing(self, video_id: str) -> np.ndarray:
     return get_histogram_image(distances)
 
 
-# async def get_video_by_id(self, video_id: UUID) -> asyncpg.Record:
-#     return await self._pool.fetchrow("SELECT * FROM video WHERE id = $1;", video_id)
+def get_sidereal_motion(track_movelet_data, video_fps):
+    movements = []
+    for movelet in track_movelet_data:
+        duration = (
+            movelet.get("end_frame") / video_fps - movelet.get("start_frame") / video_fps
+        )
+        if duration < MIN_MOVELET_DURATION:
+            continue
+        start_centroid = get_projected_pose_centroid(
+            movelet.get("start_pose3d"), movelet.get("start_camera")
+        )
+        end_centroid = get_projected_pose_centroid(
+            movelet.get("end_pose3d"), movelet.get("end_camera")
+        )
+        distance = euclidean(start_centroid, end_centroid)
+        if distance == 0:
+            continue
+        movements.append(distance / duration)
+    return movements
+
+
+async def analyze_video_sidereal(self, video_ids: tuple[str]) -> list:
+    movements_by_video = {}
+    for video_id in video_ids:
+        video_data = await self.get_video_by_id(video_id)
+        video_fps = video_data["fps"]
+
+        movements_by_video[video_id] = []
+
+        track_movelet_data = await self._pool.fetch(
+            f"""
+            WITH movelet_start_pose AS (
+                SELECT movelet.track_id, start_frame, end_frame, movelet.pose_idx, keypoints3d, camera
+                FROM movelet LEFT JOIN pose ON
+                    movelet.video_id = pose.video_id
+                    AND movelet.start_frame = pose.frame
+                    AND movelet.track_id = pose.track_id
+                WHERE movelet.video_id='{video_id}'
+            ), movelet_end_pose AS (
+                SELECT movelet.track_id, start_frame, end_frame, movelet.pose_idx, keypoints3d, camera
+                FROM movelet LEFT JOIN pose ON
+                    movelet.video_id = pose.video_id
+                    AND movelet.end_frame = pose.frame
+                    AND movelet.track_id = pose.track_id
+                WHERE movelet.video_id='{video_id}'
+            )
+            SELECT
+                movelet_start_pose.track_id,
+                movelet_start_pose.start_frame,
+                movelet_end_pose.end_frame,
+                movelet_start_pose.keypoints3d AS start_pose3d,
+                movelet_start_pose.camera AS start_camera,
+                movelet_end_pose.keypoints3d AS end_pose3d,
+                movelet_end_pose.camera AS end_camera
+            FROM movelet_start_pose, movelet_end_pose
+            WHERE movelet_start_pose.track_id = movelet_end_pose.track_id
+                AND movelet_start_pose.start_frame = movelet_end_pose.start_frame
+                AND movelet_start_pose.end_frame = movelet_end_pose.end_frame
+                AND movelet_start_pose.start_frame < movelet_end_pose.end_frame
+            ;
+            """
+        )
+
+        movements_by_video[video_id] = get_sidereal_motion(track_movelet_data, video_fps)
+
+    output_stats = []
+    for video_id in movements_by_video:
+        video_stats = {"video_id": video_id} | get_distribution_stats(
+            movements_by_video[video_id]
+        )
+        output_stats.append(video_stats)
+
+    return output_stats
+
+
+async def viz_video_sidereal(self, video_id: str) -> np.ndarray:
+    video_data = await self.get_video_by_id(video_id)
+    video_fps = video_data["fps"]
+
+    track_movelet_data = await self._pool.fetch(
+        f"""
+        WITH movelet_start_pose AS (
+            SELECT movelet.track_id, start_frame, end_frame, movelet.pose_idx, keypoints3d, camera
+            FROM movelet LEFT JOIN pose ON
+                movelet.video_id = pose.video_id
+                AND movelet.start_frame = pose.frame
+                AND movelet.track_id = pose.track_id
+            WHERE movelet.video_id='{video_id}'
+        ), movelet_end_pose AS (
+            SELECT movelet.track_id, start_frame, end_frame, movelet.pose_idx, keypoints3d, camera
+            FROM movelet LEFT JOIN pose ON
+                movelet.video_id = pose.video_id
+                AND movelet.end_frame = pose.frame
+                AND movelet.track_id = pose.track_id
+            WHERE movelet.video_id='{video_id}'
+        )
+        SELECT
+            movelet_start_pose.track_id,
+            movelet_start_pose.start_frame,
+            movelet_end_pose.end_frame,
+            movelet_start_pose.keypoints3d AS start_pose3d,
+            movelet_start_pose.camera AS start_camera,
+            movelet_end_pose.keypoints3d AS end_pose3d,
+            movelet_end_pose.camera AS end_camera
+        FROM movelet_start_pose, movelet_end_pose
+        WHERE movelet_start_pose.track_id = movelet_end_pose.track_id
+            AND movelet_start_pose.start_frame = movelet_end_pose.start_frame
+            AND movelet_start_pose.end_frame = movelet_end_pose.end_frame
+            AND movelet_start_pose.start_frame < movelet_end_pose.end_frame
+        ;
+        """
+    )
+
+    movements = get_sidereal_motion(track_movelet_data, video_fps)
+
+    return get_histogram_image(movements)

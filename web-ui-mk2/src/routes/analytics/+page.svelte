@@ -1,17 +1,26 @@
 <script>
 	import { page } from '$app/stores';
-	import { Button, DataTable, ImageLoader, MultiSelect } from 'carbon-components-svelte';
+	import {
+		Button,
+		DataTable,
+		ImageLoader,
+		ProgressBar,
+		MultiSelect
+	} from 'carbon-components-svelte';
 	import { getVideoData } from '$lib/data-fetching';
 
 	let selectedVideoIds = $state([]);
 	let /** @type Number[] */ selectedMetricIds = [];
 	let videoNameById = {};
 	let analysisResults = $state([]);
+	let metricsToProcess = $state(0);
+	let metricsProcessed = $state(0);
 
 	const analysisMetrics = [
-		{ id: 0, text: '3D Movement (m/s)', endpoint: 'video_motion/3d' },
-		{ id: 1, text: '2D Movement (norm px/s)', endpoint: 'video_motion/2d' },
-		{ id: 2, text: 'Interpersonal distance (m)', endpoint: 'video_spacing' }
+		{ id: 0, text: '3D movement (m/s)', endpoint: 'video_motion/3d' },
+		{ id: 1, text: '2D movement (norm px/s)', endpoint: 'video_motion/2d' },
+		{ id: 2, text: 'Sidereal motion (m/s)', endpoint: 'video_sidereal' },
+		{ id: 3, text: 'Interpersonal distance (m)', endpoint: 'video_spacing' }
 	];
 
 	const selectMetrics = (/** @type {CustomEvent} */ multiSelectEvent) => {
@@ -21,6 +30,8 @@
 	const runAnalyses = async () => {
 		if (selectedVideoIds.length === 0) return [];
 		analysisResults = [];
+		metricsProcessed = 0;
+		metricsToProcess = selectedMetricIds.length;
 		selectedMetricIds.forEach(async (/** @type Number */ metricId) => {
 			const endpoint = analysisMetrics.filter((item) => item.id === metricId)[0]['endpoint'];
 			const videoIds = selectedVideoIds.join('|');
@@ -28,6 +39,7 @@
 				`${$page.data.apiBase}/analyze_${endpoint}/${videoIds}/`
 			).then((data) => data.json());
 			analysisResults.push({ metric: metricId, data: analyticData });
+			metricsProcessed += 1;
 		});
 	};
 
@@ -96,6 +108,14 @@
 </div>
 
 <div class="results-board">
+	{#if metricsToProcess > 0 && metricsProcessed < metricsToProcess}
+		<ProgressBar
+			labelText="Processing status"
+			helperText={`Calculating metric ${metricsProcessed + 1} of ${metricsToProcess}`}
+			bind:value={metricsProcessed}
+			bind:max={metricsToProcess}
+		/>
+	{/if}
 	{#each analysisResults as tableData}
 		<DataTable
 			title={analysisMetrics.filter((item) => item.id === tableData.metric)[0]['text']}
