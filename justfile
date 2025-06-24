@@ -42,8 +42,8 @@ default:
 @remove-video path: && refresh-db-views
   docker compose exec -T api sh -c "LOG_LEVEL=$LOG_LEVEL /app/remove_video.py --video-path \"\$VIDEO_SRC_FOLDER/$1\""
 
-@add-video-4dh path: && refresh-db-views
-  docker compose exec -T api sh -c "LOG_LEVEL=$LOG_LEVEL /app/load_video_4dh.py --video-path \"\$VIDEO_SRC_FOLDER/$1\""
+@add-video-4dh path sample_rate="0": && refresh-db-views
+  docker compose exec -T api sh -c "LOG_LEVEL=$LOG_LEVEL /app/load_video_4dh.py --video-path \"\$VIDEO_SRC_FOLDER/$1\" --parse-fps $2"
 
 # Export a video's pose data into a CSV to serve as input to a Pr-VIPE (POEM) viewpoint-invariant embedding
 @make-poem-input path:
@@ -93,8 +93,8 @@ default:
   docker compose exec -T api sh -c "LOG_LEVEL=$LOG_LEVEL /app/track_video.py --video-path \"\$VIDEO_SRC_FOLDER/$1\""
 
 # Provide path to video file relative to $VIDEO_SRC_FOLDER
-@add-motion path: && refresh-db-views
-  docker compose exec -T api sh -c "LOG_LEVEL=$LOG_LEVEL /app/track_video_motion.py --video-path \"\$VIDEO_SRC_FOLDER/$1\""
+@add-motion path tick_interval="0": && refresh-db-views
+  docker compose exec -T api sh -c "LOG_LEVEL=$LOG_LEVEL /app/track_video_motion.py --video-path \"\$VIDEO_SRC_FOLDER/$1\" --tick-interval $2"
 
 # Load detected faces data; input file is in $VIDEO_SRC_FOLDER with extension .faces.ArcFace.jsonl
 @match-faces video_path: && refresh-db-views

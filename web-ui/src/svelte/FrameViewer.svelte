@@ -29,18 +29,24 @@
       if (data.length) {
         data.forEach((pr: PoseRecord) => {
           if (pr.track_id !== null) trackCt += 1;
-          shot = pr.shot;
-          pose_interest = pr.pose_interest;
-          action_interest = pr.action_interest;
         });
       }
     }
+    getFrameInfo($currentVideo.id, $currentFrame!).then((data) =>
+      integrateFrameInfo(data),
+    );
     getFaceData($currentVideo.id, $currentFrame!).then((data) =>
       integrateFaceData(data),
     );
     getHandsData($currentVideo.id, $currentFrame!).then((data) =>
       integrateHandsData(data),
     );
+  };
+
+  const integrateFrameInfo = (data: FrameRecord) => {
+    shot = data.shot;
+    pose_interest = data.pose_interest;
+    action_interest = data.action_interest;
   };
 
   const integrateFaceData = (data: Array<FaceRecord>) => {
@@ -86,6 +92,14 @@
       }
     }
   };
+
+  async function getFrameInfo(videoId: string, frame: number) {
+    if (!frame) {
+      return null;
+    }
+    const response = await fetch(`${API_BASE}/frame_info/${videoId}/${frame}/`);
+    return await response.json();
+  }
 
   async function getPoseData(videoId: string, frame: number) {
     if (!frame) {

@@ -14,7 +14,7 @@ from sklearn.metrics.pairwise import nan_euclidean_distances
 
 from mime_db import MimeDb
 
-TICK_INTERVAL = 0.1666667  # 1/6 of a second
+DEFAULT_TICK_INTERVAL = 0.1666667  # 1/6 of a second
 
 
 async def main() -> None:
@@ -37,6 +37,13 @@ async def main() -> None:
     )
 
     parser.add_argument("--video-path", action="store", required=True)
+    parser.add_argument(
+        "--tick-interval",
+        action="store",
+        type=float,
+        required=False,
+        default=0.0,
+    )
 
     args = parser.parse_args()
 
@@ -68,13 +75,38 @@ async def main() -> None:
 
     tracks_df = pd.DataFrame.from_records(track_data, columns=track_data[0].keys())
 
+    if args.tick_interval == 0.0:
+        tick_interval = DEFAULT_TICK_INTERVAL
+    else:
+        tick_interval = args.tick_interval
+
+    pose_frames = sorted(tracks_df["frame"].unique())
+    frame_gaps = []
+    for f, frame in enumerate(pose_frames):
+        if f + 1 != len(pose_frames):
+            frame_gaps.append(pose_frames[f + 1] - frame)
+
+    median_frame_gap = np.median(frame_gaps) / video_metadata["fps"]
+
+    if (tick_interval / median_frame_gap) < 2:
+        logging.error(
+            f"The median time between frames in the pose data ({median_frame_gap:.2f}s) is quite close to the length of a 'tick' to be used for motion calculations ({tick_interval:.2f}s)."
+        )
+        logging.error(
+            "This is unlikely to produce usable motion data. Ideally, the tick interval should be a multiple of the duration between sampled poses."
+        )
+        logging.error(
+            "Please set an appropriate value with --tick-interval if running this script directly, or by specifying the value at the end of the just command."
+        )
+        return
+
     # XXX Need to adjust if track_id allowed to be null
     tracks_df = tracks_df[tracks_df["track_id"] != 0]
 
     tracks_df["timecode"] = tracks_df["frame"] / video_metadata["fps"]
 
     def assign_tick_values(timecodes):
-        return [int((code - timecodes.iloc[0]) / TICK_INTERVAL) for code in timecodes]
+        return [int((code - timecodes.iloc[0]) / tick_interval) for code in timecodes]
 
     tracks_df["tick"] = tracks_df.groupby(["track_id"])["timecode"].transform(
         assign_tick_values

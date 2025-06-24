@@ -46,7 +46,18 @@ async def main() -> None:
     )
 
     parser.add_argument("--video-path", action="store", required=True)
-    parser.add_argument("--pkl-path", action="store")
+    parser.add_argument(
+        "--pkl-path",
+        action="store",
+        help="Location of the PHALP data .pkl file for the video",
+    )
+    parser.add_argument(
+        "--parse-fps",
+        action="store",
+        type=int,
+        default=0,
+        help="How many frames per second to sample from the pose data",
+    )
 
     args = parser.parse_args()
 
@@ -76,10 +87,32 @@ async def main() -> None:
     video_metadata = get_video_metadata(video_path)
     video_id = await db.add_video(video_path.name, video_metadata)
 
+    # Video FPS = 30
+    # Target frame rate: 5 FPS
+    # Should import 1 out of every 30/5 = 6 frames
+    # 1 7 13 19 25
+    # Video FPS = 24
+    # Target frame rate: 5 FPS
+    # Should import 1 out of every 24/5 = 4.8 = 5 frames
+    # 1 6 11 16 21
+
+    import_multiples_of = 1
+
+    if args.parse_fps:
+        if args.parse_fps > video_metadata["fps"] or args.parse_fps < 0:
+            logging.info(
+                f"Specified sample rate ({args.parse_fps} fps) is invalid; using actual video framerate ({video_metadata['fps']})."
+            )
+        elif args.parse_fps > 0:
+            import_multiples_of = round(video_metadata["fps"] / args.parse_fps)
+            logging.info(
+                f"Target frame sample rate is {args.parse_fps} fps; video fps is {video_metadata['fps']}; importing 1 out of every {import_multiples_of} frames."
+            )
+
     logging.info("Loading pose data into DB")
 
     # Load pose data into database
-    await db.load_4dh_predictions(video_id, pkl_path)
+    await db.load_4dh_predictions(video_id, pkl_path, import_multiples_of)
 
     # Normalize pose data and annotate database records
     logging.info("Normalizing pose data, and annotating db records...")

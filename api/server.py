@@ -214,6 +214,15 @@ async def poses_by_frame(video_id: UUID, frame: int, request: Request):
     )
 
 
+@mime_api.get("/frame_info/{video_id}/{frame}/")
+async def get_frame_info(video_id: UUID, frame: int, request: Request):
+    frame_info = await request.app.state.db.get_frame_info(video_id, frame)
+    return Response(
+        content=json.dumps(frame_info, cls=MimeJSONEncoder),
+        media_type="application/json",
+    )
+
+
 @mime_api.get("/clustered_faces/{video_id}/")
 async def clustered_faces(video_id: UUID, request: Request):
     frame_data = await request.app.state.db.get_clustered_face_data_from_video(video_id)

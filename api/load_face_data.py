@@ -67,6 +67,8 @@ async def main() -> None:
     video_id = await db.get_video_id(video_name)
     video_id = video_id[0]["id"]
 
+    track_frames = await db.get_track_frames(video_id)
+
     logging.info("Loading face detection results from JSON file into the DB")
 
     with jsonlines.open(input_path) as reader:
@@ -76,7 +78,11 @@ async def main() -> None:
                 await db.add_video_faces(video_id, faces_to_add)
                 faces_to_add = []
             # Don't bother
-            if face["confidence"] == 0 or not face["landmarks"]:
+            if (
+                face["frame"] not in track_frames
+                or face["confidence"] == 0
+                or not face["landmarks"]
+            ):
                 continue
             landmarks_vector = [
                 coord for pair in face["landmarks"].values() for coord in pair

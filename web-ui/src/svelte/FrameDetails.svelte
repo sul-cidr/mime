@@ -46,8 +46,10 @@
         <dd>{handCt}</dd>
         <dt>Time:</dt>
         <dd>{formatSeconds(($currentFrame || 0) / $currentVideo.fps)}</dd>
-        <dt>Shot:</dt>
-        <dd>{shot}</dd>
+        {#if shot != 0}
+          <dt>Shot:</dt>
+          <dd>{shot}</dd>
+        {/if}
         {#if pose_interest}
           <dt>Avg pose interest:</dt>
           <dd>{(pose_interest * 100).toFixed(2)}%</dd>
