@@ -326,7 +326,7 @@ async def add_video_tracks(self, video_id: UUID | None, track_data) -> None:
 
 
 async def load_lart_predictions(
-    self, video_id: UUID, pkl_path: Path, clear=True, reindex=False
+    self, video_id: UUID, pkl_path: Path, clear=True
 ) -> None:
     if clear:
         logging.debug(f"Clearing actions for video {video_id}")
@@ -366,16 +366,6 @@ async def load_lart_predictions(
     )
 
     logging.info(f"Loaded {len(data)} action predictions!")
-
-    if reindex:
-        logging.info("Building action search index")
-        await self._pool.execute(
-            """
-            CREATE INDEX ON pose
-            USING ivfflat (ava_action vector_cosine_ops)
-            ;
-            """,
-        )
 
 
 async def add_video_faces(self, video_id: UUID | None, faces_data) -> None:
@@ -451,32 +441,7 @@ async def add_pose_hands(self, hands_data) -> None:
     logging.info(f"Loaded {len(hands_data)} matched hands!")
 
 
-async def index_pose_hands(self) -> None:
-    logging.info("Building hand search index")
-    await self._pool.execute(
-        """
-        CREATE INDEX ON hand
-        USING ivfflat (joint_angles3d vector_cosine_ops)
-        ;
-        """,
-    )
-    await self._pool.execute(
-        """
-        CREATE INDEX ON hand
-        USING ivfflat (class_weights vector_cosine_ops)
-        ;
-        """,
-    )
-    await self._pool.execute(
-        """
-        CREATE INDEX ON hand
-        USING ivfflat (rectified3d vector_cosine_ops)
-        ;
-        """,
-    )
-
-
-async def add_video_movelets(self, movelets_data, reindex=False) -> None:
+async def add_video_movelets(self, movelets_data) -> None:
     data = [tuple(movelet) for movelet in movelets_data]
     await self._pool.executemany(
         """
@@ -501,19 +466,8 @@ async def add_video_movelets(self, movelets_data, reindex=False) -> None:
 
     logging.info(f"Loaded {len(movelets_data)} movelets!")
 
-    if reindex:
-        logging.info("Creating approximate distance index for movelets...")
-        async with self._pool.acquire() as conn:
-            await conn.execute(
-                """
-                CREATE INDEX ON movelet
-                USING ivfflat (motion vector_cosine_ops)
-                ;
-                """,
-            )
 
-
-async def assign_poem_embeddings(self, poem_data, reindex=False) -> None:
+async def assign_poem_embeddings(self, poem_data) -> None:
     async with self._pool.acquire() as conn:
         await conn.execute(
             "ALTER TABLE pose ADD COLUMN IF NOT EXISTS poem_embedding vector(16) DEFAULT NULL;"
@@ -527,18 +481,6 @@ async def assign_poem_embeddings(self, poem_data, reindex=False) -> None:
             """,
             poem_data,
         )
-
-        if reindex:
-            logging.info(
-                "Creating approximate index for cosine distance of viewpoint-invariant pose embeddings..."
-            )
-            await conn.execute(
-                """
-                CREATE INDEX ON pose
-                USING ivfflat (poem_embedding vector_cosine_ops)
-                ;
-                """,
-            )
 
         return
 
@@ -633,7 +575,6 @@ async def annotate_pose(
     col_type: str,
     video_id: UUID | None,
     annotation_func: Callable,
-    reindex=False,
     pose_tbl="pose",
 ) -> None:
     async with self._pool.acquire() as conn:
@@ -665,15 +606,14 @@ async def annotate_pose(
                     pose["pose_idx"],
                 )
 
-        if reindex:
-            logging.info("Creating approximate index for cosine distance...")
-            await conn.execute(
-                f"""
-                CREATE INDEX ON {pose_tbl}
-                USING ivfflat ({column} vector_cosine_ops)
-                ;
-                """,
-            )
+        # logging.info("Creating approximate index for cosine distance...")
+        await conn.execute(
+            f"""
+            CREATE INDEX IF NOT EXISTS {pose_tbl}_{column}_idx ON {pose_tbl}
+              USING ivfflat ({column} vector_cosine_ops)
+            ;
+            """,
+        )
     return
 
 
