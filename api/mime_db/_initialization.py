@@ -200,7 +200,7 @@ async def initialize_db(conn, drop=False) -> None:
                 pose_details.track_ct,
                 pose_details.face_ct,
                 pose_details.hand_ct,
-                1 - pose_details.avg_score,
+                pose_details.avg_score,
                 CAST(frame.is_shot_boundary AS INT) AS is_shot,
                 frame.pose_interest,
                 frame.action_interest,
