@@ -10,7 +10,7 @@
 	import { getVideoData } from '$lib/data-fetching';
 
 	let selectedVideoIds = $state([]);
-	let /** @type Number[] */ selectedMetricIds = [];
+	let /** @type Number[] */ selectedMetricIds = $state([]);
 	let videoNameById = {};
 	let analysisResults = $state([]);
 	let metricsToProcess = $state(0);
