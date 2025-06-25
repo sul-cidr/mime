@@ -1,5 +1,5 @@
 <script>
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import {
 		Button,
 		DataTable,
@@ -23,10 +23,6 @@
 		{ id: 3, text: 'Interpersonal distance (m)', endpoint: 'video_spacing' }
 	];
 
-	const selectMetrics = (/** @type {CustomEvent} */ multiSelectEvent) => {
-		selectedMetricIds = multiSelectEvent.detail.selectedIds;
-	};
-
 	const runAnalyses = async () => {
 		if (selectedVideoIds.length === 0) return [];
 		analysisResults = [];
@@ -36,7 +32,7 @@
 			const endpoint = analysisMetrics.filter((item) => item.id === metricId)[0]['endpoint'];
 			const videoIds = selectedVideoIds.join('|');
 			const analyticData = await fetch(
-				`${$page.data.apiBase}/analyze_${endpoint}/${videoIds}/`
+				`${page.data.apiBase}/analyze_${endpoint}/${videoIds}/`
 			).then((data) => data.json());
 			analysisResults.push({ metric: metricId, data: analyticData });
 			metricsProcessed += 1;
@@ -74,7 +70,7 @@
 				if (key === 'video_id') {
 					rowDict['id'] = value;
 					rowDict['video'] = videoNameById[value];
-					rowDict['histogram'] = `${$page.data.apiBase}/viz_${endpoint}/${value}/`;
+					rowDict['histogram'] = `${page.data.apiBase}/viz_${endpoint}/${value}/`;
 				} else {
 					rowDict[key] = value;
 				}
@@ -101,10 +97,9 @@
 		label="Choose analyses to run on the performances"
 		filterable
 		items={analysisMetrics}
-		on:select={selectMetrics}
-		selectedIds={selectedMetricIds}
+		bind:selectedIds={selectedMetricIds}
 	/>
-	<Button on:click={runAnalyses}>Analyze</Button>
+	<Button onclick={runAnalyses}>Analyze</Button>
 </div>
 
 <div class="results-board">
