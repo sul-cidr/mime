@@ -1,11 +1,13 @@
 <script>
 	import { page } from '$app/state';
+	import { fade } from 'svelte/transition';
 	import {
 		Button,
 		DataTable,
 		ImageLoader,
-		ProgressBar,
-		MultiSelect
+		Loading,
+		MultiSelect,
+		ProgressBar
 	} from 'carbon-components-svelte';
 	import { getVideoData } from '$lib/data-fetching';
 
@@ -83,23 +85,35 @@
 <h1>Analytics</h1>
 
 <div class="control-board">
-	{#await formatVideoData() then videos}
-		<MultiSelect
-			titleText="Performances"
-			label="Select performances..."
-			filterable
-			items={videos}
-			bind:selectedIds={selectedVideoIds}
-		/>
+	{#await formatVideoData()}
+		<div class="loading"><Loading small withOverlay={false} />Loading performances...</div>
+	{:then videos}
+		<div transition:fade>
+			<MultiSelect
+				titleText="Performances"
+				label="Select performances..."
+				hideLabel
+				placeholder="Select performances..."
+				filterable
+				items={videos}
+				bind:selectedIds={selectedVideoIds}
+			/>
+		</div>
 	{/await}
 	<MultiSelect
 		titleText="Metrics"
 		label="Choose analyses to run on the performances"
+		hideLabel
+		placeholder="Select analyses to run..."
 		filterable
 		items={analysisMetrics}
 		bind:selectedIds={selectedMetricIds}
 	/>
-	<Button onclick={runAnalyses}>Analyze</Button>
+	<Button
+		onclick={runAnalyses}
+		size="field"
+		disabled={selectedVideoIds.length === 0 || selectedMetricIds.length === 0}>Analyze</Button
+	>
 </div>
 
 <div class="results-board">
@@ -136,6 +150,15 @@
 		display: flex;
 		flex-direction: row;
 		column-gap: 1rem;
+		align-items: end;
+
+		:global(& > *) {
+			width: 25%;
+		}
+
+		:global(button) {
+			width: auto;
+		}
 	}
 
 	.results-board {
@@ -147,5 +170,21 @@
 
 	h1 {
 		margin: 2rem 0;
+	}
+
+	:global(td > img) {
+		max-height: 200px;
+		max-width: 300px;
+		mix-blend-mode: multiply;
+	}
+
+	.loading {
+		align-self: center;
+		display: flex;
+		gap: 1rem;
+	}
+
+	:global(.bx--data-table-container, .bx--data-table--static) {
+		width: 100%;
 	}
 </style>

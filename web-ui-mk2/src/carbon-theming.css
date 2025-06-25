@@ -37,7 +37,7 @@
 	}
 }
 
-.bx--btn--primary {
+.bx--btn--primary:not(.bx--btn--disabled) {
 	background-color: var(--primary);
 
 	&:hover {
