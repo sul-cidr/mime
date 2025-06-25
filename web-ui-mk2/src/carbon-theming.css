@@ -92,3 +92,8 @@ a.bx--side-nav__link--current {
 .bx--data-table th {
 	background-color: var(--panel-background);
 }
+
+/* Progress Bar */
+.bx--progress-bar__bar {
+	background-color: var(--primary);
+}
