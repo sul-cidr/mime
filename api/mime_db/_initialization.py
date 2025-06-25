@@ -5,11 +5,13 @@ async def initialize_db(conn, drop=False) -> None:
     if drop:
         logging.warning("Dropping database tables...")
         await conn.execute("DROP TABLE IF EXISTS video CASCADE;")
-        await conn.execute("DROP TABLE IF EXISTS pose CASCADE;")
-        await conn.execute("DROP TABLE IF EXISTS movelet CASCADE;")
-        await conn.execute("DROP TABLE IF EXISTS face CASCADE;")
         await conn.execute("DROP TABLE IF EXISTS frame CASCADE;")
+        await conn.execute("DROP TABLE IF EXISTS pose CASCADE;")
+        await conn.execute("DROP TABLE IF EXISTS face CASCADE;")
         await conn.execute("DROP TABLE IF EXISTS hand CASCADE;")
+        await conn.execute("DROP TABLE IF EXISTS movelet CASCADE;")
+        await conn.execute("DROP MATERIALIZED VIEW IF EXISTS video_meta CASCADE;")
+        await conn.execute("DROP MATERIALIZED VIEW IF EXISTS video_meta_frame CASCADE;")
 
     await conn.execute(
         """
