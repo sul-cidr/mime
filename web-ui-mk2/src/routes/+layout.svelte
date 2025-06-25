@@ -69,5 +69,6 @@
 <style>
 	:global(#main-content) {
 		height: calc(100vh - 3rem);
+		overflow-y: scroll;
 	}
 </style>

@@ -137,29 +137,20 @@
 </div>
 
 <style>
-	#main-content {
-		overflow-y: scroll !important;
-	}
 	.control-board {
 		display: flex;
 		flex-direction: row;
 		column-gap: 1rem;
 	}
+
 	.results-board {
 		display: flex;
 		flex-direction: column;
 		padding: 1rem 0 0 0;
 		row-gap: 1rem;
 	}
+
 	h1 {
 		margin: 2rem 0;
-	}
-	pre {
-		margin: 2rem;
-		padding: 1rem;
-		font-family: monospace;
-		font-size: 1rem;
-		line-height: 1.5;
-		background: #eee;
 	}
 </style>
