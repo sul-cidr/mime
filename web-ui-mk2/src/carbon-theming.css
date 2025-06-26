@@ -37,7 +37,7 @@
 	}
 }
 
-.bx--btn--primary {
+.bx--btn--primary:not(.bx--btn--disabled) {
 	background-color: var(--primary);
 
 	&:hover {
@@ -91,4 +91,9 @@ a.bx--side-nav__link--current {
 /* Data Table */
 .bx--data-table th {
 	background-color: var(--panel-background);
+}
+
+/* Progress Bar */
+.bx--progress-bar__bar {
+	background-color: var(--primary);
 }
