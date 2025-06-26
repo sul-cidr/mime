@@ -304,14 +304,27 @@ async def load_lart_predictions(
 
     action_updates = []
 
-    track_frames = await self.get_track_frames(video_id)
+    track_frames = [
+        track_frame["frame"] for track_frame in await self.get_track_frames(video_id)
+    ]
+
+    errors = {
+        "No action for frame": 0,
+        "No track for frame": 0,
+        "No tracked ids for frame": 0,
+    }
 
     for _, frame in frames.items():
-        if (
-            (frame["time"] + 1) not in track_frames
-            or len(frame["tracked_ids"]) == 0
-            or "ava_action" not in frame
-        ):
+        if "ava_action" not in frame:
+            errors["No action for frame"] += 1
+            continue
+
+        if (frame["time"] + 1) not in track_frames:
+            errors["No track for frame"] += 1
+            continue
+
+        if len(frame["tracked_ids"]) == 0:
+            errors["No tracked ids for frame"] += 1
             continue
 
         for tracked_id in frame["tracked_ids"]:
@@ -336,6 +349,8 @@ async def load_lart_predictions(
     )
 
     logging.info(f"Loaded {len(data)} action predictions!")
+
+    logging.info(f"Errors: {errors}")
 
 
 async def add_video_faces(self, video_id: UUID | None, faces_data) -> None:
