@@ -17,11 +17,11 @@
 
 	/**
 	 * @typedef {Object} WebcamPoseInputProps
-	 * @property {function} setSourcePoseFromCoco13Skeleton Function to set the selected pose in the parent component
+	 * @property {function} setSourcePose Function to set the selected pose in the parent component
 	 */
 
 	/** @type {WebcamPoseInputProps} */
-	let { setSourcePoseFromCoco13Skeleton } = $props();
+	let { setSourcePose } = $props();
 
 	let /** @type HTMLVideoElement */ videoElement;
 	let /** @type HTMLCanvasElement */ canvasElement;
@@ -162,7 +162,7 @@
 				size="small"
 				icon={Search}
 				class="search"
-				onclick={() => setSourcePoseFromCoco13Skeleton(capturedPose)}
+				onclick={() => setSourcePose({ norm: capturedPose, fromWebcam: true })}
 			>
 				Search
 			</Button>

@@ -43,11 +43,14 @@
 		const queryParams = new URLSearchParams();
 		queryParams.append(
 			'pose',
-			searchType.value === '3d'
+			searchType.value === '3d' && !sourcePose.fromWebcam
 				? JSON.stringify(sourcePose.global3d_coco13)
 				: JSON.stringify(sourcePose.norm)
 		);
-		queryParams.append('search_type', searchType.value);
+		queryParams.append(
+			'search_type',
+			sourcePose.fromWebcam && searchType.value === '3d' ? 'view_invariant' : searchType.value
+		);
 		if (selectedVideoIds.value.length)
 			selectedVideoIds.value.forEach((v) => queryParams.append('videos', v));
 		queryParams.append('exclude_within_frames', Math.max(excludeWithinFrames.value, 1).toString());
