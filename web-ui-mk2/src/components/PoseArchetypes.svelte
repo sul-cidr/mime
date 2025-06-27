@@ -220,5 +220,11 @@
 			outline-offset: 6px;
 			outline: 2px solid var(--primary);
 		}
+
+		&:focus {
+			border-radius: 1px;
+			outline-offset: 6px;
+			outline: 2px solid var(--primary);
+		}
 	}
 </style>
