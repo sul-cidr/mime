@@ -17,6 +17,16 @@
  * ]} Coco13SkeletonWithConfidence 13 x,y,confidence coordinates for 39 array elements
  */
 
+/**
+ * @typedef {[
+ *    number, number, number, number, number, number, number, number,
+ *    number, number, number, number, number, number, number, number,
+ *    number, number, number, number, number, number, number, number,
+ *    number, number, number, number, number, number, number, number,
+ *    number, number, number, number, number, number, number
+ * ]} Coco13Skeleton3d 13 x,y,z coordinates (structurally but not logically equivalent to the above)
+ */
+
 /** @typedef {Array<{x: number, y: number, z?: number}>} Coco13Pose */
 
 /** @typedef {Array<number>} BoundingBox */
@@ -26,6 +36,7 @@
  * @property {Coco13SkeletonNoConfidence} keypoints
  * @property {Array<number>} bbox [x0, y0, width, height]
  * @property {Coco13SkeletonNoConfidence} norm
+ * @property {Coco13Skeleton3d} global3d_coco13
  */
 
 /**
@@ -42,7 +53,17 @@
  */
 
 /**
+ * @typedef {Object} ArchetypeMetadata
+ * @property {string} provenance
+ * @property {string} description
+ * @property {string} image_filename
+
+/**
  * @typedef {MinimalPose & PoseDbFields} PoseRecord
+ */
+
+/**
+ * @typedef {MinimalPose & PoseDbFields & ArchetypeMetadata & ArchetypeMetadata} PoseArchetype
  */
 
 /**

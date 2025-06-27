@@ -7,7 +7,7 @@
 	import SearchResults from '$components/SearchResults.svelte';
 	import HandSearchResults from '$components/HandSearchResults.svelte';
 	import WebcamPoseInput from '$components/WebcamPoseInput.svelte';
-	import ExamplePoses from '$components/ExamplePoses.svelte';
+	import PoseArchetypes from '$components/PoseArchetypes.svelte';
 	import ExampleHands from '$components/ExampleHands.svelte';
 	import SourcePoseFromDb from '$components/SourcePoseFromDb.svelte';
 
@@ -78,12 +78,12 @@
 				<svelte:fragment slot="content">
 					<TabContent class="tab-panel">
 						<Tabs bind:selected={sourceTab} autoWidth>
-							<Tab label="Examples" />
+							<Tab label="Archetypes" />
 							<Tab label="Webcam" />
 							<Tab label="Pose Editor" />
 							<svelte:fragment slot="content">
 								<TabContent class="tab-panel">
-									<ExamplePoses {setSourcePoseFromCoco13Skeleton} />
+									<PoseArchetypes {setSourcePoseFromCoco13Skeleton} />
 								</TabContent>
 								<TabContent class="tab-panel">
 									{#if sourceTab === 1}<WebcamPoseInput {setSourcePoseFromCoco13Skeleton} />{/if}

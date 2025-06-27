@@ -133,7 +133,7 @@ export const POSE_MAX_DIM = 100;
  * @param {Array<number>} keypoints - An array of keypoints.
  * @return {Array<number>} An array of normalized and rescaled keypoints.
  */
-export const shiftNormalizeRescaleKeypoints = (keypoints) => {
+export const shiftNormalizeRescaleKeypoints = (keypoints, invertY=false) => {
 	const [xMin, yMin, w, h] = getKeypointsBounds(keypoints, false);
 	const scaleFactor = POSE_MAX_DIM / Math.max(w, h);
 
@@ -231,6 +231,37 @@ export const getKeypointsBounds = (keypoints, hasConfidence = true) => {
 
 	return [minX, minY, width, height];
 };
+
+/**
+ * Inverts a set of 2D keypoints that are expected to be normed (where x and y
+ * are always beteween 0 and 100) within the bounding box of the keypoints,
+ * flipping the pose around its Y axis midpoint. This is needed when e.g., the
+ * camera software produces coordinats with y=0 at the top, while the drawing/
+ * rendering tools assume y=0 is at the bottom.
+ *
+ * @param {Number[]} keypoints
+ * @return {Number[]}
+ */
+export const invertNormedKeypoints = (keypoints) => {
+	const segments = segmentKeypoints(keypoints, 2);
+	const yValues = segments.map(([, y]) => y);
+
+	const minY = Math.min(...yValues);
+	const maxY = Math.max(...yValues);
+	const midY = (maxY - minY) / 2;
+
+	return keypoints.map((val, i) => {
+		if ((i + 1) % 2 === 0) {
+			if (val > midY) {
+				return midY - (val - midY) 
+			} else {
+				return midY + (midY - val)
+			}
+		} else {
+			return val;
+		}
+	})
+}
 
 /**
  * Draws a hand skeleton on a canvas.
