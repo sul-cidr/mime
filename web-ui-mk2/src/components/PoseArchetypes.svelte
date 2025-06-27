@@ -7,11 +7,11 @@
 
 	/**
 	 * @typedef {Object} PoseArchetypesProps
-	 * @property {function} setSourcePoseFromCoco13Skeleton Function to set the selected pose in the parent component
+	 * @property {function} setSourcePose Function to set the selected pose in the parent component
 	 */
 
 	/** @type {PoseArchetypesProps} */
-	let { setSourcePoseFromCoco13Skeleton } = $props();
+	let { setSourcePose } = $props();
 
 	// const padArrayToNorm = (/** @type {Number[]} */ arr) =>
 	// 	/** @type {Coco13SkeletonNoConfidence} */
@@ -188,7 +188,7 @@
 
 <section>
 	{#each poses as pose}
-		<button onclick={() => setSourcePoseFromCoco13Skeleton(pose.norm)}>
+		<button onclick={() => setSourcePose(pose)}>
 			<img src={`/mk2/archetypes/${pose.image_filename}`} alt={pose.description} />
 			<p>{pose.provenance}:</p>
 			<p>{pose.description}</p>

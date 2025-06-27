@@ -23,6 +23,11 @@
 		sourcePose = { norm: skeleton };
 	};
 
+	/** @param {MinimalPose} pose */
+	const setSourcePose = (pose) => {
+		sourcePose = pose;
+	};
+
 	/** @param {HandForSearching} hand */
 	const setSourceHand = (hand) => {
 		sourceHand = hand;
@@ -83,7 +88,7 @@
 							<Tab label="Pose Editor" />
 							<svelte:fragment slot="content">
 								<TabContent class="tab-panel">
-									<PoseArchetypes {setSourcePoseFromCoco13Skeleton} />
+									<PoseArchetypes {setSourcePose} />
 								</TabContent>
 								<TabContent class="tab-panel">
 									{#if sourceTab === 1}<WebcamPoseInput {setSourcePoseFromCoco13Skeleton} />{/if}
