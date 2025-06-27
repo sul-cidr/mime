@@ -18,6 +18,7 @@
 	let sourcePoseFromUrl = $state(true);
 	let sourceHand = $state();
 
+	// Only used with ExamplePoses.svelte (which is currently disconnected)
 	/** @param {Coco13SkeletonNoConfidence} skeleton */
 	const setSourcePoseFromCoco13Skeleton = (skeleton) => {
 		sourcePose = { norm: skeleton };
@@ -91,7 +92,7 @@
 									<PoseArchetypes {setSourcePose} />
 								</TabContent>
 								<TabContent class="tab-panel">
-									{#if sourceTab === 1}<WebcamPoseInput {setSourcePoseFromCoco13Skeleton} />{/if}
+									{#if sourceTab === 1}<WebcamPoseInput {setSourcePose} />{/if}
 								</TabContent>
 								<TabContent class="tab-panel">Pose Editor goes here...</TabContent>
 							</svelte:fragment>

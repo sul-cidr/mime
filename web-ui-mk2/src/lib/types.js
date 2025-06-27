@@ -37,6 +37,7 @@
  * @property {Array<number>} bbox [x0, y0, width, height]
  * @property {Coco13SkeletonNoConfidence} norm
  * @property {Coco13Skeleton3d} global3d_coco13
+ * @property {Boolean} fromWebcam
  */
 
 /**
