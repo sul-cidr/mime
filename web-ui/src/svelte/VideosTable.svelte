@@ -38,7 +38,8 @@
           "",
           "Name",
           "Meta",
-          "Length",
+          "Duration",
+          "Frames",
           "Poses",
           "Poses/Frame",
           "Faces",
@@ -53,6 +54,7 @@
           new Date((video.frame_count / video.fps) * 1000)
             .toISOString()
             .slice(11, 19),
+          video.frame_count,
           video.pose_ct,
           video.poses_per_frame,
           video.face_ct,

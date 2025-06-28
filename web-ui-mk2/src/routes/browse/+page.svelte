@@ -5,7 +5,8 @@
 	const headers = [
 		{ key: 'video_name', value: 'Name' },
 		{ key: 'meta', value: 'Meta' },
-		{ key: 'length', value: 'Length' },
+		{ key: 'length', value: 'Duration' },
+		{ key: 'frame_ct', value: 'Frames' },
 		{ key: 'pose_ct', value: 'Poses' },
 		{ key: 'poses_per_frame', value: 'Poses/Frame' },
 		{ key: 'face_ct', value: 'Faces' },
@@ -23,6 +24,7 @@
 					video_name: video.video_name,
 					meta: `${video.width}x${video.height}@${video.fps.toFixed(2)}fps`,
 					length: new Date((video.frame_count / video.fps) * 1000).toISOString().slice(11, 19),
+					frame_ct: video.frame_count?.toLocaleString(),
 					pose_ct: video.pose_ct?.toLocaleString(),
 					poses_per_frame: video.poses_per_frame,
 					face_ct: video.face_ct?.toLocaleString(),
