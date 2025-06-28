@@ -108,6 +108,10 @@
  */
 
 /**
+ * @typedef {HandForSearching & ArchetypeMetadata} HandArchetype
+ */
+
+/**
  * @typedef {Object} HandForDrawing
  * @property {boolean} is_right
  * @property {Array<number>} [rh_keypoints2d]
