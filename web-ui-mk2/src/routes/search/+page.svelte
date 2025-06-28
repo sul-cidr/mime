@@ -8,7 +8,7 @@
 	import HandSearchResults from '$components/HandSearchResults.svelte';
 	import WebcamPoseInput from '$components/WebcamPoseInput.svelte';
 	import PoseArchetypes from '$components/PoseArchetypes.svelte';
-	import ExampleHands from '$components/ExampleHands.svelte';
+	import HandArchetypes from '$components/HandArchetypes.svelte';
 	import SourcePoseFromDb from '$components/SourcePoseFromDb.svelte';
 
 	let searchTab = $state(0);
@@ -98,9 +98,9 @@
 							</svelte:fragment>
 						</Tabs>
 					</TabContent>
-					<TabContent>
+					<TabContent class="tab-panel">
 						{#if searchType === 'hand'}
-							<ExampleHands {setSourceHand} />
+							<HandArchetypes {setSourceHand} />
 						{/if}
 					</TabContent>
 				</svelte:fragment>

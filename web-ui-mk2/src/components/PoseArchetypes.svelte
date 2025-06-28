@@ -286,7 +286,7 @@
 <section>
 	{#each poses as pose}
 		<button onclick={() => setSourcePose(pose)}>
-			<img src={`/mk2/archetypes/${pose.image_filename}`} alt={pose.description} />
+			<img src={`/mk2/archetypes/poses/${pose.image_filename}`} alt={pose.description} />
 			<p>{pose.provenance}:</p>
 			<p>{pose.description}</p>
 		</button>
