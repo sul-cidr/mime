@@ -1,4 +1,5 @@
 <script>
+	import { RadioTile, TileGroup } from 'carbon-components-svelte';
 	import { getKeypointsBounds } from '$lib/pose-utils';
 
 	/**
@@ -8,6 +9,8 @@
 
 	/** @type {HandArchetypesProps} */
 	let { setSourceHand } = $props();
+
+	let selectedHand = /** @type {HandArchetype} */ null;
 
 	const /** @type {HandArchetype[]} */ hands = [
 			{
@@ -480,45 +483,37 @@
 	}
 </script>
 
-<section>
+<TileGroup
+	name="archetypes"
+	on:select={({ detail }) => {
+		setSourceHand(detail);
+	}}
+>
 	{#each hands as hand}
-		<button onclick={() => setSourceHand(hand)}>
-			<img src={`/mk2/archetypes/hands/${hand.image_filename}`} alt={hand.description} />
-			<p>{hand.provenance}:</p>
-			<p>{hand.description}</p>
-		</button>
+		<RadioTile light value={hand} checked={selectedHand === hand}>
+			<svelte:fragment>
+				<div class="archetype-details">
+					<img src={`/mk2/archetypes/hands/${hand.image_filename}`} alt={hand.description} />
+					<p>{hand.provenance}:</p>
+					<p>{hand.description}</p>
+				</div>
+			</svelte:fragment>
+		</RadioTile>
 	{/each}
-</section>
+</TileGroup>
 
 <style>
-	section {
+	.archetype-details {
 		align-items: center;
 		display: flex;
 		flex-direction: column;
-		gap: 1rem;
 
 		img {
 			max-height: 200px;
 		}
-	}
 
-	button {
-		background: none;
-		border: none;
-		cursor: pointer;
-		padding: 0;
-
-		&:hover {
-			background: rgba(0, 0, 0, 0.25);
-			border-radius: 1px;
-			outline-offset: 6px;
-			outline: 2px solid var(--primary);
-		}
-
-		&:focus {
-			border-radius: 1px;
-			outline-offset: 6px;
-			outline: 2px solid var(--primary);
+		p {
+			text-align: center;
 		}
 	}
 </style>

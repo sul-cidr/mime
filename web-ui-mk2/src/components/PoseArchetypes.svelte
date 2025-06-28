@@ -1,4 +1,5 @@
 <script>
+	import { RadioTile, TileGroup } from 'carbon-components-svelte';
 	import {
 		getKeypointsBounds,
 		invertNormedKeypoints,
@@ -13,9 +14,7 @@
 	/** @type {PoseArchetypesProps} */
 	let { setSourcePose } = $props();
 
-	// const padArrayToNorm = (/** @type {Number[]} */ arr) =>
-	// 	/** @type {Coco13SkeletonNoConfidence} */
-	// 	arr.concat(Array(26).fill(0)).slice(0, 26);
+	let selectedPose = /** @type {Partial<PoseArchetype> */ null;
 
 	const /** @type {Partial<PoseArchetype>[]} */ poses = [
 			{
@@ -104,6 +103,7 @@
 					-0.2642098131339107, 0.03130777635284673, 0.062346006000201085, -0.4926806422186891, 0,
 					0.147823533269272, -0.4957107720342078, -0.04417551846827351
 				],
+				provenance: 'Shawn/Delsarte',
 				description: 'Reflection (NOR-con 2)',
 				image_filename: 'shawn_delsarte_reflection2.png'
 			},
@@ -283,39 +283,37 @@
 	}
 </script>
 
-<section>
+<TileGroup
+	name="archetypes"
+	on:select={({ detail }) => {
+		setSourcePose(detail);
+	}}
+>
 	{#each poses as pose}
-		<button onclick={() => setSourcePose(pose)}>
-			<img src={`/mk2/archetypes/poses/${pose.image_filename}`} alt={pose.description} />
-			<p>{pose.provenance}:</p>
-			<p>{pose.description}</p>
-		</button>
+		<RadioTile light value={pose} checked={selectedPose === pose}>
+			<svelte:fragment>
+				<div class="archetype-details">
+					<img src={`/mk2/archetypes/poses/${pose.image_filename}`} alt={pose.description} />
+					<p>{pose.provenance}:</p>
+					<p>{pose.description}</p>
+				</div>
+			</svelte:fragment>
+		</RadioTile>
 	{/each}
-</section>
+</TileGroup>
 
 <style>
-	section {
+	.archetype-details {
 		align-items: center;
 		display: flex;
 		flex-direction: column;
-		gap: 1rem;
 
 		img {
 			max-height: 200px;
 		}
-	}
 
-	button {
-		background: none;
-		border: none;
-		cursor: pointer;
-		padding: 0;
-
-		&:hover {
-			background: rgba(0, 0, 0, 0.25);
-			border-radius: 1px;
-			outline-offset: 6px;
-			outline: 2px solid var(--primary);
+		p {
+			text-align: center;
 		}
 	}
 </style>
