@@ -13,8 +13,10 @@
 	import DataBase from 'carbon-icons-svelte/lib/DataBase.svelte';
 	import Home from 'carbon-icons-svelte/lib/Home.svelte';
 	import LogoGithub from 'carbon-icons-svelte/lib/LogoGithub.svelte';
+	import LogoJupyter from 'carbon-icons-svelte/lib/LogoJupyter.svelte';
 	import Search from 'carbon-icons-svelte/lib/Search.svelte';
 	import ChartScatter from 'carbon-icons-svelte/lib/ChartScatter.svelte';
+	import ChartDualYAxis from 'carbon-icons-svelte/lib/ChartDualYAxis.svelte';
 
 	import '@/carbon-theming.css';
 
@@ -58,7 +60,21 @@
 			isSelected={$page.url.pathname == `${base}/analytics`}
 		/>
 		<SideNavDivider />
-		<SideNavLink icon={LogoGithub} text="GitHub" href="https://github.com/sul-cidr/mime" />
+		<SideNavLink icon={ChartDualYAxis} text="Timelines" href="/" target="_blank" />
+		<SideNavLink
+			icon={LogoJupyter}
+			text="Notebooks"
+			href="/jupyter/tree/notebooks/"
+			target="_blank"
+			isSelected={$page.url.pathname == `/jupyter/tree/notebooks/`}
+		/>
+		<SideNavDivider />
+		<SideNavLink
+			icon={LogoGithub}
+			text="GitHub"
+			href="https://github.com/sul-cidr/mime"
+			target="_blank"
+		/>
 	</SideNavItems>
 </SideNav>
 
