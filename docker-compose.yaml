@@ -48,6 +48,7 @@ services:
     environment:
       PUBLIC_API_BASE: /api
       COREPACK_ENABLE_AUTO_PIN: 0
+      __VITE_ADDITIONAL_SERVER_ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost}
 
   db:
     container_name: mime-db
