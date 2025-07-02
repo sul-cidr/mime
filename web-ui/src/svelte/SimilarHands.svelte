@@ -10,7 +10,7 @@
   import Pose from "@svelte/Pose.svelte";
   import Hand3D from "@svelte/Hand3D.svelte";
   import { formatSeconds } from "@utils";
-  import { getExtentFlat } from "../lib/poseutils";
+  import { getExtentFlat } from "../lib/poseutils.ts";
 
   import { API_BASE } from "@config";
   import {
