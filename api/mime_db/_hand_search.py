@@ -31,6 +31,7 @@ async def search_hands(
                 hand.frame,
                 hand.pose_idx,
                 {distance} AS distance,
+                hand.is_right,
                 RANK() OVER (ORDER BY {distance}) AS rank
             FROM hand
             {where_clause}
@@ -68,12 +69,14 @@ async def search_hands(
                 ON matches.video_id = rHand.video_id
                 AND matches.pose_idx = rHand.pose_idx
                 AND matches.frame = rHand.frame
+                AND matches.is_right = 't'
                 AND rHand.is_right = 't'
 
             LEFT JOIN hand AS lHand
                 ON matches.video_id = lHand.video_id
                 AND matches.pose_idx = lHand.pose_idx
                 AND matches.frame = lHand.frame
+                AND matches.is_right = 'f'
                 AND lHand.is_right = 'f',
 
             pose, video

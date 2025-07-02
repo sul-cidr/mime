@@ -7,8 +7,8 @@
 	import SearchResults from '$components/SearchResults.svelte';
 	import HandSearchResults from '$components/HandSearchResults.svelte';
 	import WebcamPoseInput from '$components/WebcamPoseInput.svelte';
-	import ExamplePoses from '$components/ExamplePoses.svelte';
-	import ExampleHands from '$components/ExampleHands.svelte';
+	import PoseArchetypes from '$components/PoseArchetypes.svelte';
+	import HandArchetypes from '$components/HandArchetypes.svelte';
 	import SourcePoseFromDb from '$components/SourcePoseFromDb.svelte';
 
 	let searchTab = $state(0);
@@ -18,9 +18,15 @@
 	let sourcePoseFromUrl = $state(true);
 	let sourceHand = $state();
 
+	// Only used with ExamplePoses.svelte (which is currently disconnected)
 	/** @param {Coco13SkeletonNoConfidence} skeleton */
 	const setSourcePoseFromCoco13Skeleton = (skeleton) => {
 		sourcePose = { norm: skeleton };
+	};
+
+	/** @param {MinimalPose} pose */
+	const setSourcePose = (pose) => {
+		sourcePose = pose;
 	};
 
 	/** @param {HandForSearching} hand */
@@ -78,23 +84,23 @@
 				<svelte:fragment slot="content">
 					<TabContent class="tab-panel">
 						<Tabs bind:selected={sourceTab} autoWidth>
-							<Tab label="Examples" />
+							<Tab label="Archetypes" />
 							<Tab label="Webcam" />
 							<Tab label="Pose Editor" />
 							<svelte:fragment slot="content">
 								<TabContent class="tab-panel">
-									<ExamplePoses {setSourcePoseFromCoco13Skeleton} />
+									<PoseArchetypes {setSourcePose} />
 								</TabContent>
 								<TabContent class="tab-panel">
-									{#if sourceTab === 1}<WebcamPoseInput {setSourcePoseFromCoco13Skeleton} />{/if}
+									{#if sourceTab === 1}<WebcamPoseInput {setSourcePose} />{/if}
 								</TabContent>
 								<TabContent class="tab-panel">Pose Editor goes here...</TabContent>
 							</svelte:fragment>
 						</Tabs>
 					</TabContent>
-					<TabContent>
+					<TabContent class="tab-panel">
 						{#if searchType === 'hand'}
-							<ExampleHands {setSourceHand} />
+							<HandArchetypes {setSourceHand} />
 						{/if}
 					</TabContent>
 				</svelte:fragment>
