@@ -39,5 +39,5 @@
 {#await getVideoRows()}
 	<p>Loading...</p>
 {:then rows}
-	<DataTable {headers} {rows} />
+	<DataTable sortable {headers} {rows} />
 {/await}
