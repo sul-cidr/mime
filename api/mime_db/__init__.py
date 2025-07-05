@@ -70,6 +70,7 @@ class MimeDb:
         get_frame_faces,
         get_frame_hands,
         get_frame_info,
+        get_hand_data_from_video,
         get_movelet_data_from_video,
         get_movelet_from_pose,
         get_nearest_actions,
