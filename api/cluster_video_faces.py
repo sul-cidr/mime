@@ -82,13 +82,13 @@ async def main() -> None:
         handlers=[RichHandler(rich_tracebacks=True)],
     )
 
-    video_name = Path(args.video_name)
+    video_path = Path(args.video_name)
 
     # Connect to the database
     db = await MimeDb.create()
 
     # Get video metadata
-    video_name = video_name.name
+    video_name = video_path.name
     video_id = await db.get_video_id(video_name)
 
     pose_faces = await db.get_poses_with_faces(video_id)
@@ -172,7 +172,7 @@ async def main() -> None:
             assigned_faces += labels.count(cluster_id)
 
     logging.info(
-        f"assigned {assigned_faces} track faces out of {len(labels)}, {round(assigned_faces/len(labels),4)}"
+        f"assigned {assigned_faces} track faces out of {len(labels)}, {round(assigned_faces / len(labels), 4)}"
     )
 
     logging.info("Generating representative face averages for timeline")
@@ -205,8 +205,7 @@ async def main() -> None:
             cluster_images[cluster_id] = []
 
         x, y, w, h = [round(coord) for coord in cluster_face["bbox"]]
-        video_handle = f"/videos/{video_name}"
-        img = iio.imread(video_handle, index=cluster_face["frame"] - 1, plugin="pyav")
+        img = iio.imread(video_path, index=cluster_face["frame"] - 1, plugin="pyav")
         img_region = img[y : y + h, x : x + w]
 
         # Resize/normalize the cutout background dimensions, just as is done
