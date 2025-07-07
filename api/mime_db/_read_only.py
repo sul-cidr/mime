@@ -25,7 +25,7 @@ async def get_pose_data_by_frame(self, video_id: UUID) -> list:
                track_ct AS "trackCt",
                face_ct AS "faceCt",
                hand_ct AS "handCt",
-               1 - avg_score AS "badScore",
+               1 - NULLIF(avg_score, 0) AS "badScore",
                is_shot AS "isShot",
                movement,
                movement3d,
