@@ -34,6 +34,7 @@ class MimeDb:
         viz_video_motion,
         viz_video_sidereal,
         viz_video_spacing,
+        generate_profile,
     )
     from mime_db._data_loading import (
         add_frame_movement,

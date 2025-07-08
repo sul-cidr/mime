@@ -559,5 +559,13 @@ async def viz_video_sidereal(video_id: str, request: Request):
     )
 
 
+@mime_api.get("/profile/{poses_or_hands}/{metric}/{video_id}/")
+async def generate_profile(poses_or_hands: str, metric: str, video_id: str, request: Request):
+    img = await request.app.state.db.generate_profile(poses_or_hands, metric, video_id)
+    return Response(
+        content=iio.imwrite("<bytes>", img, extension=".png"),
+        media_type="image/png",
+    )
+
 if __name__ == "__main__":
     uvicorn.run("server:mime_api", host="0.0.0.0", port=5000, reload=True)
