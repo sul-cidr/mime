@@ -3,8 +3,6 @@
 	import { fade } from 'svelte/transition';
 	import {
 		Button,
-		DataTable,
-		ImageLoader,
 		Loading,
 		MultiSelect,
 		ProgressBar,
@@ -16,30 +14,46 @@
 	let selectedVideoIds = $state([]);
 	let /** @type Number */ selectedProfile = $state(0);
 	let videoNameById = {};
-	let profileResults = $state([]);
-	let videosToProcess = $state(0);
-	let videosProcessed = $state(0);
+	let profileData = $state([]);
+	let profilesToLoad = $state(0);
+	let profilesLoaded = $state(0);
+	let metricName = 'Pose embeddings';
+	let resultsClass = $state('hidden');
+
+	const imageLoaded = () => {
+		// XXX There's a concurrency issue here (?) that sometimes prevents the progress
+		//  bar from reaching 100%. But it's desirable to hide the old plots when a new
+		//  set is being generated. So hiding the results divs when the "Profile" button
+		//  is pressed, but revealing them when the •first* new response comes in,
+		//  seems to work OK and at least won't leave the results divs hidden if the
+		//  race condition crops up.
+		profilesLoaded++;
+		resultsClass = '';
+	};
 
 	const profileTypes = [
-		{ id: 0, text: 'Pose embeddings', endpoint: 'profile/poses/poem' },
-		{ id: 1, text: 'Pose coordinates', endpoint: 'profile/poses/global3d' },
-		{ id: 2, text: 'Hand embeddings', endpoint: 'profile/hands/weights' },
-		{ id: 3, text: 'Hand joint angles', endpoint: 'profiles/hands/angles' }
+		{ id: 0, text: 'Pose embeddings (view invariant)', endpoint: 'profile/poses/poem_embedding' },
+		{ id: 1, text: 'Pose coordinates (global 3D)', endpoint: 'profile/poses/global3d_coco13' },
+		{ id: 2, text: 'Hand embeddings (class weights)', endpoint: 'profile/hands/class_weights' },
+		{ id: 3, text: 'Hand joint angles (view invariant)', endpoint: 'profile/hands/joint_angles3d' }
 	];
 
+	const setProfileType = (/** @type Number */ profileTypeId) => {
+		selectedProfile = profileTypeId;
+		metricName = profileTypes.filter((item) => item.id === selectedProfile)[0]['text'];
+	};
+
 	const runProfiles = async () => {
-		if (selectedVideoIds.length === 0) return [];
-		profileResults = [];
-		videosProcessed = 0;
-		videosToProcess = selectedVideoIds.length;
-		selectedVideoIds.forEach(async (/** @type Number */ videoId) => {
+		if (selectedVideoIds.length === 0) return;
+
+		resultsClass = 'hidden';
+		profileData = [];
+		profilesLoaded = 0;
+		profilesToLoad = selectedVideoIds.length;
+		selectedVideoIds.forEach(async (/** @type String */ videoId) => {
 			const endpoint = profileTypes.filter((item) => item.id === selectedProfile)[0]['endpoint'];
-			const videoIds = selectedVideoIds.join('|');
-			const profileData = await fetch(`${page.data.apiBase}/${endpoint}/${videoIds}/`).then(
-				(data) => data.json()
-			);
-			profileResults.push({ data: profileData });
-			videosProcessed += 1;
+			const profileUrl = `${page.data.apiBase}/${endpoint}/${videoId}/`;
+			profileData.push({ url: profileUrl, videoId: videoId });
 		});
 	};
 
@@ -53,35 +67,6 @@
 				};
 			})
 		);
-
-	// const getHeaders = (/** @type {[Object]} */ metricData) => {
-	// 	return metricData === undefined || metricData.length < 1
-	// 		? []
-	// 		: Object.keys(metricData[0])
-	// 				.map((key) =>
-	// 					key === 'video_id'
-	// 						? { key: 'video', value: 'Performance' }
-	// 						: { key: key, value: String(key).charAt(0).toUpperCase() + String(key).slice(1) }
-	// 				)
-	// 				.concat([{ key: 'histogram', value: 'Histogram' }]);
-	// };
-
-	// const getRows = ({ metric: metricId, data: metricData }) => {
-	// 	const endpoint = analysisMetrics.filter((item) => item.id === metricId)[0]['endpoint'];
-	// 	return metricData.map((/** @type {Object} */ metricRowData) => {
-	// 		let rowDict = {};
-	// 		Object.entries(metricRowData).map(([key, value]) => {
-	// 			if (key === 'video_id') {
-	// 				rowDict['id'] = value;
-	// 				rowDict['video'] = videoNameById[value];
-	// 				rowDict['histogram'] = `${page.data.apiBase}/viz_${endpoint}/${value}/`;
-	// 			} else {
-	// 				rowDict[key] = value;
-	// 			}
-	// 		});
-	// 		return rowDict;
-	// 	});
-	// };
 </script>
 
 <h1>Performance Profiling</h1>
@@ -104,11 +89,15 @@
 			/>
 		</div>
 	{/await}
-	<TileGroup legend="Select a profile to calculate" name="profiles" bind:selectedProfile>
+	<TileGroup
+		on:select={({ detail }) => {
+			setProfileType(detail);
+		}}
+		legend="Select a profile to calculate"
+		name="profiles"
+	>
 		{#each profileTypes as pType}
-			<RadioTile light value={pType.id} checked={selectedProfile === pType.id}
-				>{pType.text}</RadioTile
-			>
+			<RadioTile value={pType.id} checked={selectedProfile === pType.id}>{pType.text}</RadioTile>
 		{/each}
 	</TileGroup>
 	<Button onclick={runProfiles} size="field" disabled={selectedVideoIds.length === 0}
@@ -117,18 +106,33 @@
 </div>
 
 <div class="results-board">
-	{#if videosToProcess > 0 && videosProcessed < videosToProcess}
+	{#if profilesToLoad > 0 && profilesLoaded < profilesToLoad}
 		<ProgressBar
 			labelText="Processing status"
-			helperText={`Profiling performance ${videosProcessed + 1} of ${videosToProcess}`}
-			bind:value={videosProcessed}
-			bind:max={videosToProcess}
+			helperText={`Calculating profile ${profilesLoaded + 1} of ${profilesToLoad}`}
+			bind:value={profilesLoaded}
+			bind:max={profilesToLoad}
 		/>
 	{/if}
-	{#each profileResults as profileData}{/each}
+	{#each profileData as profileInfo}
+		<div class={resultsClass}>
+			<p>
+				{videoNameById[profileInfo['videoId']]}: Archetype similarity based on {metricName}
+			</p>
+			<img
+				src={profileInfo['url']}
+				alt="Bar plot of avg pose or hand similarity from a performance video to Delsarte archetypes"
+				on:load={imageLoaded}
+			/>
+		</div>
+	{/each}
 </div>
 
 <style>
+	.hidden {
+		opacity: 0;
+	}
+
 	.control-board {
 		display: flex;
 		flex-direction: row;
