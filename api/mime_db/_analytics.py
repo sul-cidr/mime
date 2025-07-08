@@ -11,8 +11,6 @@ from scipy.spatial import distance_matrix
 from scipy.spatial.distance import cosine, euclidean
 from scipy.stats import kurtosis, kurtosistest, skew, skewtest
 
-from lib.pose_utils import get_poem_embedding
-
 font = {"weight": "normal", "size": 8}
 
 plt.rc("font", **font)
