@@ -17,6 +17,7 @@
 	import Search from 'carbon-icons-svelte/lib/Search.svelte';
 	import ChartScatter from 'carbon-icons-svelte/lib/ChartScatter.svelte';
 	import ChartDualYAxis from 'carbon-icons-svelte/lib/ChartDualYAxis.svelte';
+	import FingerprintRecognition from 'carbon-icons-svelte/lib/FingerprintRecognition.svelte';
 
 	import '@/carbon-theming.css';
 
@@ -58,6 +59,12 @@
 			text="Analytics"
 			href="{base}/analytics/"
 			isSelected={$page.url.pathname == `${base}/analytics`}
+		/>
+		<SideNavLink
+			icon={FingerprintRecognition}
+			text="Profiles"
+			href="{base}/profiles/"
+			isSelected={$page.url.pathname == `${base}/profiles`}
 		/>
 		<SideNavDivider />
 		<SideNavLink icon={ChartDualYAxis} text="Timelines" href="/" target="_blank" />
