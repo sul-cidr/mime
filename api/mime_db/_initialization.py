@@ -22,6 +22,8 @@ async def initialize_db(conn, drop=False) -> None:
             fps FLOAT NOT NULL,
             width INTEGER NOT NULL,
             height INTEGER NOT NULL,
+            scaled_width INTEGER NOT NULL,
+            scaled_height INTEGER NOT NULL,
             created_on TIMESTAMP NOT NULL DEFAULT NOW()
         )
         ;
