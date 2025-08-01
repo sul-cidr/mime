@@ -31,6 +31,7 @@
 	"type": "module",
 	"dependencies": {
 		"@mediapipe/tasks-vision": "^0.10.21",
-		"layercake": "^8.4.3"
+		"layercake": "^8.4.3",
+		"@carbon/charts-svelte": "^1.22.18"
 	}
 }
