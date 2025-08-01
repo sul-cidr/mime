@@ -477,6 +477,25 @@ async def pose_search(
     )
 
 
+@mime_api.get("/pose-prevalence/")
+async def pose_prevalence(
+    request: Request,
+    video_id: str,
+    pose: str,
+    search_type: Literal["cosine", "euclidean", "view_invariant", "3d"] = "cosine",
+):
+    pose_coords = [float(coord) for coord in pose.split(",")]
+    results = await request.app.state.db.pose_prevalence(
+        video=video_id,
+        pose_coords=pose_coords,
+        search_type=search_type,
+    )
+    return Response(
+        content=json.dumps(results, cls=MimeJSONEncoder),
+        media_type="application/json",
+    )
+
+
 @mime_api.get("/hand-search/")
 async def hand_search(
     request: Request,

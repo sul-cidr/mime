@@ -106,3 +106,67 @@ async def search_poses(
         limit,
         exclude_within_frames,
     )
+
+async def pose_prevalence(
+    self,
+    video: UUID,
+    pose_coords: List[int] | List[float],
+    search_type: Literal["cosine", "euclidean", "view_invariant", "3d"],
+) -> list:
+    """Search for poses in the database"""
+
+    (metric, embedding) = {
+        "cosine": ("cosine", "norm"),
+        "euclidean": ("euclidean", "norm"),
+        "view_invariant": ("cosine", "poem_embedding"),
+        "3d": ("cosine", "global3d_coco13"),
+    }[search_type]
+
+    if search_type == "3d":
+        pose_coords = list(map(float, pose_coords))
+
+    if search_type == "view_invariant":
+        pose_coords = get_poem_embedding(pose_coords)
+
+    distance = {
+        "cosine": f"{embedding} <=> '{pose_coords}'",
+        "euclidean": f"{embedding} <-> '{pose_coords}'",
+        "innerproduct": f"({embedding} <#> '{pose_coords}' * -1",
+    }[metric]
+
+    all_frames = await self._pool.fetch(
+        """
+        SELECT DISTINCT frame FROM frame WHERE video_id = $1 ORDER BY frame ASC;
+        """,
+        video
+    )
+
+    avg_frame_sims = await self._pool.fetch(
+        f"""
+        SELECT 
+            pose.frame,
+            1 - AVG({distance}) AS similarity
+        FROM pose
+        WHERE pose.video_id = $1
+        GROUP BY frame
+        ORDER BY frame
+        ;
+    """,
+        video,
+    )
+
+    sims_by_frame = {}
+    for frame in avg_frame_sims:
+        sims_by_frame[frame["frame"]] = frame["similarity"]
+
+    output_frames = []
+
+    for frame in all_frames:
+        if frame["frame"] in sims_by_frame:
+            output_frames.append({"frame": frame["frame"], "similarity": sims_by_frame[frame["frame"]]})
+        else:
+            output_frames.append({"frame": frame["frame"], "similarity": 0})
+
+    return output_frames
+
+
