@@ -18,12 +18,12 @@
 
 	let selectedVideoIds = $state([]);
 
-	let videoNameById = {};
+	let videoDataById = {};
 
 	const formatVideoData = async () =>
 		await getVideoData().then((data) =>
 			data.map((/** @type {VideoRecord} */ video) => {
-				videoNameById[video.id] = video.video_name;
+				videoDataById[video.id] = video;
 				return {
 					id: video.id,
 					text: video.video_name
@@ -71,7 +71,7 @@
 		{#each selectedVideoIds as videoId}
 			<PosePrevalence
 				{videoId}
-				videoName={videoNameById[videoId]}
+				video={videoDataById[videoId]}
 				sourcePose={formatSourcePose(sourcePose)}
 				searchType={sourcePose.fromWebcam && searchType.value === '3d'
 					? 'view_invariant'

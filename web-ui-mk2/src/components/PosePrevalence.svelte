@@ -6,30 +6,42 @@
 
 	/**
 	 * @typedef {Object} PosePrevalenceProps
-	 * @property {string} videoId
-	 * @property {string} videoName
+	 * @property {VideoRecord} video
 	 * @property {string} sourcePose Pose or hand to be searched
 	 * @property {string} searchType
 	 */
 
 	/** @type {PosePrevalenceProps} */
-	let { videoId, videoName, sourcePose, searchType } = $props();
+	let { video, sourcePose, searchType } = $props();
 
 	const formatPrevalenceData = async () =>
 		await getPrevalenceData().then((data) =>
-			data.map((frameData) => {
-				return {
-					group: videoName,
-					value: frameData.similarity,
-					frame: frameData.frame
-				};
+			data.flatMap((frameData) => {
+				if (frameData.frame < 500) console.log(frameData);
+				return [
+					{
+						group: 'Similarity',
+						value: frameData.similarity,
+						frame: frameData.frame
+					},
+					{
+						group: 'Moving average',
+						value: frameData.moving_average,
+						frame: frameData.frame
+					},
+					{
+						group: 'Gaussian',
+						value: frameData.gaussian,
+						frame: frameData.frame
+					}
+				];
 			})
 		);
 
 	const getPrevalenceData = async () => {
 		const queryParams = new URLSearchParams();
 
-		queryParams.append('video_id', videoId);
+		queryParams.append('video_id', video.id);
 		queryParams.append('pose', sourcePose);
 		queryParams.append('search_type', searchType);
 
@@ -40,21 +52,45 @@
 	};
 
 	const options = {
-		title: 'Pose prevalence',
+		title: `Pose prevalence for ${video.video_name}`,
 		axes: {
 			bottom: {
-				title: 'Frame',
+				title: 'Time',
 				mapsTo: 'frame',
-				scaleType: 'linear'
+				scaleType: 'linear',
+				ticks: {
+					number: 8,
+					formatter: (frame) => new Date((frame / video.fps) * 1000).toISOString().slice(11, 19)
+				}
 			},
 			left: {
 				mapsTo: 'value',
 				title: 'Similarity',
-				scaleType: 'linear'
+				scaleType: 'linear',
+				domain: [0, 1]
 			}
 		},
 		legend: {
-			clickable: false
+			enabled: true
+		},
+		points: {
+			enabled: false
+		},
+		tooltip: {
+			valueFormatter: (value, label) => {
+				if (label === 'Time') {
+					const timeString = new Date((value / video.fps) * 1000).toISOString().slice(11, 19);
+					return `Frame ${value} (${timeString})`;
+				} else if (label === 'Similarity') {
+					return `${value.toFixed(5)}`;
+				}
+				return value;
+			},
+			groupLabel: 'Performance',
+			showTotal: false,
+			truncation: {
+				numCharacter: 30
+			}
 		},
 		height: '400px'
 	};
