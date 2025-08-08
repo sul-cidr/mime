@@ -1,6 +1,9 @@
 from typing import List, Literal, Set
 from uuid import UUID
 
+import numpy as np
+from tsmoothie.smoother import GaussianSmoother
+
 from lib.pose_utils import get_poem_embedding
 
 
@@ -36,7 +39,7 @@ async def search_poses(
     distance = {
         "cosine": f"{embedding} <=> '{pose_coords}'",
         "euclidean": f"{embedding} <-> '{pose_coords}'",
-        "innerproduct": f"({embedding} <#> '{pose_coords}' * -1",
+        "innerproduct": f"({embedding} <#> '{pose_coords}') * -1",
     }[metric]
 
     return await self._pool.fetch(
@@ -131,7 +134,7 @@ async def pose_prevalence(
     distance = {
         "cosine": f"{embedding} <=> '{pose_coords}'",
         "euclidean": f"{embedding} <-> '{pose_coords}'",
-        "innerproduct": f"({embedding} <#> '{pose_coords}' * -1",
+        "innerproduct": f"({embedding} <#> '{pose_coords}') * -1",
     }[metric]
 
     all_frames = await self._pool.fetch(
@@ -159,13 +162,36 @@ async def pose_prevalence(
     for frame in avg_frame_sims:
         sims_by_frame[frame["frame"]] = frame["similarity"]
 
+    all_frame_ids = [] # This should eventually just be 1 ... total frames in video
+    all_frame_sims = []
+    for frame in all_frames:
+        all_frame_ids.append(frame["frame"])
+        if frame["frame"] in sims_by_frame:
+            all_frame_sims.append(sims_by_frame[frame["frame"]])
+        else:
+            all_frame_sims.append(0)
+
+    WINDOW_SIZE = 500
+    midpt = int(WINDOW_SIZE / 2) # 5
+    step = 1 / (midpt+1) # .16666
+    weights = [i * step for i in range(1, midpt+2)] # .16666, .3333, .5, .6666, .83333, 1
+    weights.extend(list(reversed(weights))[1:])
+
+    weights = np.ones(WINDOW_SIZE) / WINDOW_SIZE
+
+    ma_frame_sims = np.convolve(all_frame_sims, weights, mode="same")
+
+    smoother = GaussianSmoother(n_knots=6, sigma=0.1)
+    smoother.smooth(all_frame_sims)
+    gaussian_frame_sims = smoother.smooth_data[0]
+
+    SAMPLE_RATE = 250
+
     output_frames = []
 
-    for frame in all_frames:
-        if frame["frame"] in sims_by_frame:
-            output_frames.append({"frame": frame["frame"], "similarity": sims_by_frame[frame["frame"]]})
-        else:
-            output_frames.append({"frame": frame["frame"], "similarity": 0})
+    for f, frame in enumerate(all_frame_sims):
+        if f % SAMPLE_RATE == 0 or f == len(all_frame_sims)-1:
+            output_frames.append({"frame": f+1, "similarity": all_frame_sims[f], "moving_average": ma_frame_sims[f], "gaussian": gaussian_frame_sims[f]})
 
     return output_frames
 
