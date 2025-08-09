@@ -13,7 +13,7 @@
 
 	let selectedVideoIds = $state([]);
 	let /** @type Number[] */ selectedMetricIds = $state([]);
-	let videoNameById = {};
+	let /** @type {Object.<string, string>} */ videoNameById = {};
 	let analysisResults = $state([]);
 	let metricsToProcess = $state(0);
 	let metricsProcessed = $state(0);

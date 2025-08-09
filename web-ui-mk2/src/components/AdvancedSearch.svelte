@@ -29,7 +29,7 @@
 	let allSelected = $state(false);
 	let runWithAll = $state(false);
 
-	let videoDataById = {};
+	let /** @type {Object.<string, VideoRecord>} */ videoDataById = {};
 
 	const formatVideoData = async () =>
 		await getVideoData().then((data) =>
@@ -42,12 +42,12 @@
 			})
 		);
 
-	const formatSourcePose = (sourcePose) =>
+	const formatSourcePose = (/** @type MinimalPose */ sourcePose) =>
 		searchType.value === '3d' && !sourcePose.fromWebcam
 			? sourcePose.global3d_coco13.toString()
 			: sourcePose.norm.toString();
 
-	const toggleAllVideos = (e) => {
+	const toggleAllVideos = (/** @type CustomEvent */ e) => {
 		const toggledOn = e.detail.toggled;
 		if (toggledOn) {
 			selectedVideoIds = Object.keys(videoDataById);
@@ -73,7 +73,7 @@
 				hideLabel
 				labelText="All"
 				bind:allSelected
-				on:toggle={(e) => toggleAllVideos(e)}
+				on:toggle={(/** @type CustomEvent */ e) => toggleAllVideos(e)}
 			/>
 		</label>
 		<label>
@@ -99,7 +99,7 @@
 			inline
 			labelText="Search Type:"
 			selected={searchType.value}
-			on:change={(e) => (searchType.value = e.target.value)}
+			on:change={(/** @type CustomEvent */ e) => (searchType.value = e.target?.value)}
 		>
 			<SelectItem value="cosine" text="Cosine" />
 			<SelectItem value="view_invariant" text="View Invariant" />

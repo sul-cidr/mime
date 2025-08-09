@@ -1,6 +1,5 @@
 <script>
 	import PoseCard from './PoseCard.svelte';
-	import { getKeypointsBounds } from '$lib/pose-utils';
 
 	/**
 	 * @typedef {Object} SourcePoseFromDbProps

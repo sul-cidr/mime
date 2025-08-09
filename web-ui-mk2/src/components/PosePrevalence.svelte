@@ -11,12 +11,20 @@
 	 * @property {string} searchType
 	 */
 
+	/**
+	 * @typedef {Object} FrameData
+	 * @property {Number} frame
+	 * @property {Number} similarity
+	 * @property {Number} moving_average
+	 * @property {Number} gaussian
+	 */
+
 	/** @type {PosePrevalenceProps} */
 	let { video, sourcePose, searchType } = $props();
 
 	const formatPrevalenceData = async () =>
 		await getPrevalenceData().then((data) =>
-			data.flatMap((frameData) => {
+			data.flatMap((/** @type {FrameData} */ frameData) => {
 				return [
 					{
 						group: 'Similarity',
@@ -59,7 +67,8 @@
 				scaleType: 'linear',
 				ticks: {
 					number: 8,
-					formatter: (frame) => new Date((frame / video.fps) * 1000).toISOString().slice(11, 19)
+					formatter: (/** @type Number */ frame) =>
+						new Date((frame / video.fps) * 1000).toISOString().slice(11, 19)
 				}
 			},
 			left: {
@@ -76,7 +85,7 @@
 			enabled: false
 		},
 		tooltip: {
-			valueFormatter: (value, label) => {
+			valueFormatter: (/** @type Number */ value, /** @type string */ label) => {
 				if (label === 'Time') {
 					const timeString = new Date((value / video.fps) * 1000).toISOString().slice(11, 19);
 					return `Frame ${value} (${timeString})`;
