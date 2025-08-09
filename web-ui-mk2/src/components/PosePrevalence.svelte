@@ -17,7 +17,6 @@
 	const formatPrevalenceData = async () =>
 		await getPrevalenceData().then((data) =>
 			data.flatMap((frameData) => {
-				if (frameData.frame < 500) console.log(frameData);
 				return [
 					{
 						group: 'Similarity',
@@ -52,7 +51,7 @@
 	};
 
 	const options = {
-		title: `Pose prevalence for ${video.video_name}`,
+		title: 'Prevalence',
 		axes: {
 			bottom: {
 				title: 'Time',
@@ -81,8 +80,8 @@
 				if (label === 'Time') {
 					const timeString = new Date((value / video.fps) * 1000).toISOString().slice(11, 19);
 					return `Frame ${value} (${timeString})`;
-				} else if (label === 'Similarity') {
-					return `${value.toFixed(5)}`;
+				} else if (!isNaN(value)) {
+					return value.toFixed(5);
 				}
 				return value;
 			},
@@ -99,8 +98,14 @@
 {#await formatPrevalenceData()}
 	<div class="loading"><Loading small withOverlay={false} />Loading data...</div>
 {:then data}
-	<LineChart {data} {options} style="padding:2rem;" />
+	<div class="prevalence-chart">
+		<div class="chart-title">{video.video_name}</div>
+		<LineChart {data} {options} />
+	</div>
 {/await}
 
 <style>
+	.prevalence-chart {
+		padding: 1em;
+	}
 </style>
