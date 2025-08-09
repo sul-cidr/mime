@@ -15,7 +15,7 @@
 	let searchTab = $state(0);
 	let searchType = $derived(searchTab === 0 ? 'pose' : 'hand');
 	let resultsTab = $state(0);
-	let resultsType = $derived(resultsTab === 0 ? 'prevalences' : 'poses');
+	let resultsType = $derived(resultsTab === 0 && searchType === 'pose' ? 'prevalences' : 'poses');
 	let sourceTab = $state(0);
 	let sourcePose = $state();
 	let sourcePoseFromUrl = $state(true);
@@ -113,7 +113,7 @@
 	<div id="results-container">
 		<Tabs bind:selected={resultsTab} type="container">
 			<Tab>Prevalences</Tab>
-			<Tab>Poses</Tab>
+			<Tab>Search</Tab>
 			<svelte:fragment slot="content">
 				{#if resultsType === 'prevalences'}
 					<div id="prevalences-container">
