@@ -285,7 +285,8 @@
 
 <TileGroup
 	name="archetypes"
-	on:select={({ detail }) => {
+	on:select={(/** @type CustomEvent */ e) => {
+		const detail = e.detail;
 		setSourcePose(detail);
 	}}
 >
