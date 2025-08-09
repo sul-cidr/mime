@@ -485,8 +485,9 @@ async def pose_prevalence(
     search_type: Literal["cosine", "euclidean", "view_invariant", "3d"] = "cosine",
 ):
     pose_coords = [float(coord) for coord in pose.split(",")]
-    results = await request.app.state.db.pose_prevalence(
+    results = await request.app.state.db.pose_or_hand_prevalence(
         video=video_id,
+        pose_or_hand="pose",
         pose_coords=pose_coords,
         search_type=search_type,
     )
@@ -512,6 +513,26 @@ async def hand_search(
         videos=videos,
         limit=limit,
         exclude_within_frames=exclude_within_frames,
+    )
+    return Response(
+        content=json.dumps(results, cls=MimeJSONEncoder),
+        media_type="application/json",
+    )
+
+
+@mime_api.get("/hand-prevalence/")
+async def hand_prevalence(
+    request: Request,
+    video_id: str,
+    hand: str,
+    search_type: Literal["view_invariant", "3d"] = "view_invariant",
+):
+    hand_coords = [float(coord) for coord in hand.split(",")]
+    results = await request.app.state.db.pose_or_hand_prevalence(
+        video=video_id,
+        pose_or_hand="hand",
+        coords=hand_coords,
+        search_type=search_type,
     )
     return Response(
         content=json.dumps(results, cls=MimeJSONEncoder),

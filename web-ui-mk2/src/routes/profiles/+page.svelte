@@ -13,7 +13,7 @@
 
 	let selectedVideoIds = $state([]);
 	let /** @type Number */ selectedProfile = $state(0);
-	let videoNameById = {};
+	let /** @type {Object.<string, string>} */ videoNameById = {};
 	let profileData = $state([]);
 	let profilesToLoad = $state(0);
 	let profilesLoaded = $state(0);

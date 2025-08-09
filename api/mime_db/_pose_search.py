@@ -110,11 +110,12 @@ async def search_poses(
         exclude_within_frames,
     )
 
-async def pose_prevalence(
+async def pose_or_hand_prevalence(
     self,
     video: UUID,
+    pose_or_hand: Literal["pose", "hand"],
     pose_coords: List[int] | List[float],
-    search_type: Literal["cosine", "euclidean", "view_invariant", "3d"],
+    search_type: Literal["cosine", "euclidean", "view_invariant", "3d", "joint_angles3d", "class_weights"],
 ) -> list:
     """Search for poses in the database"""
 
@@ -123,6 +124,8 @@ async def pose_prevalence(
         "euclidean": ("euclidean", "norm"),
         "view_invariant": ("cosine", "poem_embedding"),
         "3d": ("cosine", "global3d_coco13"),
+        "joint_angles3d": ("cosine", "joint_angles3d"),
+        "class_weights": ("cosine", "class_weights")
     }[search_type]
 
     if search_type == "3d":
@@ -149,8 +152,8 @@ async def pose_prevalence(
         SELECT 
             pose.frame,
             1 - AVG({distance}) AS similarity
-        FROM pose
-        WHERE pose.video_id = $1
+        FROM {pose_or_hand}
+        WHERE {pose_or_hand}.video_id = $1
         GROUP BY frame
         ORDER BY frame
         ;
@@ -194,5 +197,3 @@ async def pose_prevalence(
             output_frames.append({"frame": f+1, "similarity": all_frame_sims[f], "moving_average": ma_frame_sims[f], "gaussian": gaussian_frame_sims[f]})
 
     return output_frames
-
-
