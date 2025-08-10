@@ -149,7 +149,7 @@ async def pose_or_hand_prevalence(
 
     avg_frame_sims = await self._pool.fetch(
         f"""
-        SELECT 
+        SELECT
             pose.frame,
             1 - AVG({distance}) AS similarity
         FROM {pose_or_hand}
@@ -192,7 +192,7 @@ async def pose_or_hand_prevalence(
 
     output_frames = []
 
-    for f, frame in enumerate(all_frame_sims):
+    for f in range(len((all_frame_sims))):
         if f % SAMPLE_RATE == 0 or f == len(all_frame_sims)-1:
             output_frames.append({"frame": f+1, "similarity": all_frame_sims[f], "moving_average": ma_frame_sims[f], "gaussian": gaussian_frame_sims[f]})
 
