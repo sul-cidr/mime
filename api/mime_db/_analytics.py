@@ -3,9 +3,9 @@ import json
 import os
 
 import matplotlib as mpl
-from matplotlib.offsetbox import OffsetImage, AnnotationBbox
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.offsetbox import AnnotationBbox, OffsetImage
 from PIL import Image
 from scipy.spatial import distance_matrix
 from scipy.spatial.distance import cosine, euclidean
@@ -334,16 +334,14 @@ async def generate_profile(self, poses_or_hands: str, metric: str, video_id: str
         video_poses_or_hands = await self.get_hand_data_from_video(video_id)
         with open("archetypes/hand_archetypes.json", "r") as hands_file:
             archetypes = json.load(hands_file)
-    
+
     descriptions = [arch["description"] for arch in archetypes]
 
     # Rudimentary support for supplying pre-calculated fingerprints.
     # Falls back to computing the fingerprints on the fly if data is missing.
     try:
         archetype_similarities = fingerprints[poses_or_hands][video_id][metric]
-        print("using cached fingerprints")
-    except Exception as e:
-        print("computing fingerprints")
+    except Exception:
         archetype_similarities = []
         for archetype in archetypes: # [:10]
             sims = []
@@ -374,10 +372,9 @@ async def generate_profile(self, poses_or_hands: str, metric: str, video_id: str
     max_value = max(fingerprint_data)
 
     for a, arch in enumerate(list(reversed(archetypes))):
-        img = plt.imread(f"archetypes/{poses_or_hands}/{arch['image_filename']}")
         value = fingerprint_data[a]
         offset_image(value, a, arch, bar_is_too_short=value < max_value / 10, ax=plt.gca())
-        
+
     plt.subplots_adjust(left=0.15)
 
     plt.xlim(0, 1.10)
