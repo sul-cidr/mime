@@ -249,7 +249,7 @@ def get_poem_embedding(pose_coords):
             "poem.pr_vipe.infer",
             "--input_csv=/app/poem_files/camera_pose/input.csv",
             "--output_dir=/app/poem_files/camera_pose/",
-            "--checkpoint_path=/app/lib/poem/checkpoints/checkpoint_Pr-VIPE_2M/model.ckpt-02013963",
+            "--checkpoint_path=/app/lib/poem/checkpoints/checkpoint_L2_VIPE_occlusion_robust/model.ckpt-01104395",
         ],
         cwd="/app/lib",
     )

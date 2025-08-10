@@ -455,7 +455,7 @@ async def add_video_movelets(self, movelets_data) -> None:
 async def assign_poem_embeddings(self, poem_data) -> None:
     async with self._pool.acquire() as conn:
         await conn.execute(
-            "ALTER TABLE pose ADD COLUMN IF NOT EXISTS poem_embedding vector(16) DEFAULT NULL;"
+            "ALTER TABLE pose ADD COLUMN IF NOT EXISTS poem_embedding vector(32) DEFAULT NULL;"
         )
         await conn.executemany(
             """

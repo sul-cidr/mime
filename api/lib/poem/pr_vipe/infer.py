@@ -1,5 +1,5 @@
 # coding=utf-8
-# Copyright 2024 The Google Research Authors.
+# Copyright 2025 The Google Research Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -103,11 +103,11 @@ flags.DEFINE_string('output_dir', None, 'Path to output directory.')
 flags.mark_flag_as_required('output_dir')
 
 flags.DEFINE_string(
-    'input_keypoint_profile_name_2d', 'LEGACY_2DCOCO13',
+    'input_keypoint_profile_name_2d', 'LEGACY_2DH36M13',
     'Profile name for 2D keypoints from input sources. Use None to ignore input'
     ' 2D keypoints.')
 
-flags.DEFINE_string('model_input_keypoint_mask_type', 'NO_USE',
+flags.DEFINE_string('model_input_keypoint_mask_type', 'MASK_KEYPOINTS_AND_AS_INPUT',
                     'Usage type of model input keypoint masks.')
 
 flags.DEFINE_float(
@@ -116,15 +116,15 @@ flags.DEFINE_float(
     'value to ignore. Only used if 2D keypoint masks are used.')
 
 # See `common.SUPPORTED_EMBEDDING_TYPES`.
-flags.DEFINE_string('embedding_type', 'GAUSSIAN', 'Type of embeddings.')
+flags.DEFINE_string('embedding_type', 'POINT', 'Type of embeddings.')
 
-flags.DEFINE_integer('embedding_size', 16, 'Size of predicted embeddings.')
+flags.DEFINE_integer('embedding_size', 32, 'Size of predicted embeddings.')
 
 flags.DEFINE_integer(
     'num_embedding_components', 1,
     'Number of embedding components, e.g., the number of Gaussians in mixture.')
 
-flags.DEFINE_integer('num_embedding_samples', 20,
+flags.DEFINE_integer('num_embedding_samples', 1,
                      'Number of samples from embedding distributions.')
 
 # See `common.SUPPORTED_BASE_MODEL_TYPES`.
