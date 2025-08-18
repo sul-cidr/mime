@@ -1,4 +1,5 @@
 <script>
+	import { onMount, tick } from 'svelte';
 	import { page } from '$app/stores';
 	import { Loading } from 'carbon-components-svelte';
 	import { LineChart } from '@carbon/charts-svelte';
@@ -9,6 +10,7 @@
 	 * @property {VideoRecord} video
 	 * @property {string} sourcePose Pose or hand to be searched
 	 * @property {string} searchType
+	 * @property {Number} itemSequence
 	 */
 
 	/**
@@ -20,7 +22,18 @@
 	 */
 
 	/** @type {PosePrevalenceProps} */
-	let { video, sourcePose, searchType } = $props();
+	let { video, sourcePose, searchType, itemSequence } = $props();
+
+	let showComponent = $state(false);
+
+	onMount(async () => {
+		// View Invariant matches take significantly longer to process than the
+		// others... while we're being arbitrary, might as well make the distinction
+		const waitTime = searchType === 'view_invariant' ? 3000 : 1000;
+		await new Promise((resolve) => setTimeout(resolve, waitTime * itemSequence));
+		showComponent = true;
+		await tick(); // Ensure pending state changes are applied
+	});
 
 	const formatPrevalenceData = async () =>
 		await getPrevalenceData().then((data) =>
@@ -104,14 +117,16 @@
 	};
 </script>
 
-{#await formatPrevalenceData()}
-	<div class="loading"><Loading small withOverlay={false} />Loading data...</div>
-{:then data}
-	<div class="prevalence-chart">
-		<div class="chart-title">{video.video_name}</div>
-		<LineChart {data} {options} />
-	</div>
-{/await}
+{#if showComponent}
+	{#await formatPrevalenceData()}
+		<div class="loading"><Loading small withOverlay={false} />Loading data...</div>
+	{:then data}
+		<div class="prevalence-chart">
+			<div class="chart-title">{video.video_name}</div>
+			<LineChart {data} {options} />
+		</div>
+	{/await}
+{/if}
 
 <style>
 	.prevalence-chart {
