@@ -118,7 +118,7 @@
 
 {#if sourcePose && (!allSelected || (allSelected && runWithAll))}
 	<div class="results">
-		{#each selectedVideoIds as videoId}
+		{#each selectedVideoIds as videoId, v}
 			<PosePrevalence
 				{videoId}
 				video={videoDataById[videoId]}
@@ -126,6 +126,7 @@
 				searchType={sourcePose.fromWebcam && searchType.value === '3d'
 					? 'view_invariant'
 					: searchType.value}
+				itemSequence={v}
 			/>
 		{/each}
 	</div>
