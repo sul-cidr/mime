@@ -44,7 +44,7 @@ add_timing_middleware(mime_api, record=logger.debug, prefix="api")
 # Should only be used to meter jobs that might be run in "swarms"
 # Could use a Semaphore instead to allowed limited concurrency, but maybe it's
 # preferable to make the user wait a bit rather than risk overloading the server.
-mime_api.server_lock = asyncio.Lock()
+mime_api.server_lock = asyncio.Semaphore(3)
 
 mime_api.add_middleware(
     CORSMiddleware,

@@ -176,13 +176,15 @@ async def pose_or_hand_prevalence(
 
     # Try to include a minimum number of frames in the analysis, so reduce the
     # inter-sample distance if the video is short
-    MAX_SAMPLE_GAP = 250
-    FRAMES_FLOOR = 2000
+    FRAMES_TARGET = 1800
+    MAX_SAMPLE_GAP = 240
+    WINDOW_SIZE = 500
 
-    total_samples = max(FRAMES_FLOOR, round(len(all_frame_sims) / MAX_SAMPLE_GAP))
-    sample_gap = max(1,round(len(all_frame_sims) / total_samples))
+    if len(all_frame_sims) < FRAMES_TARGET:
+        sample_gap = max(1, len(all_frame_sims) / FRAMES_TARGET)
+    else:
+        sample_gap = MAX_SAMPLE_GAP
 
-    WINDOW_SIZE = sample_gap * 2
     midpt = int(WINDOW_SIZE / 2)
     step = 1 / (midpt+1)
     weights = [i * step for i in range(1, midpt+2)]
