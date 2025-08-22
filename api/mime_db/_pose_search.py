@@ -174,10 +174,18 @@ async def pose_or_hand_prevalence(
         else:
             all_frame_sims.append(0)
 
-    WINDOW_SIZE = 500
-    midpt = int(WINDOW_SIZE / 2) # 5
-    step = 1 / (midpt+1) # .16666
-    weights = [i * step for i in range(1, midpt+2)] # .16666, .3333, .5, .6666, .83333, 1
+    # Try to include a minimum number of frames in the analysis, so reduce the
+    # inter-sample distance if the video is short
+    MAX_SAMPLE_GAP = 250
+    FRAMES_FLOOR = 2000
+
+    total_samples = max(FRAMES_FLOOR, round(len(all_frame_sims) / MAX_SAMPLE_GAP))
+    sample_gap = max(1,round(len(all_frame_sims) / total_samples))
+
+    WINDOW_SIZE = sample_gap * 2
+    midpt = int(WINDOW_SIZE / 2)
+    step = 1 / (midpt+1)
+    weights = [i * step for i in range(1, midpt+2)]
     weights.extend(list(reversed(weights))[1:])
 
     weights = np.ones(WINDOW_SIZE) / WINDOW_SIZE
@@ -188,12 +196,10 @@ async def pose_or_hand_prevalence(
     smoother.smooth(all_frame_sims)
     gaussian_frame_sims = smoother.smooth_data[0]
 
-    SAMPLE_RATE = 250
-
     output_frames = []
 
     for f in range(len((all_frame_sims))):
-        if f % SAMPLE_RATE == 0 or f == len(all_frame_sims)-1:
+        if f % sample_gap == 0 or f == len(all_frame_sims)-1:
             output_frames.append({"frame": f+1, "similarity": all_frame_sims[f], "moving_average": ma_frame_sims[f], "gaussian": gaussian_frame_sims[f]})
 
     return output_frames
