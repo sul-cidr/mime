@@ -180,11 +180,8 @@ async def pose_or_hand_prevalence(
     MAX_SAMPLE_GAP = 240
     WINDOW_SIZE = 500
 
-    if len(all_frame_sims) < FRAMES_TARGET:
-        sample_gap = max(1, len(all_frame_sims) / FRAMES_TARGET)
-    else:
-        sample_gap = MAX_SAMPLE_GAP
-
+    sample_gap = min(MAX_SAMPLE_GAP, max(1, round(len(all_frame_sims) / FRAMES_TARGET)))
+    
     midpt = int(WINDOW_SIZE / 2)
     step = 1 / (midpt+1)
     weights = [i * step for i in range(1, midpt+2)]
