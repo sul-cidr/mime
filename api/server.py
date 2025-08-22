@@ -1,3 +1,4 @@
+import asyncio
 import json
 import logging
 import os
@@ -40,6 +41,10 @@ logger = logging.getLogger(__name__)
 mime_api = FastAPI(root_path=os.environ.get("PUBLIC_API_BASE", "/"))
 add_timing_middleware(mime_api, record=logger.debug, prefix="api")
 
+# Should only be used to meter jobs that might be run in "swarms"
+# Could use a Semaphore instead to allowed limited concurrency, but maybe it's
+# preferable to make the user wait a bit rather than risk overloading the server.
+mime_api.server_lock = asyncio.Lock()
 
 mime_api.add_middleware(
     CORSMiddleware,
@@ -485,16 +490,19 @@ async def pose_prevalence(
     search_type: Literal["cosine", "euclidean", "view_invariant", "3d"] = "cosine",
 ):
     pose_coords = [float(coord) for coord in pose.split(",")]
-    results = await request.app.state.db.pose_or_hand_prevalence(
-        video=video_id,
-        pose_or_hand="pose",
-        pose_coords=pose_coords,
-        search_type=search_type,
-    )
-    return Response(
-        content=json.dumps(results, cls=MimeJSONEncoder),
-        media_type="application/json",
-    )
+
+    async with mime_api.server_lock:
+        results = await request.app.state.db.pose_or_hand_prevalence(
+            video=video_id,
+            pose_or_hand="pose",
+            pose_coords=pose_coords,
+            search_type=search_type,
+        )
+
+        return Response(
+            content=json.dumps(results, cls=MimeJSONEncoder),
+            media_type="application/json",
+        )
 
 
 @mime_api.get("/hand-search/")
