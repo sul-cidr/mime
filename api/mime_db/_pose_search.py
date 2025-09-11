@@ -110,12 +110,15 @@ async def search_poses(
         exclude_within_frames,
     )
 
+
 async def pose_or_hand_prevalence(
     self,
     video: UUID,
     pose_or_hand: Literal["pose", "hand"],
     pose_coords: List[int] | List[float],
-    search_type: Literal["cosine", "euclidean", "view_invariant", "3d", "joint_angles3d", "class_weights"],
+    search_type: Literal[
+        "cosine", "euclidean", "view_invariant", "3d", "joint_angles3d", "class_weights"
+    ],
 ) -> list:
     """Search for poses in the database"""
 
@@ -125,7 +128,7 @@ async def pose_or_hand_prevalence(
         "view_invariant": ("cosine", "poem_embedding"),
         "3d": ("cosine", "global3d_coco13"),
         "joint_angles3d": ("cosine", "joint_angles3d"),
-        "class_weights": ("cosine", "class_weights")
+        "class_weights": ("cosine", "class_weights"),
     }[search_type]
 
     if search_type == "3d":
@@ -144,7 +147,7 @@ async def pose_or_hand_prevalence(
         """
         SELECT DISTINCT frame FROM frame WHERE video_id = $1 ORDER BY frame ASC;
         """,
-        video
+        video,
     )
 
     avg_frame_sims = await self._pool.fetch(
@@ -165,7 +168,7 @@ async def pose_or_hand_prevalence(
     for frame in avg_frame_sims:
         sims_by_frame[frame["frame"]] = frame["similarity"]
 
-    all_frame_ids = [] # This should eventually just be 1 ... total frames in video
+    all_frame_ids = []  # This should eventually just be 1 ... total frames in video
     all_frame_sims = []
     for frame in all_frames:
         all_frame_ids.append(frame["frame"])
@@ -181,10 +184,10 @@ async def pose_or_hand_prevalence(
     WINDOW_SIZE = 500
 
     sample_gap = min(MAX_SAMPLE_GAP, max(1, round(len(all_frame_sims) / FRAMES_TARGET)))
-    
+
     midpt = int(WINDOW_SIZE / 2)
-    step = 1 / (midpt+1)
-    weights = [i * step for i in range(1, midpt+2)]
+    step = 1 / (midpt + 1)
+    weights = [i * step for i in range(1, midpt + 2)]
     weights.extend(list(reversed(weights))[1:])
 
     weights = np.ones(WINDOW_SIZE) / WINDOW_SIZE
@@ -198,7 +201,14 @@ async def pose_or_hand_prevalence(
     output_frames = []
 
     for f in range(len((all_frame_sims))):
-        if f % sample_gap == 0 or f == len(all_frame_sims)-1:
-            output_frames.append({"frame": f+1, "similarity": all_frame_sims[f], "moving_average": ma_frame_sims[f], "gaussian": gaussian_frame_sims[f]})
+        if f % sample_gap == 0 or f == len(all_frame_sims) - 1:
+            output_frames.append(
+                {
+                    "frame": f + 1,
+                    "similarity": all_frame_sims[f],
+                    "moving_average": ma_frame_sims[f],
+                    "gaussian": gaussian_frame_sims[f],
+                }
+            )
 
     return output_frames

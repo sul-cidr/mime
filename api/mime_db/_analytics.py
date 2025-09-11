@@ -22,6 +22,7 @@ if os.path.exists("archetypes/archetype_fingerprints.json"):
     with open("archetypes/archetype_fingerprints.json", "r") as fingerprints_file:
         fingerprints = json.load(fingerprints_file)
 
+
 # Helper/lib functions duplicated from pose_information_retrieval.ipynb
 # Consider DRYing up...
 def get_distribution_stats(distrib):
@@ -324,8 +325,9 @@ async def viz_video_sidereal(self, video_id: str) -> np.ndarray:
     return get_histogram_image(movements)
 
 
-async def generate_profile(self, poses_or_hands: str, metric: str, video_id: str) -> np.ndarray:
-
+async def generate_profile(
+    self, poses_or_hands: str, metric: str, video_id: str
+) -> np.ndarray:
     if poses_or_hands == "poses":
         video_poses_or_hands = await self.get_pose_data_from_video(video_id)
         with open("archetypes/pose_archetypes.json", "r") as poses_file:
@@ -343,7 +345,7 @@ async def generate_profile(self, poses_or_hands: str, metric: str, video_id: str
         archetype_similarities = fingerprints[poses_or_hands][video_id][metric]
     except Exception:
         archetype_similarities = []
-        for archetype in archetypes: # [:10]
+        for archetype in archetypes:  # [:10]
             sims = []
             archetype_vector = archetype[metric]
             for pose_or_hand in video_poses_or_hands:
@@ -352,20 +354,34 @@ async def generate_profile(self, poses_or_hands: str, metric: str, video_id: str
 
     def offset_image(x, y, arch, bar_is_too_short, ax):
         img = plt.imread(f"archetypes/{poses_or_hands}/{arch['image_filename']}")
-        im = OffsetImage(img, zoom=.09, cmap=mpl.colormaps['gray'])
+        im = OffsetImage(img, zoom=0.09, cmap=mpl.colormaps["gray"])
         im.image.axes = ax
-        x_offset = .2
+        x_offset = 0.2
         if bar_is_too_short:
             x = 0
-        ab = AnnotationBbox(im, (x, y), xybox=(x_offset, 0), frameon=False,
-                            xycoords='data', boxcoords="offset points", pad=0)
-        ax.set_facecolor('#FFFFFF')
+        ab = AnnotationBbox(
+            im,
+            (x, y),
+            xybox=(x_offset, 0),
+            frameon=False,
+            xycoords="data",
+            boxcoords="offset points",
+            pad=0,
+        )
+        ax.set_facecolor("#FFFFFF")
         ax.add_artist(ab)
 
-    fig = plt.figure(figsize=(10,12), dpi=100)
-    height = .5
+    fig = plt.figure(figsize=(10, 12), dpi=100)
+    height = 0.5
     fingerprint_data = list(reversed(archetype_similarities))
-    plt.barh(list(reversed(descriptions)), fingerprint_data, height=height, align='center', alpha=0.8, color="#663399")
+    plt.barh(
+        list(reversed(descriptions)),
+        fingerprint_data,
+        height=height,
+        align="center",
+        alpha=0.8,
+        color="#663399",
+    )
     ax = plt.gca()
     ax.tick_params(axis="y", labelrotation=40)
 
@@ -373,7 +389,9 @@ async def generate_profile(self, poses_or_hands: str, metric: str, video_id: str
 
     for a, arch in enumerate(list(reversed(archetypes))):
         value = fingerprint_data[a]
-        offset_image(value, a, arch, bar_is_too_short=value < max_value / 10, ax=plt.gca())
+        offset_image(
+            value, a, arch, bar_is_too_short=value < max_value / 10, ax=plt.gca()
+        )
 
     plt.subplots_adjust(left=0.15)
 
