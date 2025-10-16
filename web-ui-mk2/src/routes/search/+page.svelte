@@ -4,6 +4,7 @@
 	import CloseLarge from 'carbon-icons-svelte/lib/CloseLarge.svelte';
 
 	import { getPoseData, getVideoData } from '$lib/data-fetching';
+	import AdvancedSearch from '$components/AdvancedSearch.svelte';
 	import SearchResults from '$components/SearchResults.svelte';
 	import HandSearchResults from '$components/HandSearchResults.svelte';
 	import WebcamPoseInput from '$components/WebcamPoseInput.svelte';
@@ -13,6 +14,8 @@
 
 	let searchTab = $state(0);
 	let searchType = $derived(searchTab === 0 ? 'pose' : 'hand');
+	let resultsTab = $state(0);
+	let resultsType = $derived(resultsTab === 0 && searchType === 'pose' ? 'prevalences' : 'poses');
 	let sourceTab = $state(0);
 	let sourcePose = $state();
 	let sourcePoseFromUrl = $state(true);
@@ -108,16 +111,43 @@
 		{/if}
 	</div>
 	<div id="results-container">
-		{#if searchType === 'pose'}
-			<SearchResults {sourcePose} />
-		{:else if searchType === 'hand'}
-			<HandSearchResults {sourceHand} />
-		{/if}
+		<Tabs bind:selected={resultsTab} type="container">
+			<Tab>Prevalences</Tab>
+			<Tab>Search</Tab>
+			<svelte:fragment slot="content">
+				{#if resultsType === 'prevalences'}
+					<div id="prevalences-container">
+						{#if searchType === 'pose'}
+							<AdvancedSearch {sourcePose} />
+						{:else if searchType === 'hand'}
+							<div></div>
+						{/if}
+					</div>
+				{:else if resultsType === 'poses'}
+					<div id="results-container">
+						{#if searchType === 'pose'}
+							<SearchResults {sourcePose} />
+						{:else if searchType === 'hand'}
+							<HandSearchResults {sourceHand} />
+						{/if}
+					</div>
+				{/if}
+			</svelte:fragment>
+		</Tabs>
 	</div>
 </section>
 
 <style>
 	#query-container {
+		display: flex;
+		flex-direction: column;
+
+		& :global(> .tab-panel) {
+			padding: 0;
+		}
+	}
+
+	#results-container {
 		display: flex;
 		flex-direction: column;
 

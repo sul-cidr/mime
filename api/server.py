@@ -1,3 +1,4 @@
+import asyncio
 import json
 import logging
 import os
@@ -40,6 +41,10 @@ logger = logging.getLogger(__name__)
 mime_api = FastAPI(root_path=os.environ.get("PUBLIC_API_BASE", "/"))
 add_timing_middleware(mime_api, record=logger.debug, prefix="api")
 
+# Should only be used to meter jobs that might be run in "swarms"
+# Could use a Semaphore instead to allowed limited concurrency, but maybe it's
+# preferable to make the user wait a bit rather than risk overloading the server.
+mime_api.server_lock = asyncio.Semaphore(3)
 
 mime_api.add_middleware(
     CORSMiddleware,
@@ -477,6 +482,29 @@ async def pose_search(
     )
 
 
+@mime_api.get("/pose-prevalence/")
+async def pose_prevalence(
+    request: Request,
+    video_id: str,
+    pose: str,
+    search_type: Literal["cosine", "euclidean", "view_invariant", "3d"] = "cosine",
+):
+    pose_coords = [float(coord) for coord in pose.split(",")]
+
+    async with mime_api.server_lock:
+        results = await request.app.state.db.pose_or_hand_prevalence(
+            video=video_id,
+            pose_or_hand="pose",
+            pose_coords=pose_coords,
+            search_type=search_type,
+        )
+
+        return Response(
+            content=json.dumps(results, cls=MimeJSONEncoder),
+            media_type="application/json",
+        )
+
+
 @mime_api.get("/hand-search/")
 async def hand_search(
     request: Request,
@@ -493,6 +521,26 @@ async def hand_search(
         videos=videos,
         limit=limit,
         exclude_within_frames=exclude_within_frames,
+    )
+    return Response(
+        content=json.dumps(results, cls=MimeJSONEncoder),
+        media_type="application/json",
+    )
+
+
+@mime_api.get("/hand-prevalence/")
+async def hand_prevalence(
+    request: Request,
+    video_id: str,
+    hand: str,
+    search_type: Literal["view_invariant", "3d"] = "view_invariant",
+):
+    hand_coords = [float(coord) for coord in hand.split(",")]
+    results = await request.app.state.db.pose_or_hand_prevalence(
+        video=video_id,
+        pose_or_hand="hand",
+        coords=hand_coords,
+        search_type=search_type,
     )
     return Response(
         content=json.dumps(results, cls=MimeJSONEncoder),
@@ -560,12 +608,15 @@ async def viz_video_sidereal(video_id: str, request: Request):
 
 
 @mime_api.get("/profile/{poses_or_hands}/{metric}/{video_id}/")
-async def generate_profile(poses_or_hands: str, metric: str, video_id: str, request: Request):
+async def generate_profile(
+    poses_or_hands: str, metric: str, video_id: str, request: Request
+):
     img = await request.app.state.db.generate_profile(poses_or_hands, metric, video_id)
     return Response(
         content=iio.imwrite("<bytes>", img, extension=".png"),
         media_type="image/png",
     )
+
 
 if __name__ == "__main__":
     uvicorn.run("server:mime_api", host="0.0.0.0", port=5000, reload=True)

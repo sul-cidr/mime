@@ -566,7 +566,7 @@ async def main() -> None:
 
     logging.info(
         f"assigned {assigned_poses} track poses out of {len(labels)}, "
-        f"{round(assigned_poses/len(labels),4)}"
+        f"{round(assigned_poses / len(labels), 4)}"
     )
 
     cluster_to_poses = {}

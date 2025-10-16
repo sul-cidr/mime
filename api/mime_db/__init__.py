@@ -31,10 +31,10 @@ class MimeDb:
         analyze_video_motion,
         analyze_video_sidereal,
         analyze_video_spacing,
+        generate_profile,
         viz_video_motion,
         viz_video_sidereal,
         viz_video_spacing,
-        generate_profile,
     )
     from mime_db._data_loading import (
         add_frame_movement,
@@ -60,7 +60,7 @@ class MimeDb:
     )
     from mime_db._hand_search import search_hands
     from mime_db._initialization import initialize_db, remove_video
-    from mime_db._pose_search import search_poses
+    from mime_db._pose_search import pose_or_hand_prevalence, search_poses
     from mime_db._read_only import (
         get_available_videos,
         get_clustered_face_data_from_video,
