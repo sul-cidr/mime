@@ -1,4 +1,5 @@
 import csv
+import math
 import os
 import subprocess
 
@@ -186,6 +187,27 @@ HAND_21_ANGLES = [
 ]
 
 
+COCO_13_ANGLES = [
+    [1, 0, 2],
+    # [0, 1, 3],
+    # [0, 2, 4],
+    [0, 1, 7],
+    [0, 2, 8],
+    [1, 3, 5],
+    [2, 4, 6],
+    [1, 7, 8],
+    [2, 8, 7],
+    # [1, 7, 9],
+    # [2, 8, 10],
+    [3, 1, 7],
+    [4, 2, 8],
+    [7, 9, 11],
+    [8, 10, 12],
+    [9, 7, 8],
+    [10, 8, 7],
+]
+
+
 def pt_in_bbox(pt, xyxy):
     return (
         pt[0] >= xyxy[0] and pt[0] <= xyxy[2] and pt[1] >= xyxy[1] and pt[1] <= xyxy[3]
@@ -266,6 +288,43 @@ def get_poem_embedding(pose_coords):
         poem_embed = [float(c) for c in poem_line]
 
         return poem_embed
+
+
+# Inspired by https://www.geeksforgeeks.org/angle-between-a-pair-of-lines-in-3d/
+def calculate_angle_in_3d(arm1, vertex, arm2):
+    x1, y1, z1 = arm1
+    x2, y2, z2 = vertex
+    x3, y3, z3 = arm2
+
+    # Find direction ratio of line AB
+    ABx = x1 - x2
+    ABy = y1 - y2
+    ABz = z1 - z2
+
+    # Find direction ratio of line BC
+    BCx = x3 - x2
+    BCy = y3 - y2
+    BCz = z3 - z2
+
+    # Find magnitudes of lines AB and BC
+    magnitude_AB = ABx * ABx + ABy * ABy + ABz * ABz
+    magnitude_BC = BCx * BCx + BCy * BCy + BCz * BCz
+
+    # Find the cosine of the angle formed by lines AB and BC
+    magnitude = magnitude_AB * magnitude_BC
+
+    if magnitude == 0:
+        return 0
+
+    # Find the dot product of lines AB & BC
+    dot_product = ABx * BCx + ABy * BCy + ABz * BCz
+
+    angle = dot_product / math.sqrt(magnitude_AB * magnitude_BC)
+
+    # Get the angle in radians
+    angle = (angle * 180) / 3.14
+
+    return round(abs(angle), 4)
 
 
 def unflatten_pose_data(prediction, key="keypoints"):

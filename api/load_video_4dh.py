@@ -142,6 +142,40 @@ async def main() -> None:
         ),
     )
 
+    # Calculate 3D joint angles and annotate database records
+    logging.info("Calculating 3D joint angles, and annotating db records...")
+    await db.annotate_pose(
+        "coco13_angles3d",
+        "vector(39)",
+        video_id,
+        lambda pose: tuple(
+            np.array(
+                [
+                    pose_utils.calculate_angle_in_3d(
+                        (
+                            pose["global3d_coco13"][triad[0] * 3],
+                            pose["global3d_coco13"][triad[0] * 3 + 1],
+                            pose["global3d_coco13"][triad[0] * 3 + 2],
+                        ),
+                        (
+                            pose["global3d_coco13"][triad[1] * 3],
+                            pose["global3d_coco13"][triad[1] * 3 + 1],
+                            pose["global3d_coco13"][triad[1] * 3 + 2],
+                        ),
+                        (
+                            pose["global3d_coco13"][triad[2] * 3],
+                            pose["global3d_coco13"][triad[2] * 3 + 1],
+                            pose["global3d_coco13"][triad[2] * 3 + 2],
+                        ),
+                    )
+                    for triad in pose_utils.COCO_13_ANGLES
+                ]
+            )
+            .flatten()
+            .tolist()
+        ),
+    )
+
     # This is for when we want to merge the full 45-point PHALP set into a set of
     # normalized COCO points for pose similarity and clustering calculations
     # Normalize pose data and annotate database records
