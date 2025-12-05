@@ -219,7 +219,12 @@ async def initialize_db(conn, drop=False) -> None:
                   WHEN frame.total_movement3d = 'NaN'
                   THEN 0.0
                   ELSE ROUND(frame.total_movement3d::numeric, 2)
-                END AS "movement3d"
+                END AS "movement3d",
+                CASE
+                  WHEN frame.total_joint_movement3d = 'NaN'
+                  THEN 0.0
+                  ELSE ROUND(frame.total_joint_movement3d::numeric, 2)
+                END AS "joint_movement3d"
         FROM frame
         LEFT JOIN
             ( SELECT pose.video_id,
