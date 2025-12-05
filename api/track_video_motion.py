@@ -166,6 +166,10 @@ async def main() -> None:
         "tick_norm"
     ].shift(1)
 
+    tracks_tick_df["prev_coco13_angles3d"] = tracks_tick_df.groupby(["track_id"])[
+        "coco13_angles3d"
+    ].shift(1)
+
     tracks_tick_df["prev_tick_norm"] = tracks_tick_df["prev_tick_norm"].apply(
         lambda x: [np.nan] * norm_coords if isinstance(x, float) else x
     )
@@ -204,6 +208,12 @@ async def main() -> None:
         motion = nan_euclidean_distances([last_norm], [norm])[0]
         return motion / timediff
 
+    def compute_joint_movement(timediff, last_angles, angles):
+        if np.isnan(timediff) or timediff == 0 or isinstance(last_angles, float):
+            return [0] * 13  # usually this is the first frame in the movelet
+        motion = np.array(angles) - np.array(last_angles)
+        return motion / timediff
+
     tracks_tick_df["motion_vector"] = tracks_tick_df.apply(
         lambda row: compute_motion_vector(
             row["tick_timediff"], row["prev_tick_norm"], row["tick_norm"]
@@ -216,6 +226,17 @@ async def main() -> None:
             row["tick_timediff"], row["prev_tick_norm"], row["tick_norm"]
         ),
         axis=1,
+    )
+
+    tracks_tick_df["joint_motion3d"] = tracks_tick_df.apply(
+        lambda row: compute_joint_movement(
+            row["tick_timediff"], row["prev_coco13_angles3d"], row["coco13_angles3d"]
+        ),
+        axis=1,
+    )
+
+    tracks_tick_df["joint_movement3d"] = (
+        np.absolute(np.array(tracks_tick_df["joint_motion3d"].to_list())).sum().tolist()
     )
 
     tracks_tick_df["movelet_vector"] = tracks_tick_df["tick_norm"].apply(
@@ -326,6 +347,8 @@ async def main() -> None:
             "movelet_vector",
             "movement",
             "movement_3d",
+            "joint_motion3d",
+            "joint_movement3d",
             "tick_poem",
         ]
     ].values
@@ -338,9 +361,11 @@ async def main() -> None:
 
     cumulative_movement_per_frame = {0: 0}
     cumulative_movement_per_frame_3d = {0: 0}
+    cumulative_joint_movement_per_frame_3d = {0: 0}
 
     max_movement = 0
     max_movement_3d = 0
+    max_joint_movement_3d = 0
 
     for frame in range(1, video_metadata["frame_count"]):
         active_ticks_df = tracks_tick_df[
@@ -350,6 +375,7 @@ async def main() -> None:
         if len(active_ticks_df) == 0:
             cumulative_movement_per_frame[frame] = 0.0
             cumulative_movement_per_frame_3d[frame] = 0.0
+            cumulative_joint_movement_per_frame_3d[frame] = 0.0
         else:
             active_ticks_df["tick_frames_duration"] = (
                 active_ticks_df["tick_end_frame"] - active_ticks_df["tick_start_frame"]
@@ -384,6 +410,19 @@ async def main() -> None:
             )
             movement_3d = active_ticks_df["motion_per_frame_3d"].sum()
 
+            active_ticks_df["joint_motion_per_frame_3d"] = np.where(
+                active_ticks_df["tick_frames_duration"] <= 0,
+                0,
+                np.absolute(np.array(active_ticks_df["joint_motion3d"].to_list()))
+                .sum()
+                .tolist(),
+            ) / np.where(
+                active_ticks_df["tick_frames_duration"] <= 0,
+                1,
+                active_ticks_df["tick_frames_duration"],
+            )
+            joint_movement_3d = active_ticks_df["joint_motion_per_frame_3d"].sum()
+
             if np.isnan(movement):
                 cumulative_movement_per_frame[frame] = 0.0
             else:
@@ -396,6 +435,12 @@ async def main() -> None:
                 max_movement_3d = max(max_movement_3d, movement_3d)
                 cumulative_movement_per_frame_3d[frame] = movement_3d
 
+            if np.isnan(joint_movement_3d):
+                cumulative_joint_movement_per_frame_3d[frame] = 0.0
+            else:
+                max_joint_movement_3d = max(max_joint_movement_3d, joint_movement_3d)
+                cumulative_joint_movement_per_frame_3d[frame] = joint_movement_3d
+
     logging.info("Adding cumulative movement per frame to DB.")
 
     await db.add_frame_movement(
@@ -404,6 +449,8 @@ async def main() -> None:
         cumulative_movement_per_frame,
         max_movement_3d,
         cumulative_movement_per_frame_3d,
+        max_joint_movement_3d,
+        cumulative_joint_movement_per_frame_3d,
     )
 
 
