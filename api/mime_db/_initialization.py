@@ -147,7 +147,6 @@ async def initialize_db(conn, drop=False) -> None:
             joint_motion3d vector(13),
             movement FLOAT DEFAULT 0,
             movement3d FLOAT DEFAULT 0,
-            joint_movement3d FLOAT DEFAULT 0,
             poem_embedding vector(16) DEFAULT NULL,
             cluster_id INTEGER DEFAULT NULL,
             PRIMARY KEY(video_id, track_id, tick)

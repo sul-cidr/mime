@@ -235,9 +235,9 @@ async def main() -> None:
         axis=1,
     )
 
-    tracks_tick_df["joint_movement3d"] = (
-        np.absolute(np.array(tracks_tick_df["joint_motion3d"].to_list())).sum().tolist()
-    )
+    # tracks_tick_df["joint_movement3d"] = (
+    #     np.absolute(np.array(tracks_tick_df["joint_motion3d"].to_list())).sum().tolist()
+    # )
 
     tracks_tick_df["movelet_vector"] = tracks_tick_df["tick_norm"].apply(
         list
@@ -348,7 +348,7 @@ async def main() -> None:
             "movement",
             "movement_3d",
             "joint_motion3d",
-            "joint_movement3d",
+            # "joint_movement3d",
             "tick_poem",
         ]
     ].values

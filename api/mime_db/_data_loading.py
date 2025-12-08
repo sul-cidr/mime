@@ -453,9 +453,8 @@ async def add_video_movelets(self, movelets_data) -> None:
             movement,
             movement3d,
             joint_motion3d,
-            joint_movement3d,
             poem_embedding )
-            VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+            VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
         ;
         """,
         data,
