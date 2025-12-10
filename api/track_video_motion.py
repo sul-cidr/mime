@@ -210,7 +210,7 @@ async def main() -> None:
 
     def compute_joint_movement(timediff, last_angles, angles):
         if np.isnan(timediff) or timediff == 0 or isinstance(last_angles, float):
-            return [0] * 13  # usually this is the first frame in the movelet
+            return [0] * 15  # usually this is the first frame in the movelet
         motion = np.array(angles) - np.array(last_angles)
         return motion / timediff
 

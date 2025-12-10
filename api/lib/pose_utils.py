@@ -1,5 +1,4 @@
 import csv
-import math
 import os
 import subprocess
 
@@ -188,23 +187,23 @@ HAND_21_ANGLES = [
 
 
 COCO_13_ANGLES = [
-    [1, 0, 2],
+    [1, 0, 2],  # left shoulder - nose - right shoulder
     # [0, 1, 3],
     # [0, 2, 4],
-    [0, 1, 7],
-    [0, 2, 8],
-    [1, 3, 5],
-    [2, 4, 6],
-    [1, 7, 8],
-    [2, 8, 7],
-    # [1, 7, 9],
-    # [2, 8, 10],
-    [3, 1, 7],
-    [4, 2, 8],
-    [7, 9, 11],
-    [8, 10, 12],
-    [9, 7, 8],
-    [10, 8, 7],
+    [0, 1, 7],  # nose - left shoulder - left hip
+    [0, 2, 8],  # nose - right shoulder - right hip
+    [1, 3, 5],  # left shoulder - left elbow - left wrist
+    [2, 4, 6],  # right shoulder - right elbow - right wrist
+    [1, 7, 8],  # left shoulder - left hip - right hip
+    [2, 8, 7],  # right shoulder - right hip - left hip
+    [1, 7, 9],  # left shoulder - left hip - left knee
+    [2, 8, 10],  # right shoulder - right hip - right knee
+    [3, 1, 7],  # left elbow - left shoulder - left hip
+    [4, 2, 8],  # right elbow - right shoulder - right hip
+    [7, 9, 11],  # left hip - left knee - left ankle
+    [8, 10, 12],  # right hip - right knee - right ankle
+    [9, 7, 8],  # left knee - left hip - right hip
+    [10, 8, 7],  # right knee - right hip - left hip
 ]
 
 
@@ -290,41 +289,21 @@ def get_poem_embedding(pose_coords):
         return poem_embed
 
 
-# Inspired by https://www.geeksforgeeks.org/angle-between-a-pair-of-lines-in-3d/
-def calculate_angle_in_3d(arm1, vertex, arm2):
-    x1, y1, z1 = arm1
-    x2, y2, z2 = vertex
-    x3, y3, z3 = arm2
+# Borrowed from https://stackoverflow.com/questions/19729831/angle-between-3-points-in-3d-space
+def calculate_angle_in_3d(a, b, c):
+    v1 = np.array([a[0] - b[0], a[1] - b[1], a[2] - b[2]])
+    v2 = np.array([c[0] - b[0], c[1] - b[1], c[2] - b[2]])
 
-    # Find direction ratio of line AB
-    ABx = x1 - x2
-    ABy = y1 - y2
-    ABz = z1 - z2
+    v1mag = np.sqrt([v1[0] * v1[0] + v1[1] * v1[1] + v1[2] * v1[2]])
+    v1norm = np.array([v1[0] / v1mag, v1[1] / v1mag, v1[2] / v1mag])
 
-    # Find direction ratio of line BC
-    BCx = x3 - x2
-    BCy = y3 - y2
-    BCz = z3 - z2
+    v2mag = np.sqrt(v2[0] * v2[0] + v2[1] * v2[1] + v2[2] * v2[2])
+    v2norm = np.array([v2[0] / v2mag, v2[1] / v2mag, v2[2] / v2mag])
+    res = v1norm[0] * v2norm[0] + v1norm[1] * v2norm[1] + v1norm[2] * v2norm[2]
+    angle_rad = np.arccos(res)
 
-    # Find magnitudes of lines AB and BC
-    magnitude_AB = ABx * ABx + ABy * ABy + ABz * ABz
-    magnitude_BC = BCx * BCx + BCy * BCy + BCz * BCz
-
-    # Find the cosine of the angle formed by lines AB and BC
-    magnitude = magnitude_AB * magnitude_BC
-
-    if magnitude == 0:
-        return 0
-
-    # Find the dot product of lines AB & BC
-    dot_product = ABx * BCx + ABy * BCy + ABz * BCz
-
-    angle = dot_product / math.sqrt(magnitude_AB * magnitude_BC)
-
-    # Get the angle in radians
-    angle = (angle * 180) / 3.14
-
-    return round(abs(angle), 4)
+    # return math.degrees(angle_rad)
+    return angle_rad
 
 
 def unflatten_pose_data(prediction, key="keypoints"):
