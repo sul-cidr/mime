@@ -42,6 +42,7 @@ async def initialize_db(conn, drop=False) -> None:
             total_joint_movement3d FLOAT DEFAULT 0.0,
             pose_interest FLOAT DEFAULT 0.0,
             action_interest FLOAT DEFAULT 0.0,
+            sync_motion3d FLOAT DEFAULT 0.0,
             PRIMARY KEY(video_id, frame)
         )
         ;
@@ -209,6 +210,7 @@ async def initialize_db(conn, drop=False) -> None:
                 CAST(frame.is_shot_boundary AS INT) AS is_shot,
                 frame.pose_interest,
                 frame.action_interest,
+                frame.sync_motion3d,
                 CASE
                   WHEN frame.total_movement = 'NaN'
                   THEN 0.0

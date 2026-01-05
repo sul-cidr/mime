@@ -49,6 +49,7 @@ class MimeDb:
         annotate_pose,
         assign_face_clusters_by_track,
         assign_frame_interest,
+        assign_frame_sync_motion,
         assign_movelet_clusters,
         assign_poem_embeddings,
         assign_pose_interest,

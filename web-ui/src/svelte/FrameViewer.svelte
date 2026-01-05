@@ -20,6 +20,7 @@
   let shot: number | 0;
   let pose_interest: number | 0;
   let action_interest: number | 0;
+  let sync_motion3d: number | 0;
   let show3Dframe: boolean = false;
 
   const updatePoseData = (data: Array<PoseRecord>) => {
@@ -47,6 +48,7 @@
     shot = data.shot;
     pose_interest = data.pose_interest;
     action_interest = data.action_interest;
+    sync_motion3d = data.sync_motion3d;
   };
 
   const integrateFaceData = (data: Array<FaceRecord>) => {
@@ -222,6 +224,7 @@
         {shot}
         {pose_interest}
         {action_interest}
+        {sync_motion3d}
       />
     {:else}
       Loading pose data... <ProgressBar />

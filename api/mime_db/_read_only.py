@@ -31,7 +31,8 @@ async def get_pose_data_by_frame(self, video_id: UUID) -> list:
                movement3d,
                joint_movement3d,
                pose_interest,
-               action_interest
+               action_interest,
+               sync_motion3d
            FROM video_frame_meta
            WHERE video_id = $1;
         """,
@@ -120,6 +121,7 @@ async def get_frame_data(self, video_id: UUID, frame: int) -> list:
                frame.shot,
                frame.pose_interest,
                frame.action_interest,
+               frame.sync_motion3d,
                rhand.keypoints2d AS rh_keypoints2d,
                rhand.global_orient AS rh_global_orient,
                lhand.keypoints2d AS lh_keypoints2d,

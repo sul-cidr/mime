@@ -84,6 +84,7 @@
     "badScore",
     "pose_interest",
     "action_interest",
+    "sync_motion3d",
   ]; // always normalize between 0 and maxValue
   let normalizedSeriesAlreadyScaled = false;
 
@@ -145,6 +146,7 @@
           joint_movement3d: 0,
           pose_interest: 0,
           action_interest: 0,
+          sync_motion3d: 0,
           sim_pose: 0,
           sim_action: 0,
           sim_hand: 0,
@@ -180,6 +182,7 @@
         joint_movement3d: 0,
         pose_interest: 0,
         action_interest: 0,
+        sync_motion3d: 0,
         sim_pose: 0,
         sim_action: 0,
         sim_hand: 0,
@@ -306,6 +309,7 @@
           "joint_movement3d",
           "pose_interest",
           "action_interest",
+          "sync_motion3d",
         ]}
       />
       <Key align="end" bind:hiddenSeries />

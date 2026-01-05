@@ -523,6 +523,25 @@ async def assign_frame_interest(self, frame_interest, metric="pose") -> None:
         return
 
 
+async def assign_frame_sync_motion(self, frame_sync_motion) -> None:
+    colname = "sync_motion3d"
+    async with self._pool.acquire() as conn:
+        await conn.execute(
+            f"ALTER TABLE frame ADD COLUMN IF NOT EXISTS {colname} FLOAT DEFAULT 0.0;"
+        )
+        await conn.executemany(
+            f"""
+                UPDATE frame
+                SET {colname} = $3
+                WHERE video_id = $1 AND frame = $2
+                ;
+            """,
+            frame_sync_motion,
+        )
+
+        return
+
+
 async def assign_face_clusters_by_track(self, face_clusters) -> None:
     async with self._pool.acquire() as conn:
         await conn.execute(
