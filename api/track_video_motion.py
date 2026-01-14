@@ -16,6 +16,8 @@ from mime_db import MimeDb
 
 DEFAULT_TICK_INTERVAL = 0.1666667  # 1/6 of a second
 
+N_ANGLES = 15
+
 
 async def main() -> None:
     """Command-line entry-point."""
@@ -127,9 +129,13 @@ async def main() -> None:
     # The pose-invariant embedding is used subsequently in similarity
     # comparisons of representative poses of movelet tracks (but it's not
     # currently used for motion/gesture quantification).
-    tracks_df["tick_poem"] = tracks_df.groupby(["track_id", "tick"])[
-        "poem_embedding"
-    ].transform(avg_pose_data)
+    if not (
+        len(tracks_df["poem_embedding"]) == 0
+        or tracks_df["poem_embedding"].isnull().all()
+    ):
+        tracks_df["tick_poem"] = tracks_df.groupby(["track_id", "tick"])[
+            "poem_embedding"
+        ].transform(avg_pose_data)
 
     tracks_df["tick_global3d_coco13"] = tracks_df.groupby(["track_id", "tick"])[
         "global3d_coco13"
@@ -210,7 +216,7 @@ async def main() -> None:
 
     def compute_joint_movement(timediff, last_angles, angles):
         if np.isnan(timediff) or timediff == 0 or isinstance(last_angles, float):
-            return [0] * 15  # usually this is the first frame in the movelet
+            return [0] * N_ANGLES  # usually this is the first frame in the movelet
         motion = np.array(angles) - np.array(last_angles)
         return motion / timediff
 
