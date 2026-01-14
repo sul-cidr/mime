@@ -84,12 +84,17 @@
     "badScore",
     "pose_interest",
     "action_interest",
-    "sync_motion3d",
   ]; // always normalize between 0 and maxValue
+
+  const seriesToCenter = ["sync_motion3d"]; // scale as described above, but can have raw values from -1 to 1
+
   let normalizedSeriesAlreadyScaled = false;
 
   const scaleToFit = (thisValue: number) =>
     Math.min(maxValue, thisValue * maxValue);
+
+  const scaleToCenter = (thisValue: number) =>
+    Math.max(-1, Math.min(maxValue, thisValue * (maxValue / 2) + maxValue / 2));
 
   // This is a pretty silly way to get a bar that always extends to the top
   // of the chart, but short of implementing multiple Y axes for the MultiLine
@@ -164,6 +169,9 @@
       if (!normalizedSeriesAlreadyScaled) {
         seriesToFit.forEach((series) => {
           thisFrame[series] = scaleToFit(frame[series]);
+        });
+        seriesToCenter.forEach((series) => {
+          thisFrame[series] = scaleToCenter(frame[series]);
         });
       }
       timeSeries.push(thisFrame);
