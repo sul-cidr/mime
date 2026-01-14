@@ -65,15 +65,15 @@ async def main() -> None:
     )
 
     start_frames = movelets_df.start_frame.unique()
+    frame_joint_motions = {}  # rotational velocities
     all_motion_correlations = []
     frame_joint_motion_corr = {}
     for start_frame in start_frames:
         end_frames = movelets_df[movelets_df["start_frame"] == start_frame][
             "end_frame"
         ].unique()
-        if len(end_frames) <= 1:
+        if len(end_frames) <= 0:
             continue
-        all_joint_motions = []  # rotational velocities
         for end_frame in end_frames:
             if end_frame == start_frame:
                 continue
@@ -83,25 +83,28 @@ async def main() -> None:
                 (movelets_df["start_frame"] == start_frame)
                 & (movelets_df["end_frame"] == end_frame)
             ]["joint_motion3d"].values
-            # print(start_frame, end_frame, joint_motions)
+
             for joint_motion in joint_motions:
                 joint_velocities = joint_motion / time_elapsed
                 if len(joint_velocities.nonzero()[0]) > 0:
-                    all_joint_motions.append(joint_velocities)
+                    for f in range(start_frame, end_frame + 1):
+                        if f not in frame_joint_motions:
+                            frame_joint_motions[f] = [joint_velocities]
+                        else:
+                            frame_joint_motions[f].append(joint_velocities)
 
-        if len(all_joint_motions) <= 1:
-            continue
+        for frame in sorted(frame_joint_motions.keys()):
+            if len(frame_joint_motions[frame]) <= 1:
+                continue
+            velocity_correlations = cosine_similarity(
+                np.array(frame_joint_motions[frame])
+            )  # np.corrcoef(frame_joint_motions[frame])
+            corrs_to_avg = []
+            for corr in velocity_correlations[0][1:]:
+                corrs_to_avg.append(corr)
+            frame_joint_motion_corr[frame] = np.mean(corrs_to_avg)
 
-        velocity_correlations = cosine_similarity(
-            np.array(all_joint_motions)
-        )  # np.corrcoef(all_joint_motions)
-        corrs_to_avg = []
-        for corr in velocity_correlations[0][1:]:
-            corrs_to_avg.append(corr)
-
-        frame_joint_motion_corr[start_frame] = np.mean(corrs_to_avg)
-
-    for f in range(1, max(max(frame_joint_motion_corr.keys()), video_frame_count + 1)):
+    for f in range(0, max(max(frame_joint_motion_corr.keys()), video_frame_count)):
         if f in frame_joint_motion_corr:
             all_motion_correlations.append([video_id, f, frame_joint_motion_corr[f]])
         else:
