@@ -136,6 +136,8 @@ async def main() -> None:
         tracks_df["tick_poem"] = tracks_df.groupby(["track_id", "tick"])[
             "poem_embedding"
         ].transform(avg_pose_data)
+    else:
+        tracks_df["tick_poem"] = None
 
     tracks_df["tick_global3d_coco13"] = tracks_df.groupby(["track_id", "tick"])[
         "global3d_coco13"
@@ -336,9 +338,15 @@ async def main() -> None:
         "tick_global3d_coco13"
     ].apply(lambda x: np.nan_to_num(x, nan=-1))
 
-    tracks_tick_df["tick_poem"] = tracks_tick_df["tick_poem"].apply(
-        lambda x: np.nan_to_num(x, nan=-1)
-    )
+    if not (
+        len(tracks_tick_df["tick_poem"]) == 0
+        or tracks_tick_df["tick_poem"].isnull().all()
+    ):
+        tracks_tick_df["tick_poem"] = tracks_tick_df["tick_poem"].apply(
+            lambda x: np.nan_to_num(x, nan=-1)
+        )
+    else:
+        tracks_tick_df["tick_poem"] = None
 
     movelets = tracks_tick_df[
         [
