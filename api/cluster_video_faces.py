@@ -172,7 +172,7 @@ async def main() -> None:
             assigned_faces += labels.count(cluster_id)
 
     logging.info(
-        f"assigned {assigned_faces} track faces out of {len(labels)}, {round(assigned_faces/len(labels),4)}"
+        f"assigned {assigned_faces} track faces out of {len(labels)}, {round(assigned_faces / len(labels), 4)}"
     )
 
     logging.info("Generating representative face averages for timeline")

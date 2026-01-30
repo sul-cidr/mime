@@ -119,6 +119,7 @@ type FrameRecord = {
   movement: number | undefined;
   pose_interest: number | undefined;
   action_interest: number | undefined;
+  sync_motion3d: number | undefined;
   sim_pose: number | undefined;
   sim_move: number | undefined;
   sim_hand: number | undefined;

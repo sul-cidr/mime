@@ -232,6 +232,8 @@ async def add_frame_movement(
     movement_data,
     max_movement_3d,
     movement_data_3d,
+    max_joint_movement_3d,
+    joint_movement_data_3d,
 ) -> None:
     async with self._pool.acquire() as conn:
         await conn.execute(
@@ -246,20 +248,28 @@ async def add_frame_movement(
             ;
             """
         )
+        await conn.execute(
+            """
+            ALTER TABLE frame ADD COLUMN IF NOT EXISTS total_joint_movement3d FLOAT DEFAULT 0.0
+            ;
+            """
+        )
 
         safe_max = max(1, max_movement)  # Just in case a 0 sneaks in...
         safe_max_3d = max(1, max_movement_3d)
+        safe_max_joint_3d = max(1, max_joint_movement_3d)
 
         for frame in movement_data:
             await conn.execute(
                 """
                 UPDATE frame
-                SET total_movement = $1, total_movement3d = $2
-                WHERE video_id = $3 AND frame = $4
+                SET total_movement = $1, total_movement3d = $2, total_joint_movement3d = $3
+                WHERE video_id = $4 AND frame = $5
                 ;
                 """,
                 movement_data[frame] / safe_max,
                 movement_data_3d[frame] / safe_max_3d,
+                joint_movement_data_3d[frame] / safe_max_joint_3d,
                 video_id,
                 frame,
             )
@@ -442,8 +452,9 @@ async def add_video_movelets(self, movelets_data) -> None:
             motion,
             movement,
             movement3d,
+            joint_motion3d,
             poem_embedding )
-            VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+            VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
         ;
         """,
         data,
@@ -507,6 +518,25 @@ async def assign_frame_interest(self, frame_interest, metric="pose") -> None:
                 ;
             """,
             frame_interest,
+        )
+
+        return
+
+
+async def assign_frame_sync_motion(self, frame_sync_motion) -> None:
+    colname = "sync_motion3d"
+    async with self._pool.acquire() as conn:
+        await conn.execute(
+            f"ALTER TABLE frame ADD COLUMN IF NOT EXISTS {colname} FLOAT DEFAULT 0.0;"
+        )
+        await conn.executemany(
+            f"""
+                UPDATE frame
+                SET {colname} = $3
+                WHERE video_id = $1 AND frame = $2
+                ;
+            """,
+            frame_sync_motion,
         )
 
         return

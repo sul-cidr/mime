@@ -72,6 +72,10 @@ default:
 @add-shots path: && refresh-db-views
   docker compose exec -T api sh -c "LOG_LEVEL=$LOG_LEVEL /app/load_shot_boundaries.py --video-path \"\$VIDEO_SRC_FOLDER/$1\""
 
+# Provide path to video file relative to $VIDEO_SRC_FOLDER
+@add-motion path tick_interval="0": && refresh-db-views
+  docker compose exec -T api sh -c "LOG_LEVEL=$LOG_LEVEL /app/track_video_motion.py --video-path \"\$VIDEO_SRC_FOLDER/$1\" --tick-interval $2"
+
 # Calculate pose distances from the global mean for a video already in the DB
 @calculate-pose-interest path: && refresh-db-views
   docker compose exec -T api sh -c "LOG_LEVEL=$LOG_LEVEL /app/calculate_interest.py --video-name \"$1\" --metric pose"
@@ -79,6 +83,10 @@ default:
 # Calculate action vector distances from the global mean for a video already in the DB
 @calculate-action-interest path: && refresh-db-views
   docker compose exec -T api sh -c "LOG_LEVEL=$LOG_LEVEL /app/calculate_interest.py --video-name \"$1\" --metric action"
+
+# Calculate per-frame 3D joint motion vector correlations for a video already in the DB
+@calculate-sync-motion path: && refresh-db-views
+  docker compose exec -T api sh -c "LOG_LEVEL=$LOG_LEVEL /app/calculate_sync_motion.py --video-name \"$1\""
 
 # Load LART action recognition data (per-pose, per-frame) for a video to the DB
 @load-actions path clear="false":
@@ -91,10 +99,6 @@ default:
 # Provide path to video file relative to $VIDEO_SRC_FOLDER; DO NOT RUN with 4DH data
 @add-tracks path: && refresh-db-views
   docker compose exec -T api sh -c "LOG_LEVEL=$LOG_LEVEL /app/track_video.py --video-path \"\$VIDEO_SRC_FOLDER/$1\""
-
-# Provide path to video file relative to $VIDEO_SRC_FOLDER
-@add-motion path tick_interval="0": && refresh-db-views
-  docker compose exec -T api sh -c "LOG_LEVEL=$LOG_LEVEL /app/track_video_motion.py --video-path \"\$VIDEO_SRC_FOLDER/$1\" --tick-interval $2"
 
 # Load detected faces data; input file is in $VIDEO_SRC_FOLDER with extension .faces.ArcFace.jsonl
 @match-faces video_path: && refresh-db-views

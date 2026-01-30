@@ -186,6 +186,27 @@ HAND_21_ANGLES = [
 ]
 
 
+COCO_13_ANGLES = [
+    [1, 0, 2],  # left shoulder - nose - right shoulder
+    # [0, 1, 3],
+    # [0, 2, 4],
+    [0, 1, 7],  # nose - left shoulder - left hip
+    [0, 2, 8],  # nose - right shoulder - right hip
+    [1, 3, 5],  # left shoulder - left elbow - left wrist
+    [2, 4, 6],  # right shoulder - right elbow - right wrist
+    [1, 7, 8],  # left shoulder - left hip - right hip
+    [2, 8, 7],  # right shoulder - right hip - left hip
+    [1, 7, 9],  # left shoulder - left hip - left knee
+    [2, 8, 10],  # right shoulder - right hip - right knee
+    [3, 1, 7],  # left elbow - left shoulder - left hip
+    [4, 2, 8],  # right elbow - right shoulder - right hip
+    [7, 9, 11],  # left hip - left knee - left ankle
+    [8, 10, 12],  # right hip - right knee - right ankle
+    [9, 7, 8],  # left knee - left hip - right hip
+    [10, 8, 7],  # right knee - right hip - left hip
+]
+
+
 def pt_in_bbox(pt, xyxy):
     return (
         pt[0] >= xyxy[0] and pt[0] <= xyxy[2] and pt[1] >= xyxy[1] and pt[1] <= xyxy[3]
@@ -266,6 +287,26 @@ def get_poem_embedding(pose_coords):
         poem_embed = [float(c) for c in poem_line]
 
         return poem_embed
+
+
+# Borrowed from https://stackoverflow.com/questions/19729831/angle-between-3-points-in-3d-space
+def calculate_angle_in_3d(a, b, c):
+    v1 = np.array([a[0] - b[0], a[1] - b[1], a[2] - b[2]])
+    v2 = np.array([c[0] - b[0], c[1] - b[1], c[2] - b[2]])
+
+    v1mag = np.sqrt(v1[0] * v1[0] + v1[1] * v1[1] + v1[2] * v1[2])
+    v1norm = np.array([v1[0] / v1mag, v1[1] / v1mag, v1[2] / v1mag])
+
+    v2mag = np.sqrt(v2[0] * v2[0] + v2[1] * v2[1] + v2[2] * v2[2])
+    v2norm = np.array([v2[0] / v2mag, v2[1] / v2mag, v2[2] / v2mag])
+    res = v1norm[0] * v2norm[0] + v1norm[1] * v2norm[1] + v1norm[2] * v2norm[2]
+
+    # sometimes res can be -1.0001 ???
+    res = min(max(-1, res), 1)
+    angle_rad = np.arccos(res)
+
+    # return math.degrees(angle_rad)
+    return angle_rad
 
 
 def unflatten_pose_data(prediction, key="keypoints"):

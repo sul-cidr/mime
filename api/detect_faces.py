@@ -132,7 +132,7 @@ async def main() -> None:
                         "confidence": confidence,
                     }
                 )
-            logging.info(f"found {len(img_objs)} faces in frame {frameno+1}")
+            logging.info(f"found {len(img_objs)} faces in frame {frameno + 1}")
             writer.write_all(output_json)
 
 

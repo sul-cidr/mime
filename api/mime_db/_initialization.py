@@ -39,8 +39,10 @@ async def initialize_db(conn, drop=False) -> None:
             shot INTEGER DEFAULT 0,
             total_movement FLOAT DEFAULT 0.0,
             total_movement3d FLOAT DEFAULT 0.0,
+            total_joint_movement3d FLOAT DEFAULT 0.0,
             pose_interest FLOAT DEFAULT 0.0,
             action_interest FLOAT DEFAULT 0.0,
+            sync_motion3d FLOAT DEFAULT 0.0,
             PRIMARY KEY(video_id, frame)
         )
         ;
@@ -60,6 +62,7 @@ async def initialize_db(conn, drop=False) -> None:
             keypoints3d vector(39) DEFAULT NULL,
             global3d_phalp vector(135) DEFAULT NULL,
             global3d_coco13 vector(39) DEFAULT NULL,
+            coco13_angles3d vector(15) DEFAULT NULL,
             ava_action vector(60) DEFAULT NULL,
             action_labels text[3] DEFAULT NULL,
             bbox FLOAT[4] NOT NULL,
@@ -142,6 +145,7 @@ async def initialize_db(conn, drop=False) -> None:
             prev_norm vector(26) NOT NULL,
             norm vector(26) NOT NULL,
             motion vector(52) NOT NULL,
+            joint_motion3d vector(15),
             movement FLOAT DEFAULT 0,
             movement3d FLOAT DEFAULT 0,
             poem_embedding vector(16) DEFAULT NULL,
@@ -206,6 +210,7 @@ async def initialize_db(conn, drop=False) -> None:
                 CAST(frame.is_shot_boundary AS INT) AS is_shot,
                 frame.pose_interest,
                 frame.action_interest,
+                frame.sync_motion3d,
                 CASE
                   WHEN frame.total_movement = 'NaN'
                   THEN 0.0
@@ -215,7 +220,12 @@ async def initialize_db(conn, drop=False) -> None:
                   WHEN frame.total_movement3d = 'NaN'
                   THEN 0.0
                   ELSE ROUND(frame.total_movement3d::numeric, 2)
-                END AS "movement3d"
+                END AS "movement3d",
+                CASE
+                  WHEN frame.total_joint_movement3d = 'NaN'
+                  THEN 0.0
+                  ELSE ROUND(frame.total_joint_movement3d::numeric, 2)
+                END AS "joint_movement3d"
         FROM frame
         LEFT JOIN
             ( SELECT pose.video_id,

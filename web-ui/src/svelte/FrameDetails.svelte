@@ -20,6 +20,7 @@
   export let shot: number | 0;
   export let pose_interest: number | 0;
   export let action_interest: number | 0;
+  export let sync_motion3d: number | 0;
 
   let showSearchSettings = false;
 
@@ -57,6 +58,10 @@
         {#if action_interest}
           <dt>Avg action interest:</dt>
           <dd>{(action_interest * 100).toFixed(2)}%</dd>
+        {/if}
+        {#if sync_motion3d}
+          <dt>Avg sync joint motion:</dt>
+          <dd>{(sync_motion3d * 100).toFixed(2)}%</dd>
         {/if}
       </dl>
       <div class="flex pl-4">
