@@ -32,10 +32,10 @@ async def main() -> None:
     )
 
     parser.add_argument(
-        "--drop",
+        "--replace",
         action="store_true",
         default=False,
-        help="Drop (if existing) and recreate tables",
+        help="Replace existing movelet table data for this video",
     )
 
     parser.add_argument("--video-path", action="store", required=True)
@@ -62,7 +62,7 @@ async def main() -> None:
     video_path = Path(args.video_path)
 
     # Connect to the database
-    db = await MimeDb.create(drop=args.drop)
+    db = await MimeDb.create()
 
     # Get video metadata and add to database
     video_name = video_path.name
@@ -70,6 +70,10 @@ async def main() -> None:
     video_id = await db.get_video_id(video_name)
 
     video_metadata = await db.get_video_by_id(video_id)
+
+    if args.replace is True:
+        logging.info("Deleting prior motion movelet data for video")
+        await db.clear_movelets(video_id)
 
     logging.info("Computing motion movelets for pose tracks")
 

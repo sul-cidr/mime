@@ -88,8 +88,8 @@ async def main() -> None:
     video_id = await db.add_video(video_path.name, video_metadata)
 
     # If an entry for the video already exists (should be cmd line option)
-    # video_name = video_path.name
-    # video_id = await db.get_video_id(video_name)
+    #video_name = video_path.name
+    #video_id = await db.get_video_id(video_name)
 
     # Video FPS = 30
     # Target frame rate: 5 FPS

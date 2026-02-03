@@ -38,6 +38,8 @@ async def add_video(self, video_name: str, video_metadata: dict) -> UUID:
 async def clear_poses(self, video_id: UUID) -> None:
     await self._pool.execute("DELETE FROM pose WHERE video_id = $1;", video_id)
 
+async def clear_movelets(self, video_id: UUID) -> None:
+    await self._pool.execute("DELETE FROM movelet WHERE video_id = $1;", video_id)
 
 async def clear_actions(self, video_id: UUID) -> None:
     await self._pool.execute(

@@ -76,6 +76,10 @@ default:
 @add-motion path tick_interval="0": && refresh-db-views
   docker compose exec -T api sh -c "LOG_LEVEL=$LOG_LEVEL /app/track_video_motion.py --video-path \"\$VIDEO_SRC_FOLDER/$1\" --tick-interval $2"
 
+# Provide path to video file relative to $VIDEO_SRC_FOLDER
+@recalculate-motion path tick_interval="0": && refresh-db-views
+  docker compose exec -T api sh -c "LOG_LEVEL=$LOG_LEVEL /app/track_video_motion.py --replace --video-path \"\$VIDEO_SRC_FOLDER/$1\" --tick-interval $2"
+
 # Calculate pose distances from the global mean for a video already in the DB
 @calculate-pose-interest path: && refresh-db-views
   docker compose exec -T api sh -c "LOG_LEVEL=$LOG_LEVEL /app/calculate_interest.py --video-name \"$1\" --metric pose"
