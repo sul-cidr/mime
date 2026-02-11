@@ -67,12 +67,13 @@
 			isSelected={$page.url.pathname == `${base}/profiles`}
 		/>
 		<SideNavDivider />
-		<SideNavLink icon={ChartDualYAxis} text="Timelines" href="/" target="_blank" />
+		<SideNavLink icon={ChartDualYAxis} text="Timelines" href="/" rel="external" target="_blank" />
 		<SideNavLink
 			icon={LogoJupyter}
 			text="Notebooks"
 			href="/jupyter/tree/notebooks/"
 			target="_blank"
+			rel="external"
 			isSelected={$page.url.pathname == `/jupyter/tree/notebooks/`}
 		/>
 		<SideNavDivider />
