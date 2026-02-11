@@ -148,7 +148,12 @@
     </AppBar>
   </svelte:fragment>
 
-  <section class="m-8 flex flex-col gap-10">
+  <section class="m-4 flex flex-col gap-2">
+    <p>
+      Select a row from the Performances list, then choose one of the other tabs
+      below to open that view. Click the 🔍 icon above to open the advanced
+      search.
+    </p>
     <TabGroup
       justify="justify-left"
       active="variant-filled-primary"

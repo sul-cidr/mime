@@ -86,7 +86,9 @@
     "action_interest",
   ]; // always normalize between 0 and maxValue
 
-  const seriesToCenter = ["sync_motion3d"]; // scale as described above, but can have raw values from -1 to 1
+  const seriesToCenter = []; // scale as described above, but can have raw values from -1 to 1
+  // Disabled until we get actual data for this
+  // const seriesToCenter = ["sync_motion3d"];
 
   let normalizedSeriesAlreadyScaled = false;
 
