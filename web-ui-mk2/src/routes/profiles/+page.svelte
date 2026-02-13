@@ -33,7 +33,7 @@
 
 	const profileTypes = [
 		{ id: 0, text: 'Pose embeddings (view invariant)', endpoint: 'profile/poses/poem_embedding' },
-		{ id: 1, text: 'Pose coordinates (global 3D)', endpoint: 'profile/poses/global3d_coco13' },
+		// { id: 1, text: 'Pose coordinates (global 3D)', endpoint: 'profile/poses/global3d_coco13' },
 		{ id: 2, text: 'Hand embeddings (class weights)', endpoint: 'profile/hands/class_weights' },
 		{ id: 3, text: 'Hand joint angles (view invariant)', endpoint: 'profile/hands/joint_angles3d' }
 	];

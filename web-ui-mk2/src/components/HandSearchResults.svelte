@@ -69,7 +69,7 @@
 		<input type="checkbox" bind:checked={showHands.value} />
 	</label>
 	<label>
-		Videos:
+		Performances:
 		{#await getVideoData() then videos}
 			<select multiple bind:value={selectedVideoIds.value}>
 				{#each videos as video}

@@ -77,7 +77,7 @@
 		</label>
 	</div>
 	<label>
-		Videos:
+		Performances:
 		{#await getVideoData() then videos}
 			<select multiple bind:value={selectedVideoIds.value}>
 				{#each videos as video}
