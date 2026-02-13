@@ -22,6 +22,8 @@ services:
       VIDEO_SRC_FOLDER: /videos
       CACHE_FOLDER: /static
 
+    restart: unless-stopped
+
     depends_on:
       - db
 
@@ -37,6 +39,8 @@ services:
     environment:
       PUBLIC_API_BASE: /api
       COREPACK_ENABLE_AUTO_PIN: 0
+    
+    restart: unless-stopped
 
   web-ui-mk2:
     container_name: mime-web-ui-mk2
@@ -49,6 +53,8 @@ services:
       PUBLIC_API_BASE: /api
       COREPACK_ENABLE_AUTO_PIN: 0
       __VITE_ADDITIONAL_SERVER_ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost}
+    
+    restart: unless-stopped
 
   db:
     container_name: mime-db
@@ -62,6 +68,8 @@ services:
       POSTGRES_DB: ${DB_NAME:?}
       POSTGRES_USER: ${DB_USER:?}
       POSTGRES_PASSWORD: ${DB_PASSWORD:?}
+    
+    restart: unless-stopped
 
   web-extras:
     container_name: mime-web-extras
@@ -71,6 +79,8 @@ services:
       - ./web-extras:/app
 
     stop_grace_period: 0s
+    
+    restart: unless-stopped
 
   web-proxy: &proxy
     profiles:
@@ -93,6 +103,8 @@ services:
 
     stop_grace_period: 0s
 
+    restart: unless-stopped
+
   web-proxy-tls:
     <<: *proxy
     profiles:
@@ -106,6 +118,8 @@ services:
       - ./web-ui:/app
       - ./web-ui-mk2:/app2
       - ../ssl:/ssl
+
+    restart: unless-stopped
 
 volumes:
   mime-db-data:
