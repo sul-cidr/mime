@@ -59,7 +59,7 @@
           <dt>Avg action interest:</dt>
           <dd>{(action_interest * 100).toFixed(2)}%</dd>
         {/if}
-        {#if sync_motion3d !== undefined}
+        {#if sync_motion3d}
           <dt>Avg sync joint motion:</dt>
           <dd>{(sync_motion3d * 100).toFixed(2)}%</dd>
         {/if}

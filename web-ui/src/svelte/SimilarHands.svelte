@@ -44,7 +44,7 @@
     $similarHandFrames = {};
   };
 
-  const goToFrame = (e: any) => ($currentFrame = e.originalTarget.value);
+  const goToFrame = (e: any) => ($currentFrame = e.target.value);
 
   const updateHandData = (data: Array<PoseRecord>) => {
     poses = data;

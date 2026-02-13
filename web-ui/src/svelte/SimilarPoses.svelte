@@ -44,7 +44,7 @@
     $similarPoseFrames = {};
   };
 
-  const goToFrame = (e: any) => ($currentFrame = e.originalTarget.value);
+  const goToFrame = (e: any) => ($currentFrame = e.target.value);
 
   const updatePoseData = (data: Array<PoseRecord>) => {
     poses = data;
@@ -339,7 +339,7 @@
           Exclude current shot
         </SlideToggle>
         <div class="hide-paginator-label flex items-center">
-          <span>Similar poses</span>
+          <span>Similar poses:</span>
           <Paginator
             bind:settings={simPager}
             showFirstLastButtons={false}

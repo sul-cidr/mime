@@ -38,7 +38,7 @@
     $similarActionFrames = {};
   };
 
-  const goToFrame = (e: any) => ($currentFrame = e.originalTarget.value);
+  const goToFrame = (e: any) => ($currentFrame = e.target.value);
 
   const updateActionData = (data: PoseRecord[]) => {
     actionPoses = data;

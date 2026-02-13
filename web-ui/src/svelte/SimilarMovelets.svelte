@@ -61,7 +61,7 @@
     $currentMovelet = data;
   };
 
-  const goToFrame = (e: any) => ($currentFrame = e.originalTarget.value);
+  const goToFrame = (e: any) => ($currentFrame = e.target.value);
 
   async function getMoveletData(
     thisMoveletPose: PoseRecord | null,

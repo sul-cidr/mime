@@ -73,6 +73,11 @@
       >
     </div>
   </div>
+  <p>
+    Hover and click on the timeline to see pose info for a frame (below). Zoom
+    in by selecting a region on the lower timeline. Toggle series by clicking
+    them in the legend (option or ctrl to isolate).
+  </p>
   <PosesByFrameChart timelineData={filteredData} />
 {:else}
   Loading pose data... <ProgressBar />
