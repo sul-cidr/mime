@@ -89,7 +89,7 @@
 						<Tabs bind:selected={sourceTab} autoWidth>
 							<Tab label="Archetypes" />
 							<Tab label="Webcam" />
-							<Tab label="Pose Editor" />
+							<!-- <Tab label="Pose Editor" /> -->
 							<svelte:fragment slot="content">
 								<TabContent class="tab-panel">
 									<PoseArchetypes {setSourcePose} />
@@ -97,7 +97,7 @@
 								<TabContent class="tab-panel">
 									{#if sourceTab === 1}<WebcamPoseInput {setSourcePose} />{/if}
 								</TabContent>
-								<TabContent class="tab-panel">Pose Editor goes here...</TabContent>
+								<!-- <TabContent class="tab-panel">Pose Editor goes here...</TabContent> -->
 							</svelte:fragment>
 						</Tabs>
 					</TabContent>
@@ -112,7 +112,7 @@
 	</div>
 	<div id="results-container">
 		<Tabs bind:selected={resultsTab} type="container">
-			<Tab>Prevalences</Tab>
+			<Tab disabled={searchType === 'hand'}>Prevalences</Tab>
 			<Tab>Search</Tab>
 			<svelte:fragment slot="content">
 				{#if resultsType === 'prevalences'}
