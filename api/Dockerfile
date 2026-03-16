@@ -63,6 +63,45 @@ stderr_logfile=/dev/stdout
 stderr_logfile_maxbytes=0
 EOF
 
+# Copy Pipfile and Pipfile.lock first for caching
+COPY Pipfile /app/
+
+# Install pipenv and dependencies from the lockfile
+RUN python -m pip install --upgrade pip \
+  && python -m pip install pipenv
+
+# Generate lockfile if missing, then install dependencies
+RUN if [-f Pipfile.lock]; then pipenv lock; fi
+
+#Install dependencies to system python
+RUN pipenv install --dev --system --deploy || true
+
+#Installing open cv
+RUN pip install --no-cache-dir opencv-python
+
+#Installing uvicorn
+RUN pip install uvicorn
+
+#Installing dotenv
+RUN pip install dotenv
+
+#Installing fastapi
+RUN pip install fastapi
+
+#Installing fastapi-utils
+RUN pip install fastapi-utils
+
+#Installing typing_inspect
+RUN pip install typing_inspect
+
+#Installing asyncpg
+RUN pip install asyncpg
+#Installing pgvector
+RUN pip install pgvector
+
+#Installing joblib
+RUN pip install joblib
+
 # Copy application code
 COPY . .
 
