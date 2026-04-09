@@ -47,12 +47,12 @@
     const vision = await FilesetResolver.forVisionTasks(
       // path/to/wasm/root
       //"https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm",
-      "src/lib/wasm",
+      "/lib/wasm",
     );
 
     poseLandmarker = await PoseLandmarker.createFromOptions(vision, {
       baseOptions: {
-        modelAssetPath: "src/lib/pose_landmarker_full.task",
+        modelAssetPath: "/lib/pose_landmarker_full.task",
         delegate: "GPU",
       },
       runningMode: "VIDEO",

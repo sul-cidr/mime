@@ -12,6 +12,9 @@ const config = defineConfig({
     ssr: {
       noExternal: ['three']
     },
+    build: {
+      publicDir: './public'
+    }
   },
 });
 
