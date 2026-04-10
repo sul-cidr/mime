@@ -2,7 +2,13 @@
 
 MIME is a collaborative effort between faculty in the Department of Theater and Performance Studies at Stanford University and developers in Research Data Services at the Stanford University Libraries to study recorded theatrical performances through the lens of pose estimation and motion tracking.
 
-This repository contains code for ingesting, indexing and exploring the output of software tools for running pose estimation and related tasks on video files. For further background and screenshots, see our [slides for DH 2025](https://sul-cidr.github.io/mime-dh2025-slides).
+This repository contains code for ingesting, indexing and exploring the output of software tools for running pose estimation and related tasks on video files. For further background regarding the technologies used and the research inquiries in which MIME has been applied, please consult these resources:
+
+📄 **Paper**: "Stylistic Analyses of Human Pose in Theatrical Performances: Computational and Historical Frameworks," _Anthology of Computers and the Humanities_ 3, 2025. https://doi.org/10.63744/GxQbSDPPyqvL
+
+📊 **Slides**: "The Director’s Signature: Stylometry of Theater Choreography via Pose and Action Estimation," presented at [Digital Humanities 2025](https://sul-cidr.github.io/mime-dh2025-slides).
+
+🎬 **Video**: "Using Pose and Action Estimation to Analyze Theater Performances," [Stanford HAI Research Seminar](https://www.youtube.com/watch?v=VqenFiXaCDU), January 22, 2025.
 
 ## Simple Bring-Up
 
