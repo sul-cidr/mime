@@ -1,6 +1,6 @@
 # MIME: Machine Intelligence for Motion Exegesis
 
-MIME is a collaborative effort between faculty in the Department of Theater and Performance Studies at Stanford University and developers in Research Data Services at the Stanford University Libraries to study recorded theatrical performances through the lens of pose estimation and motion tracking.
+MIME is a collaborative effort between faculty in the Department of Theater and Performance Studies at Stanford University and developers in Research Data Services at the Stanford University Libraries. The core purpose of the project is to study recorded theatrical performances through the lens of pose estimation and motion tracking.
 
 This repository contains code for ingesting, indexing and exploring the output of software tools for running pose estimation and related tasks on video files. For further background regarding the technologies used and the research inquiries in which MIME has been applied, please consult these resources:
 
