@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-"""CLI to load data from a video and corresponding OpenPifPaf output into the db."""
+"""CLI to load data from a video and corresponding PHALP (4D Humans) output into the db."""
 
 import argparse
 import asyncio
@@ -17,9 +17,6 @@ from mime_db import MimeDb
 
 
 def get_video_metadata(video_file):
-    # TODO: rewrite this without OpenCV?
-    #  (currently this is the only time OpenCV is needed in this container --
-    #   and it's a hefty dependency for just this..!)
     cap = cv2.VideoCapture(str(video_file))
     return {
         "frame_count": int(cap.get(cv2.CAP_PROP_FRAME_COUNT)),
@@ -29,9 +26,9 @@ def get_video_metadata(video_file):
     }
 
 
-def normalize_pose_data(pose):
+def normalize_pose_data(pose, key="keypoints"):
     normalized_coords = pose_utils.extract_trustworthy_coords(
-        pose_utils.shift_normalize_rescale_pose_coords(pose)
+        pose_utils.shift_normalize_rescale_pose_coords(pose, key)
     )
     return normalized_coords
 
@@ -49,7 +46,18 @@ async def main() -> None:
     )
 
     parser.add_argument("--video-path", action="store", required=True)
-    parser.add_argument("--json-path", action="store")
+    parser.add_argument(
+        "--pkl-path",
+        action="store",
+        help="Location of the PHALP data .pkl file for the video",
+    )
+    parser.add_argument(
+        "--parse-fps",
+        action="store",
+        type=int,
+        default=0,
+        help="How many frames per second to sample from the pose data",
+    )
 
     args = parser.parse_args()
 
@@ -63,13 +71,13 @@ async def main() -> None:
     video_path = Path(args.video_path)
     assert video_path.exists(), f"'{video_path}' does not exist"
 
-    if args.json_path:
-        json_path = Path(args.json_path)
+    if args.pkl_path:
+        pkl_path = Path(args.pkl_path)
     else:
-        json_path = Path(f"{video_path}.openpifpaf.json")
-        logging.debug(f"--json-path not supplied, using '{json_path}'")
+        pkl_path = Path(f"{video_path}.phalp.pkl")
+        logging.debug(f"--pkl-path not supplied, using '{pkl_path}'")
 
-    assert json_path.exists(), f"'{json_path}' does not exist"
+    assert pkl_path.exists(), f"'{pkl_path}' does not exist"
 
     # Create database
     logging.info("Initializing DB...")
@@ -79,8 +87,36 @@ async def main() -> None:
     video_metadata = get_video_metadata(video_path)
     video_id = await db.add_video(video_path.name, video_metadata)
 
-    # Load pose date into database
-    await db.load_openpifpaf_predictions(video_id, json_path)
+    # If an entry for the video already exists (should be cmd line option)
+    #video_name = video_path.name
+    #video_id = await db.get_video_id(video_name)
+
+    # Video FPS = 30
+    # Target frame rate: 5 FPS
+    # Should import 1 out of every 30/5 = 6 frames
+    # 1 7 13 19 25
+    # Video FPS = 24
+    # Target frame rate: 5 FPS
+    # Should import 1 out of every 24/5 = 4.8 = 5 frames
+    # 1 6 11 16 21
+
+    import_multiples_of = 1
+
+    if args.parse_fps:
+        if args.parse_fps > video_metadata["fps"] or args.parse_fps < 0:
+            logging.info(
+                f"Specified sample rate ({args.parse_fps} fps) is invalid; using actual video framerate ({video_metadata['fps']})."
+            )
+        elif args.parse_fps > 0:
+            import_multiples_of = round(video_metadata["fps"] / args.parse_fps)
+            logging.info(
+                f"Target frame sample rate is {args.parse_fps} fps; video fps is {video_metadata['fps']}; importing 1 out of every {import_multiples_of} frames."
+            )
+
+    logging.info("Loading pose data into DB")
+
+    # Load pose data into database
+    await db.load_4dh_predictions(video_id, pkl_path, import_multiples_of)
 
     # Normalize pose data and annotate database records
     logging.info("Normalizing pose data, and annotating db records...")
@@ -88,8 +124,82 @@ async def main() -> None:
         "norm",
         "vector(26)",
         video_id,
-        lambda pose: tuple(np.nan_to_num(normalize_pose_data(pose), nan=-1).tolist()),
+        lambda pose: tuple(
+            np.nan_to_num(normalize_pose_data(pose, "keypoints"), nan=-1).tolist()
+        ),
     )
+
+    # Normalize 3D pose data and annotate database records
+    logging.info("Normalizing 3D pose data, and annotating db records...")
+    await db.annotate_pose(
+        "global3d_coco13",
+        "vector(39)",
+        video_id,
+        lambda pose: tuple(
+            pose_utils.merge_coords(
+                np.array(pose["global3d_phalp"]).reshape(-1, 3),
+                pose_utils.phalp_to_coco_13,
+                is_3d=True,
+            )
+            .flatten()
+            .tolist()
+        ),
+    )
+
+    # Calculate 3D joint angles and annotate database records
+    logging.info("Calculating 3D joint angles, and annotating db records...")
+    await db.annotate_pose(
+        "coco13_angles3d",
+        "vector(39)",
+        video_id,
+        lambda pose: tuple(
+            np.array(
+                [
+                    pose_utils.calculate_angle_in_3d(
+                        (
+                            pose["global3d_coco13"][triad[0] * 3],
+                            pose["global3d_coco13"][triad[0] * 3 + 1],
+                            pose["global3d_coco13"][triad[0] * 3 + 2],
+                        ),
+                        (
+                            pose["global3d_coco13"][triad[1] * 3],
+                            pose["global3d_coco13"][triad[1] * 3 + 1],
+                            pose["global3d_coco13"][triad[1] * 3 + 2],
+                        ),
+                        (
+                            pose["global3d_coco13"][triad[2] * 3],
+                            pose["global3d_coco13"][triad[2] * 3 + 1],
+                            pose["global3d_coco13"][triad[2] * 3 + 2],
+                        ),
+                    )
+                    for triad in pose_utils.COCO_13_ANGLES
+                ]
+            )
+            .flatten()
+            .tolist()
+        ),
+    )
+
+    # This is for when we want to merge the full 45-point PHALP set into a set of
+    # normalized COCO points for pose similarity and clustering calculations
+    # (not currently done)
+    # Normalize pose data and annotate database records
+    # logging.info("Normalizing pose data, and annotating db records...")
+    # await db.annotate_pose(
+    #     "norm",
+    #     "vector(34)",
+    #     video_id,
+    #     lambda pose: tuple(np.nan_to_num(normalize_pose_data({"keypoints": merge_phalp_coords(pose['keypoints'].reshape(-1, 2), phalp_to_coco).flatten()}), nan=-1).tolist()),
+    #     pose_tbl="pose4dh"
+    # )
+
+    # We're not using this at present, either
+    # await db.annotate_pose(
+    #     "norm4dh",
+    #     "vector(90)",
+    #     video_id,
+    #     lambda pose: tuple(np.nan_to_num(normalize_pose_data(pose, "keypoints4dh"), nan=-1).tolist()),
+    # )
 
 
 if __name__ == "__main__":

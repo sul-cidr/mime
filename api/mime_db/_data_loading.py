@@ -1,5 +1,4 @@
 import copy
-import json
 import logging
 from pathlib import Path
 from typing import Callable
@@ -38,69 +37,16 @@ async def add_video(self, video_name: str, video_metadata: dict) -> UUID:
 async def clear_poses(self, video_id: UUID) -> None:
     await self._pool.execute("DELETE FROM pose WHERE video_id = $1;", video_id)
 
+
 async def clear_movelets(self, video_id: UUID) -> None:
     await self._pool.execute("DELETE FROM movelet WHERE video_id = $1;", video_id)
+
 
 async def clear_actions(self, video_id: UUID) -> None:
     await self._pool.execute(
         "UPDATE pose SET ava_action = NULL, action_labels = NULL WHERE video_id = $1;",
         video_id,
     )
-
-
-async def load_openpifpaf_predictions(
-    self, video_id: UUID, json_path: Path, clear=True
-) -> None:
-    frames = []
-    with json_path.open("r", encoding="utf8") as _fh:
-        for line in _fh:
-            frames.append(json.loads(line))
-
-    if clear:
-        logging.debug(f"Clearing poses for video {video_id}")
-        await self.clear_poses(video_id)
-
-    logging.info(f"Loading data for {len(frames)} frames from '{json_path}'...")
-
-    poses = []
-    for frame in frames:
-        assert frame.keys() == {"frame", "predictions"}
-
-        if len(frame["predictions"]) == 0:
-            continue
-
-        for pose_id, pose in enumerate(frame["predictions"]):
-            joints = np.array(pose["keypoints"])
-            coco13_joints = pose_utils.merge_coords(
-                joints, pose_utils.openpifpaf_to_coco_13, has_confidence=True
-            ).flatten()
-
-            poses.append(
-                {
-                    "video_id": video_id,
-                    "frame": frame["frame"],
-                    "pose_id": pose_id,
-                    "keypoints": coco13_joints,
-                    "keypointsopp": joints,
-                    "bbox": np.array(pose["bbox"]),
-                    "score": pose["score"],
-                    "category": pose["category_id"],
-                }
-            )
-
-    data = [tuple(pose.values()) for pose in poses]
-
-    await self._pool.executemany(
-        """
-        INSERT INTO pose (
-            video_id, frame, pose_idx, keypoints, keypointsopp, bbox, score, category)
-            VALUES($1, $2, $3, $4, $5, $6, $7, $8)
-        ;
-        """,
-        data,
-    )
-
-    logging.info(f"Loaded {len(poses)} predictions!")
 
 
 async def load_4dh_predictions(

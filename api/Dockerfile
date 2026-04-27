@@ -12,7 +12,7 @@ ENV PYTHONPATH=$PYTHONPATH:/app
 ENV BOKEH_ALLOW_WS_ORIGIN=localhost:8080
 
 # Install dependencies from apt repos
-# * build-essential takes care of what is needed to build the lap binaries
+# * build-essential may not be necessary if we're no longer building the lap binaries
 # * installing python3-opencv is the easiest way to ensure we have
 #    the needed libraries that will support pip-installed cv2
 RUN apt-get update -qq \
@@ -71,15 +71,10 @@ RUN pip install pipenv
 RUN pipenv lock && pipenv --clear && pipenv --rm
 RUN pipenv install --dev --deploy --system
 
-# lap is now  a dependency for the api container, not just the notebook
-RUN pip install --no-cache-dir lap
-
 # Install jupyter and notebook-only dependencies
 # (not added to Pipfile as it doesn't make sense to include it as part of the 
 #  API server -- if it's desired outside of this docker config then venv
 #  kernels must be compiled on the host etc.)
-# Note: do this after installing application dependencies so that numpy is
-#       available as a build dependency for lap
 RUN pip install --no-cache-dir --upgrade -r /app/notebooks/notebook_requirements.txt
 
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

@@ -311,7 +311,7 @@ def calculate_angle_in_3d(a, b, c):
 
 def unflatten_pose_data(prediction, key="keypoints"):
     """
-    Convert an Open PifPaf pose prediction (a 1D 51-element list) into a 17-element
+    Convert a flattened pose prediction (a 1D 51-element list) into a 17-element
     list (not a NumPy array) of [x_coord, y_coord, confidence] triples.
     """
     return np.array_split(prediction[key], len(prediction[key]) / 3)
@@ -319,7 +319,7 @@ def unflatten_pose_data(prediction, key="keypoints"):
 
 def extract_trustworthy_coords(prediction, key="keypoints"):
     """
-    Convert an Open PifPaf pose prediction from a 1D vector of coordinates and confidence
+    Convert a flattened pose prediction from a 1D vector of coordinates and confidence
     values to a 17x2 NumPy array containing only the armature coordinates, with
     coordinate values set to NaN,NaN for any coordinate with a confidence value of 0.
     Returns the 17x2 array and a separate list of the original confidence values.
@@ -336,7 +336,7 @@ def extract_trustworthy_coords(prediction, key="keypoints"):
 
 
 def get_pose_extent(prediction, key="keypoints"):
-    """Get the min and max x and y coordinates of an Open PifPaf pose prediction"""
+    """Get the min and max x and y coordinates of a pose prediction"""
     pose_coords = unflatten_pose_data(prediction, key)
     min_x = np.NaN
     min_y = np.NaN
@@ -356,7 +356,7 @@ def get_pose_extent(prediction, key="keypoints"):
 
 def shift_pose_to_origin(prediction, key):
     """
-    Shift the keypoint coordinates of an Open PifPaf pose prediction so that the
+    Shift the keypoint coordinates of a pose prediction so that the
     min x and y coordinates of its extent are at the 0,0 origin.
     NOTE: This only returns the modified 'keypoints' portion of the prediction.
     """
@@ -376,7 +376,7 @@ def shift_pose_to_origin(prediction, key):
 
 def rescale_pose_coords(prediction, key="keypoints"):
     """
-    Rescale the coordinates of an OpenPifPaf pose prediction so that the extent
+    Rescale the coordinates of a pose prediction so that the extent
     of the pose's long axis is equal to the global POSE_MAX_DIM setting. The
     coordinates of the short axis are scaled by the same factor, and then are
     shifted so that the short axis is centered within the POSE_MAX_DIM extent.
@@ -414,7 +414,7 @@ def rescale_pose_coords(prediction, key="keypoints"):
 
 def shift_normalize_rescale_pose_coords(prediction, key="keypoints"):
     """
-    Convenience function to shift an Open PifPaf pose prediction so that its minimal
+    Convenience function to shift a pose prediction so that its minimal
     corner is at the origin, then rescale so that it fits into a
     POSE_MAX_DIM * POSE_MAX_DIM extent.
     NOTE: This only returns the modified 'keypoints' portion of the prediction.

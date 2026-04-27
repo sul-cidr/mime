@@ -28,6 +28,9 @@ VIDEO_SRC_FOLDER=/path/to/source/videos
 JUPYTER_PASSWORD=secret_password
 
 LOG_LEVEL=INFO       ## Set to DEBUG for additional logging
+
+# For deployed sites - hostnames should be separated by commas
+ALLOWED_HOSTS=
 EOL
 ```
 
@@ -71,21 +74,27 @@ cd api && PIPENV_VENV_IN_PROJECT=1 python -m pipenv install --dev && cd -
 
 In addition to making it possible to run parts of the stack independently of the docker configuration, this will make sure dev environments are available to, e.g., VS Cod{ium,e} for linting and static analysis, etc.
 
+## Deploying
+
+After building a Dockerized MIME instance as described in this README, the instance can be made accessible to the web via the reverse-proxy configurations of the host OS's web server (if the host machine can serve web sites via ports 80 and 443), or via tunneling options such as Cloudflare tunnels.
+
+Be sure to set ALLOWED_HOSTS in .env to the fully qualified domain name of the host machine, e.g., mime.stanford.edu.
+
 ## Ingesting videos for analysis
 
-The processing steps are  subject to change as analytical methods are added or modified, but the full sequence for adding a performance video to the platform as of October 2025 is as described below. The provided file paths are all relative to the folder on the host system set by `VIDEO_SRC_FOLDER=` in the `.env` file. Note that the steps assume an output .pkl file from running pose estimation on the video file is already present in the same folder as the video; the other video analysis steps now can be done via the commands below.
+The processing steps are  subject to change as analytical methods are added or modified, but the full sequence for adding a performance video to the platform as of April 2026 is as described below. The provided file paths are all relative to the folder on the host system set by `VIDEO_SRC_FOLDER=` in the `.env` file. The steps assume an output .pkl file from running pose estimation on the video file is already present in the same folder as the video, and if action indexing is also to be done, anoutput .pkl file from action recognition also must be present in the same folder. The other video analysis steps now can be done via the commands below.
 
 Steps marked with an asterisk `*` may be optional if a viable output file is present from a previous run of the step.
 
-1. `just add-video-4dh Video_File_Name.ext [pose_sample_rate]` - Creates a DB entry for the video, then locates the PHALP/4D-Humans pose estimation output file as `Video_File_Name.ext.phalp.pkl` and imports the data into the DB. If `pose_sample_rate` is specified, the import process will sample this many frames per second and only import pose data for those frames.
+1. `just add-video Video_File_Name.ext [pose_sample_rate]` - Creates a DB entry for the video, then locates the PHALP/4D-Humans pose estimation output file as `Video_File_Name.ext.phalp.pkl` and imports the data into the DB. If `pose_sample_rate` is specified, the import process will sample this many frames per second and only import pose data for those frames.
 1. `just detect-shots Video_File_Name.ext` - Runs shot detection on each frame of the video file and writes the output to `Video_File_Name.ext.shots.TransNetV2.pkl`.\*
 1. `just add-shots Video_File_Name.ext` - Looks for a shot detection output file named `Video_File_Name.ext.shots.TransNetV2.pkl` generated for the video via the `api/detect_shots.py` script in the repo (see previous step) and imports the data into the DB.
 1. `just do-poem-embeddings Video_File_Name.ext` - Exports the normalized COCO 13-keypoint poses for a video into a CSV file (at `api/poem_files/Video_File_Name.ext.csv`) to be used as input when creating view-invariant pose embeddings via the Pr-VIPE model from the [POEM project](https://sites.google.com/view/pr-vipe), then runs the POEM view-invariant pose embedding generation software on the CSV, producing an output CSV file that is then loaded into the DB to create a view-invariant search index on the poses.
 1. `just add-motion Video_File_Name.ext [tick_interval]` - Segments pose tracks into "movelets" consisting of the average position of consecutive poses that occur within one `tick_interval` of each other, then computes the degree of motion between adjacent movelets. The `tick_interval` value defaults to 1/6s, but if a `pose_sample_rate` was provided above, it may need to be set to a longer duration that is an integer multiple of the `pose_sample_rate`.
 1. `just calculate-sync-motion Video_File_Name.ext` - Compares changes in joint angles for pose "movelets" occurring simultaneously, computing the degree of correlated (synchronized) motion per frame.
 1. `just load-actions Video_File_Name.ext.lart.pkl` - Loads externally generated action recognition output data for a given video from a file named `Video_File_name.ext.lart.pkl`.\*
-1. `just calculate-pose-interest Video_File_Name.ext` - Compares each pose to the global average pose for the video, computes the degree to which the poses in each frame deviate from the average, and represents the frame's "interest" level as the maximum of these values.
-1. `just calculate-action-interest Video_File_Name.ext` - If action recognition data has been loaded previously for a video, compares each pose's action vector to the global average for the video, computes the degree to which the poses in each frame deviate from the average, and represents the frame's "interest" level as the maximum of these values.\*
+1. `just calculate-pose-interest Video_File_Name.ext` - Compares each pose to the whole-video average pose for the video, computes the degree to which the poses in each frame deviate from the average, and represents the frame's "interest" level as the maximum of these values.
+1. `just calculate-action-interest Video_File_Name.ext` - If action recognition data has been loaded previously for a video, compares each pose's action vector to the whole-video average for the video, computes the degree to which the poses in each frame deviate from the average, and represents the frame's "interest" level as the maximum of these values.\*
 1. `just detect-faces Video_File_Name.ext` - Runs face detection on each frame of the video file and writes the output to `Video_File_Name.faces.ArcFace.jsonl`. Note that this can take a very long time to run (as long as the initial offline pose estimation task). You may prefer to run the `api/detect_faces.py` script separately as a batch job.\*
 1. `just match-faces Video_File_Name.ext` - Looks for a face detection output file named `Video_File_Name.ext.faces.ArcFace.jsonl` generated for the video via the `api/detect_faces.py` script in the repo, matches detected poses with detected faces and adds the information to the DB.
 1. `just match-hands Video_File_Name.ext` - Looks for a hand detection output file named `Video_File_Name.ext.hands.WiLoR.jsonl` generated for the video via the `api/detect_hands.py` script in the repo, matches detected poses with detected hands and adds the information to the DB.

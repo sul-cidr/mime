@@ -89,7 +89,7 @@ except Exception as e:
 
 def unflatten_pose_data(prediction):
     """
-    Convert an Open PifPaf pose prediction (a 1D 51-element list) into a 17-element
+    Convert a flattened pose prediction (a 1D 51-element list) into a 17-element
     list (not a NumPy array) of [x_coord, y_coord, confidence] triples.
     OR, if the input has already been flattened and normalized, in which case it's
     a 1D 34-element or 26-element list in which the confidence values have been removed
@@ -110,7 +110,7 @@ def unflatten_pose_data(prediction):
 
 def extract_trustworthy_coords(prediction):
     """
-    Convert an Open PifPaf pose prediction from a 1D vector of coordinates and confidence
+    Convert a pose prediction from a 1D vector of coordinates and confidence
     values to a 17x2 NumPy array containing only the armature coordinates, with coordinate values
     set to NaN,NaN for any coordinate with a confidence value of 0.
     Returns the 17x2 array and a separate list of the original confidence values.
@@ -127,9 +127,9 @@ def extract_trustworthy_coords(prediction):
 
 
 def get_pose_extent(prediction):
-    """Get the min and max x and y coordinates of an Open PifPaf pose prediction"""
+    """Get the min and max x and y coordinates of a pose prediction"""
     # if "bbox" in prediction:
-    #     # bbox format for PifPaf is x0, y0, width, height
+    #     # bbox format is x0, y0, width, height
     #     bbox = prediction["bbox"]
     #     extent = [bbox[0], bbox[1], bbox[0] + bbox[2], bbox[1] + bbox[3]]
     #     return extent
@@ -153,7 +153,7 @@ def get_pose_extent(prediction):
 
 def shift_pose_to_origin(prediction):
     """
-    Shift the keypoint coordinates of an Open PifPaf pose prediction so that the
+    Shift the keypoint coordinates of a pose prediction so that the
     min x and y coordinates of its extent are at the 0,0 origin.
     NOTE: This only returns the modified 'keypoints' portion of the prediction.
     """
@@ -173,7 +173,7 @@ def shift_pose_to_origin(prediction):
 
 def rescale_pose_coords(prediction):
     """
-    Rescale the coordinates of an Open PifPaf pose prediction so that the extent
+    Rescale the coordinates of a pose prediction so that the extent
     of the pose's long axis is equal to the global POSE_MAX_DIM setting. The
     coordinates of the short axis are scaled by the same factor, and then are
     shifted so that the short axis is centered within the POSE_MAX_DIM extent.
@@ -211,7 +211,7 @@ def rescale_pose_coords(prediction):
 
 def shift_normalize_rescale_pose_coords(prediction):
     """
-    Convenience function to shift an Open PifPaf pose prediction so that its minimal corner
+    Convenience function to shift a pose prediction so that its minimal corner
     is at the origin, then rescale so that it fits into a POSE_MAX_DIM * POSE_MAX_DIM extent.
     NOTE: This only returns the modified 'keypoints' portion of the prediction.
     """
@@ -228,7 +228,7 @@ def compare_poses_cosine_flattened(p1, p2):
 
 def compare_poses_cosine(p1, p2):
     """
-    Calculate the similarity of the 'keypoint' portions of two Open PifPaf pose predictions
+    Calculate the similarity of the 'keypoint' portions of two pose predictions
     by computing their cosine distance and subtracting this from 1 (so 1=identical).
     """
     return compare_poses_cosine_flattened(
@@ -247,7 +247,7 @@ def compare_poses_correlation_flattened(p1, p2):
 
 def compare_poses_correlation(p1, p2):
     """
-    Calculate the similarity of the 'keypoint' portions of two Open PifPaf pose predictions
+    Calculate the similarity of the 'keypoint' portions of two pose predictions
     by computing their Euclidean distance and subtracting this from 1 (so 1=identical).
     Note that this is only likely to generate reliable results if run on coordinates that
     have been normalized on at least one axis.
@@ -260,7 +260,7 @@ def compare_poses_correlation(p1, p2):
 
 def compute_joint_angles(prediction):
     """
-    Build an additional/alternative feature set for an Open PifPaf pose prediction, composed
+    Build an additional/alternative feature set for a pose prediction, composed
     of the angles, measured in radians, of several joints/articulation points on the body (see
     list in code comments below).
     Also compute a rotation value for each angle -- how far it would need to be rotated until
@@ -340,153 +340,6 @@ def compare_poses_angles(joint_angles1, joint_angles2):
         np.nansum(np.square(np.array(joint_angles2)))
     )
     return angles_dot / angles_norm
-
-
-def normalize_poses(pose_file, pose_data):
-    """
-    If previously computed normalized pose data and metadata is not available in
-    files, normalize all of the poses in the input pose_data and compute
-    accompanying metadata, a flattened list of all poses in the video (for use
-    with the vector-search indexer), and mappings from frame and pose IDs to
-    positions in the flattened sequence, save them to files and return them.
-    """
-
-    data_dir = Path(pose_file.replace(".openpifpaf.json", "")).with_suffix("")
-
-    normalized_pose_file = Path(
-        data_dir, Path(pose_file.replace(".openpifpaf.json", ".normalized.p")).name
-    )
-    metadata_file = Path(
-        data_dir, Path(pose_file.replace(".openpifpaf.json", ".metadata.p")).name
-    )
-
-    if (os.path.isfile(normalized_pose_file)) and (os.path.isfile(metadata_file)):
-        normalized_poses = pickle.load(open(normalized_pose_file, "rb"))
-        [normalized_pose_metadata, framepose_to_seqno] = pickle.load(
-            open(metadata_file, "rb")
-        )
-    else:
-        print("Computing normalized poses for comparison and clustering")
-        print("This may take a while...")
-        progress_bar = IntProgress(min=0, max=len(pose_data))
-        display(progress_bar)
-
-        # For cluster analysis, each pose must be a 1D array, and all poses must be in a 1D list
-        # that includes only the pose keypoint coordinates (not the confidence scores).
-        # So we also create a parallel data structure to keep track of the frame number and
-        # numbering within the frame of each of the poses.
-        normalized_poses = []
-        normalized_pose_metadata = []
-
-        framepose_to_seqno = {}
-        pose_seqno = 0
-
-        for i, frame in enumerate(pose_data):
-            if i % 100 == 0:
-                progress_bar.value = i
-
-            for j, pose in enumerate(frame["predictions"]):
-                normalized_coords = extract_trustworthy_coords(
-                    shift_normalize_rescale_pose_coords(pose)
-                )
-                normalized_poses.append(normalized_coords)
-                normalized_pose_metadata.append({"frameno": i, "poseno": j})
-
-                if i in framepose_to_seqno:
-                    framepose_to_seqno[i][j] = pose_seqno
-                else:
-                    framepose_to_seqno[i] = {j: pose_seqno}
-
-                pose_seqno += 1
-
-        progress_bar.bar_style = "success"
-
-        pickle.dump(normalized_poses, open(normalized_pose_file, "wb"))
-        pickle.dump(
-            [normalized_pose_metadata, framepose_to_seqno], open(metadata_file, "wb")
-        )
-
-    # Need to rebuild an actual structure of normalized pose data that parallels the
-    # structure of pose_data (normalized_poses doesn't actually do this).
-    normalized_pose_data = []
-
-    for frameno, frame in enumerate(pose_data):
-        frame_predictions = {"predictions": []}
-
-        if frameno in framepose_to_seqno:
-            for poseno in framepose_to_seqno[frameno]:
-                frame_predictions["predictions"].append(
-                    normalized_poses[framepose_to_seqno[frameno][poseno]]
-                )
-        normalized_pose_data.append(frame_predictions)
-
-    return [
-        normalized_poses,
-        normalized_pose_metadata,
-        framepose_to_seqno,
-        normalized_pose_data,
-    ]
-
-
-def get_all_pose_angles(pose_file, pose_data, framepose_to_seqno):
-    """
-    If previously computed pose angle data is not available,
-    run pose_angles to get angle data (in radians) for various
-    armature joints on each pose in pose_data; create a parallel
-    data structure to pose_data that includes this angle data as
-    well as a flattened list of all per-pose angles in the video,
-    for use with the vector-search indexer.
-    """
-
-    data_dir = Path(pose_file.replace(".openpifpaf.json", "")).with_suffix("")
-
-    angles_data_file = Path(
-        data_dir, Path(pose_file.replace(".openpifpaf.json", ".angles.p")).name
-    )
-
-    if os.path.isfile(angles_data_file):
-        [pose_angle_data, pose_angles] = pickle.load(open(angles_data_file, "rb"))
-    else:
-        pose_angles = []
-        # pose_angles_metadata = [] # This is redundant with normalized_pose_metadata...
-        # framepose_to_seqno = {} # Already computed when finding normalized poses
-        pose_seqno = 0
-
-        print("Precomputing pose angle data")
-
-        progress_bar = IntProgress(min=0, max=len(pose_data))
-        display(progress_bar)
-
-        for i, frame in enumerate(pose_data):
-            if i % 100 == 0:
-                progress_bar.value = i
-
-            for pose in frame["predictions"]:
-                angles = compute_joint_angles(pose)
-
-                pose_angles.append(angles)
-
-                pose_seqno += 1
-
-        progress_bar.bar_style = "success"
-
-        # Need to rebuild an actual structure of pose angle data that parallels the
-        # structure of pose_data.
-        pose_angle_data = []
-
-        for frameno, frame in enumerate(pose_data):
-            frame_predictions = {"predictions": []}
-
-            if frameno in framepose_to_seqno:
-                for poseno in framepose_to_seqno[frameno]:
-                    frame_predictions["predictions"].append(
-                        pose_angles[framepose_to_seqno[frameno][poseno]]
-                    )
-            pose_angle_data.append(frame_predictions)
-
-        pickle.dump([pose_angle_data, pose_angles], open(angles_data_file, "wb"))
-
-    return [pose_angle_data, pose_angles]
 
 
 # --- POSE DRAWING AND VISUALIZATION FUNCTIONS ---
@@ -572,7 +425,7 @@ def extract_pose_background(pose_pred, video_file, pose_frameno):
 def draw_armatures(pose_coords, drawing, line_prevalences=[], x_shift=0, y_shift=0):
     """
     Draw, colorize and adjust the transparency of armature connections in the pose_coords
-    data from an Open PifPaf pose prediction. This function can receive pose coordinates
+    data from a pose prediction. This function can receive pose coordinates
     as 3-tuples (x, y, confidence) or 2-tuples (x, y). In the latter case, coordinates
     with 0 confidence are (NaN, Nan), and nonzero confidence/armature prevalence values
     can be provided via the line_prevalences parameter. For both types, 0-confidence armature
@@ -620,7 +473,7 @@ def draw_armatures(pose_coords, drawing, line_prevalences=[], x_shift=0, y_shift
 def add_pose_to_drawing(pose_prediction, drawing, seqno=None, show_bbox=False):
     """
     Draw the colorized and confidence-brightened connecting armatures of a pose
-    prediction skeleton from Open PifPaf on a background (which can be blank or) adding a
+    prediction skeleton on a background (which can be blank or) adding a
     bounding box and pose sequence ID number to the drawing if provided. A background
     can already have been added to the drawing, or it can be added/superimposed later
     (or left blank).
@@ -635,8 +488,8 @@ def add_pose_to_drawing(pose_prediction, drawing, seqno=None, show_bbox=False):
         extent = get_pose_extent(pose_prediction)
         bbox = [extent[0], extent[1], extent[2] - extent[0], extent[3] - extent[1]]
 
-    # bbox format for PifPaf is x0, y0, width, height
-    # Also note that both PifPaf and PIL/ImageDraw place (0,0) at top left, not bottom left
+    # bbox format is x0, y0, width, height
+    # Also note that both the pose and PIL/ImageDraw place (0,0) at top left, not bottom left
     upper_left = (int(bbox[0] * UPSCALE), int(bbox[1] * UPSCALE))
     lower_right = (
         int((bbox[0] + bbox[2]) * UPSCALE),
@@ -669,7 +522,7 @@ def add_pose_to_drawing(pose_prediction, drawing, seqno=None, show_bbox=False):
 
 def normalize_and_draw_pose(pose_prediction, video_file, frameno=None):
     """
-    Shift an Open PifPaf pose prediction to border the 0,0 origin and then scale it to
+    Shift a pose prediction to border the 0,0 origin and then scale it to
     POSE_MAX_DIM*POSE_MAX_DIM pixels and draw the pose into the normalized space, using
     upscaling/downscaling to avoid pixelated lines. If a source frameno is provided,
     this also extracts the source image region of the pose and draws it behind the plotted

@@ -54,11 +54,10 @@ class MimeDb:
         assign_poem_embeddings,
         assign_pose_interest,
         clear_actions,
-        clear_poses,
         clear_movelets,
+        clear_poses,
         load_4dh_predictions,
         load_lart_predictions,
-        load_openpifpaf_predictions,
     )
     from mime_db._hand_search import search_hands
     from mime_db._initialization import initialize_db, remove_video

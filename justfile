@@ -34,16 +34,13 @@ default:
 @refresh-db-views:
   docker compose exec -T db sh -c 'psql -U mime -c "REFRESH MATERIALIZED VIEW CONCURRENTLY video_meta; REFRESH MATERIALIZED VIEW video_frame_meta;"'
 
-# Video file and pose detection output file are in $VIDEO_SRC_FOLDER; the latter is [VIDEO_FILE_NAME].openpifpaf.json
-@add-video path: && refresh-db-views
-  docker compose exec -T api sh -c "LOG_LEVEL=$LOG_LEVEL /app/load_video.py --video-path \"\$VIDEO_SRC_FOLDER/$1\""
+# Video file and pose detection output file are in $VIDEO_SRC_FOLDER; the latter is [VIDEO_FILE_NAME].phalp.pkl
+@add-video path sample_rate="0": && refresh-db-views
+  docker compose exec -T api sh -c "LOG_LEVEL=$LOG_LEVEL /app/load_video.py --video-path \"\$VIDEO_SRC_FOLDER/$1\" --parse-fps $2"
 
 # Remove a video by name and all associated records in other tables linked via its UUID
 @remove-video path: && refresh-db-views
   docker compose exec -T api sh -c "LOG_LEVEL=$LOG_LEVEL /app/remove_video.py --video-path \"\$VIDEO_SRC_FOLDER/$1\""
-
-@add-video-4dh path sample_rate="0": && refresh-db-views
-  docker compose exec -T api sh -c "LOG_LEVEL=$LOG_LEVEL /app/load_video_4dh.py --video-path \"\$VIDEO_SRC_FOLDER/$1\" --parse-fps $2"
 
 # Export a video's pose data into a CSV to serve as input to a Pr-VIPE (POEM) viewpoint-invariant embedding
 @make-poem-input path:
@@ -80,11 +77,11 @@ default:
 @recalculate-motion path tick_interval="0": && refresh-db-views
   docker compose exec -T api sh -c "LOG_LEVEL=$LOG_LEVEL /app/track_video_motion.py --replace --video-path \"\$VIDEO_SRC_FOLDER/$1\" --tick-interval $2"
 
-# Calculate pose distances from the global mean for a video already in the DB
+# Calculate pose distances from the video mean for a video already in the DB
 @calculate-pose-interest path: && refresh-db-views
   docker compose exec -T api sh -c "LOG_LEVEL=$LOG_LEVEL /app/calculate_interest.py --video-name \"$1\" --metric pose"
 
-# Calculate action vector distances from the global mean for a video already in the DB
+# Calculate action vector distances from the video mean for a video already in the DB
 @calculate-action-interest path: && refresh-db-views
   docker compose exec -T api sh -c "LOG_LEVEL=$LOG_LEVEL /app/calculate_interest.py --video-name \"$1\" --metric action"
 
@@ -96,13 +93,9 @@ default:
 @load-actions path clear="false":
   docker compose exec -T api sh -c "LOG_LEVEL=$LOG_LEVEL /app/load_action_data.py --pkl-path \"\$VIDEO_SRC_FOLDER/$1\" --clear \"$2\""
 
-# Video file is in $VIDEO_SRC_FOLDER; detected faces file will be [VIDEO_FILE_NAME].faces.ArcFace.jsonl
+# Video file is in $VIDEO_SRC_FOLDER; output detected faces file will be [VIDEO_FILE_NAME].faces.ArcFace.jsonl
 @detect-faces path:
   docker compose exec -T api sh -c "LOG_LEVEL=$LOG_LEVEL /app/detect_faces.py --video-path \"\$VIDEO_SRC_FOLDER/$1\""
-
-# Provide path to video file relative to $VIDEO_SRC_FOLDER; DO NOT RUN with 4DH data
-@add-tracks path: && refresh-db-views
-  docker compose exec -T api sh -c "LOG_LEVEL=$LOG_LEVEL /app/track_video.py --video-path \"\$VIDEO_SRC_FOLDER/$1\""
 
 # Load detected faces data; input file is in $VIDEO_SRC_FOLDER with extension .faces.ArcFace.jsonl
 @match-faces video_path: && refresh-db-views

@@ -115,8 +115,8 @@ def draw_armatures(
     pose_coords, drawing, line_prevalences=None, x_shift=0, y_shift=0, coco_coords=13
 ):
     """
-    Draw, colorize and adjust the transparency of armature connections in the
-    pose_coords data from an Open PifPaf pose prediction. This function can receive pose
+    Draw, colorize and adjust the transparency of armature connections in the COCO
+    pose_coords data from a 13- or 17-joint pose prediction. This function can receive
     coordinates as 3-tuples (x, y, confidence) or 2-tuples (x, y). In the latter case,
     coordinates with 0 confidence are (NaN, Nan), and nonzero confidence/armature
     prevalence values can be provided via the line_prevalences parameter. For both types,

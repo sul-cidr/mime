@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-"""CLI to load data from a video and corresponding OpenPifPaf output into the db."""
+"""CLI to remove a video and potentially all related entries in other tables from the DB."""
 
 import argparse
 import asyncio

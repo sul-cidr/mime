@@ -47,7 +47,7 @@ type PoseRecord = {
   keypointsopp: Coco17SkeletonWithConfidence;
   global3d_coco13: Coco13Skeleton3D;
   keypoints3d: Smpl3DSkeleton;
-  bbox: FixedLengthArray<number, 4>; // bbox format for PifPaf is x0, y0, width, height
+  bbox: FixedLengthArray<number, 4>; // bbox format is x0, y0, width, height
   camera: FixedLengthArray<number, 3>;
   score: number;
   track_id: number | null;

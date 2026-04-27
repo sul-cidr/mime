@@ -57,7 +57,6 @@ async def initialize_db(conn, drop=False) -> None:
             pose_idx INTEGER NOT NULL,
             keypoints vector(39) NOT NULL,
             norm vector(26) DEFAULT NULL,
-            keypointsopp vector(51) DEFAULT NULL,
             keypoints4dh vector(135) DEFAULT NULL,
             keypoints3d vector(39) DEFAULT NULL,
             global3d_phalp vector(135) DEFAULT NULL,
