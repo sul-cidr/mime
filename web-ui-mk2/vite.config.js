@@ -10,9 +10,6 @@ export default defineConfig({
 		fs: {
 			strict: false
 		},
-		allowedHosts: [
-			"mime.pmbwell.org",
-			"mime.stanford.edu"
-		]
+		allowedHosts: [ process.env.ALLOWED_HOSTS ]
 	}
 });
