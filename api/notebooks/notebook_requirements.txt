@@ -5,5 +5,5 @@ ipycanvas
 matplotlib
 scipy
 scikit-image
+seaborn
 torch
-lap
