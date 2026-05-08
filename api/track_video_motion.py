@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-"""CLI to add motion tracking data to OpenPifPaf pose data for a video in the db."""
+"""CLI to add motion tracking data to PHALP/4D-Humans pose data for a video in the db."""
 
 import argparse
 import asyncio
