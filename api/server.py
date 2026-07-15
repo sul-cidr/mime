@@ -61,7 +61,12 @@ async def get_frame_image(video_id: UUID, frame: int, request: Request) -> np.nd
         return iio.imread(frame_image)
     else:
         video = await request.app.state.db.get_video_by_id(video_id)
-        video_path = f"/videos/{video['video_name']}"
+        video_name = video["video_name"]
+        video_path = f"/videos/{video_name}"
+        if not os.path.exists(video_path):
+            # Silly hack to try to fall back to non-upscaled versions of videos
+            video_name = video_name.replace("_upscaled", "")
+            video_path = f"/videos/{video_name}"
         return iio.imread(video_path, index=frame - 1, plugin="pyav")
 
 
