@@ -112,7 +112,14 @@ POSE_MAX_DIM = 100
 
 
 def draw_armatures(
-    pose_coords, drawing, line_prevalences=None, x_shift=0, y_shift=0, coco_coords=13
+    pose_coords,
+    drawing,
+    line_prevalences=None,
+    x_shift=0,
+    y_shift=0,
+    coco_coords=13,
+    upscale=None,
+    line_width=2,
 ):
     """
     Draw, colorize and adjust the transparency of armature connections in the COCO
@@ -153,17 +160,20 @@ def draw_armatures(
             ) / 2
             line_color = line_color + (round(segment_confidence * 256),)
 
+        if upscale is None:
+            upscale = UPSCALE
+
         shape = [
             (
-                round((pose_coords[seg[0] - 1][0] - x_shift) * UPSCALE),
-                round((pose_coords[seg[0] - 1][1] - y_shift) * UPSCALE),
+                round((pose_coords[seg[0] - 1][0] - x_shift) * upscale),
+                round((pose_coords[seg[0] - 1][1] - y_shift) * upscale),
             ),
             (
-                round((pose_coords[seg[1] - 1][0] - x_shift) * UPSCALE),
-                round((pose_coords[seg[1] - 1][1] - y_shift) * UPSCALE),
+                round((pose_coords[seg[1] - 1][0] - x_shift) * upscale),
+                round((pose_coords[seg[1] - 1][1] - y_shift) * upscale),
             ),
         ]
-        drawing.line(shape, fill=line_color, width=2 * UPSCALE)
+        drawing.line(shape, fill=line_color, width=line_width * upscale)
 
     return drawing
 
