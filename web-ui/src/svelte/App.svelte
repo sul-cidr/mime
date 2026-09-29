@@ -138,6 +138,14 @@
         </a>
 
         <a
+          href="https://sul-cidr.github.io/mime/"
+          use:tooltip={"About"}
+          target="_blank"
+        >
+          <Icon name="info" height="24" width="24" />
+        </a>
+
+        <a
           href="https://github.com/sul-cidr/mime"
           use:tooltip={"GitHub"}
           target="_blank"

@@ -12,6 +12,7 @@
 	} from 'carbon-components-svelte';
 	import DataBase from 'carbon-icons-svelte/lib/DataBase.svelte';
 	import Home from 'carbon-icons-svelte/lib/Home.svelte';
+	import Information from 'carbon-icons-svelte/lib/Information.svelte';
 	import LogoGithub from 'carbon-icons-svelte/lib/LogoGithub.svelte';
 	import LogoJupyter from 'carbon-icons-svelte/lib/LogoJupyter.svelte';
 	import Search from 'carbon-icons-svelte/lib/Search.svelte';
@@ -77,6 +78,12 @@
 			isSelected={$page.url.pathname == `/jupyter/tree/notebooks/`}
 		/>
 		<SideNavDivider />
+		<SideNavLink
+			icon={Information}
+			text="About"
+			href="https://sul-cidr.github.io/mime/"
+			target="_blank"
+		/>
 		<SideNavLink
 			icon={LogoGithub}
 			text="GitHub"
