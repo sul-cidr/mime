@@ -75,9 +75,11 @@ async def main() -> None:
     all_vectors = []
 
     for pose_data in video_poses:
-        all_vectors.append(pose_data[db_key])
+        all_vectors.append(pose_data[db_key].to_list())
 
     mean_global_vector = np.mean(all_vectors, axis=0)
+
+    print(mean_global_vector.shape)
 
     mean_vector = [
         [mean_global_vector[x], mean_global_vector[x + 1], 1]
@@ -109,7 +111,7 @@ async def main() -> None:
             current_deviations = []
 
         # current_deviations.append(euclidean(pose_data[db_key], mean_global_pose))
-        pose_deviation = cosine(pose_data[db_key], mean_global_vector)
+        pose_deviation = cosine(pose_data[db_key].to_list(), mean_global_vector)
         if pose_data["frame"] in pose_interest:
             pose_interest[pose_data["frame"]][pose_data["pose_idx"]] = pose_deviation
         else:

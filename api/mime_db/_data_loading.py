@@ -291,7 +291,7 @@ async def load_lart_predictions(
                     "video_id": video_id,
                     "frame": frame["time"] + 1,
                     "track_id": tracked_id,
-                    "ava_action": frame["ava_action"][tracked_id][0],
+                    "ava_action": frame["ava_action"][tracked_id][0].tolist(),
                     "action_labels": frame["label"][tracked_id],
                 }
             )
