@@ -126,6 +126,18 @@ async def main() -> None:
     norm_coords = 26
     global3d_coco13_coords = 39
 
+    # PMB More pgvector output mitigtation
+    tracks_df["norm"] = tracks_df["norm"].apply(lambda x: x.to_list())
+    tracks_df["poem_embedding"] = tracks_df["poem_embedding"].apply(
+        lambda x: x.to_list()
+    )
+    tracks_df["global3d_coco13"] = tracks_df["global3d_coco13"].apply(
+        lambda x: x.to_list()
+    )
+    tracks_df["coco13_angles3d"] = tracks_df["coco13_angles3d"].apply(
+        lambda x: x.to_list()
+    )
+
     tracks_df["tick_norm"] = tracks_df.groupby(["track_id", "tick"])["norm"].transform(
         avg_pose_data
     )
