@@ -136,7 +136,7 @@ async def main() -> None:
     poseswriter.writerow(["video_id", "frame", "pose_idx"])
 
     for pose in video_poses:
-        posenorm = np.array(pose["norm"])
+        posenorm = np.array(pose["norm"].to_list())
         posenorm = np.round(posenorm / 100, 2)
         pose_data = (
             np.array(

@@ -85,7 +85,7 @@ async def main() -> None:
             ]["joint_motion3d"].values
 
             for joint_motion in joint_motions:
-                joint_velocities = joint_motion / time_elapsed
+                joint_velocities = joint_motion.to_numpy() / time_elapsed
                 if len(joint_velocities.nonzero()[0]) > 0:
                     for f in range(start_frame, end_frame + 1):
                         if f not in frame_joint_motions:

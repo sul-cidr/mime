@@ -28,7 +28,7 @@ def get_video_metadata(video_file):
 
 def normalize_pose_data(pose, key="keypoints"):
     normalized_coords = pose_utils.extract_trustworthy_coords(
-        pose_utils.shift_normalize_rescale_pose_coords(pose, key)
+        pose_utils.shift_normalize_rescale_pose_coords(dict(pose), key)
     )
     return normalized_coords
 
@@ -124,8 +124,8 @@ async def main() -> None:
         "norm",
         "vector(26)",
         video_id,
-        lambda pose: tuple(
-            np.nan_to_num(normalize_pose_data(pose, "keypoints"), nan=-1).tolist()
+        lambda pose: list(
+            np.nan_to_num(normalize_pose_data(dict(pose), "keypoints"), nan=-1)
         ),
     )
 
@@ -135,9 +135,9 @@ async def main() -> None:
         "global3d_coco13",
         "vector(39)",
         video_id,
-        lambda pose: tuple(
+        lambda pose: list(
             pose_utils.merge_coords(
-                np.array(pose["global3d_phalp"]).reshape(-1, 3),
+                np.array(pose["global3d_phalp"].to_list()).reshape(-1, 3),
                 pose_utils.phalp_to_coco_13,
                 is_3d=True,
             )
@@ -152,24 +152,24 @@ async def main() -> None:
         "coco13_angles3d",
         "vector(39)",
         video_id,
-        lambda pose: tuple(
+        lambda pose: list(
             np.array(
                 [
                     pose_utils.calculate_angle_in_3d(
                         (
-                            pose["global3d_coco13"][triad[0] * 3],
-                            pose["global3d_coco13"][triad[0] * 3 + 1],
-                            pose["global3d_coco13"][triad[0] * 3 + 2],
+                            pose["global3d_coco13"].to_list()[triad[0] * 3],
+                            pose["global3d_coco13"].to_list()[triad[0] * 3 + 1],
+                            pose["global3d_coco13"].to_list()[triad[0] * 3 + 2],
                         ),
                         (
-                            pose["global3d_coco13"][triad[1] * 3],
-                            pose["global3d_coco13"][triad[1] * 3 + 1],
-                            pose["global3d_coco13"][triad[1] * 3 + 2],
+                            pose["global3d_coco13"].to_list()[triad[1] * 3],
+                            pose["global3d_coco13"].to_list()[triad[1] * 3 + 1],
+                            pose["global3d_coco13"].to_list()[triad[1] * 3 + 2],
                         ),
                         (
-                            pose["global3d_coco13"][triad[2] * 3],
-                            pose["global3d_coco13"][triad[2] * 3 + 1],
-                            pose["global3d_coco13"][triad[2] * 3 + 2],
+                            pose["global3d_coco13"].to_list()[triad[2] * 3],
+                            pose["global3d_coco13"].to_list()[triad[2] * 3 + 1],
+                            pose["global3d_coco13"].to_list()[triad[2] * 3 + 2],
                         ),
                     )
                     for triad in pose_utils.COCO_13_ANGLES

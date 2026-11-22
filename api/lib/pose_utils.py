@@ -314,7 +314,14 @@ def unflatten_pose_data(prediction, key="keypoints"):
     Convert a flattened pose prediction (a 1D 51-element list) into a 17-element
     list (not a NumPy array) of [x_coord, y_coord, confidence] triples.
     """
-    return np.array_split(prediction[key], len(prediction[key]) / 3)
+    if isinstance(prediction[key], np.ndarray):
+        return np.array_split(
+            prediction[key].tolist(), len(prediction[key].tolist()) / 3
+        )
+    else:
+        return np.array_split(
+            prediction[key].to_list(), len(prediction[key].to_list()) / 3
+        )
 
 
 def extract_trustworthy_coords(prediction, key="keypoints"):
