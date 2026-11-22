@@ -175,6 +175,26 @@ def draw_armatures(
         ]
         drawing.line(shape, fill=line_color, width=line_width * upscale)
 
+        # Draw joints
+        drawing.circle(
+            (
+                round((pose_coords[seg[0] - 1][0] - x_shift) * upscale),
+                round((pose_coords[seg[0] - 1][1] - y_shift) * upscale),
+            ),
+            radius=line_width,
+            width=0,
+            fill=line_color,
+        )
+        drawing.circle(
+            (
+                round((pose_coords[seg[1] - 1][0] - x_shift) * upscale),
+                round((pose_coords[seg[1] - 1][1] - y_shift) * upscale),
+            ),
+            radius=line_width,
+            width=0,
+            fill=line_color,
+        )
+
     return drawing
 
 
