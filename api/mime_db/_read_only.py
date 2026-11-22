@@ -5,7 +5,7 @@ import numpy as np
 
 
 async def get_available_videos(self) -> list:
-    return await self._pool.fetch("""SELECT * FROM video_meta;""")
+    return await self._pool.fetch("""SELECT * FROM video_meta ORDER BY video_name;""")
 
 
 async def get_video_by_id(self, video_id: UUID) -> asyncpg.Record:
