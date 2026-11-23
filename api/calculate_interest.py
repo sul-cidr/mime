@@ -79,8 +79,6 @@ async def main() -> None:
 
     mean_global_vector = np.mean(all_vectors, axis=0)
 
-    print(mean_global_vector.shape)
-
     mean_vector = [
         [mean_global_vector[x], mean_global_vector[x + 1], 1]
         for x in range(0, len(mean_global_vector), 2)
